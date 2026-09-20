@@ -1,0 +1,20 @@
+{
+  "name": "Saha Kariyer — Türkiye Futbol Simülasyonu",
+  "short_name": "Saha Kariyer",
+  "description": "Türkiye Süper Lig'inde futbolcu kariyeri yaşayan simülasyon oyunu: maçlar, transferler, stadyum yönetimi ve daha fazlası.",
+  "id": "/futbolmanager/",
+  "start_url": "/futbolmanager/index.html",
+  "scope": "/futbolmanager/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a1014",
+  "theme_color": "#0a1014",
+  "lang": "tr",
+  "dir": "ltr",
+  "categories": ["sports", "games", "simulation"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
