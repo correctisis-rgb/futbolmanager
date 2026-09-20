@@ -107,11 +107,16 @@ nav#bottom{
 }
 nav#bottom button{
   flex:1;background:none;border:0;color:var(--dim);padding:9px 2px 8px;font-size:.66rem;font-weight:600;
-  display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;position:relative;
 }
-nav#bottom button i{font-style:normal;font-size:1.25rem;line-height:1;}
+nav#bottom button i{font-style:normal;font-size:1.25rem;line-height:1;position:relative;}
 nav#bottom button.on{color:var(--flood);}
 nav#bottom button:disabled{opacity:.32;}
+.navdot{position:absolute;top:5px;left:50%;margin-left:2px;min-width:8px;height:8px;padding:0 3px;
+  border-radius:999px;background:var(--bad);color:#fff;font-size:.58rem;font-weight:800;line-height:8px;
+  text-align:center;box-shadow:0 0 0 2px var(--navbg);display:none;}
+.navdot.on{display:block;}
+.navdot.dotnum{min-width:14px;height:14px;line-height:14px;top:3px;}
 
 .view{display:none;}
 .view.on{display:block;}
@@ -139,10 +144,15 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:12px 0;}
 .btn:focus-visible{outline:2px solid var(--flood);outline-offset:2px;}
 .btngrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 
-.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;-webkit-overflow-scrolling:touch;}
+.tabs{display:flex;gap:6px;overflow-x:auto;overflow-y:visible;padding:6px 4px 8px;margin:0 -4px 10px;-webkit-overflow-scrolling:touch;}
 .tabs button{background:var(--chipbg2);border:1px solid var(--line);color:var(--dim);border-radius:999px;
-  padding:6px 12px;font-size:.82rem;font-weight:600;white-space:nowrap;cursor:pointer;}
+  padding:6px 12px;font-size:.82rem;font-weight:600;white-space:nowrap;cursor:pointer;position:relative;overflow:visible;}
 .tabs button.on{background:var(--flood);color:#241c00;border-color:#caa42e;}
+.tabdot{position:absolute;top:-3px;right:-3px;min-width:8px;height:8px;padding:0 3px;
+  border-radius:999px;background:var(--bad);color:#fff;font-size:.56rem;font-weight:800;line-height:8px;
+  text-align:center;box-shadow:0 0 0 2px var(--panel);display:none;z-index:1;}
+.tabdot.on{display:block;}
+.tabdot.dotnum{min-width:14px;height:14px;line-height:14px;top:-5px;right:-5px;}
 .pane{display:none;}
 .pane.on{display:block;}
 
@@ -151,6 +161,12 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:12px 0;}
 .bar > i{display:block;height:100%;background:linear-gradient(90deg,#2563eb,#60a5fa);transition:width .3s;}
 .bar.energy > i{background:linear-gradient(90deg,#b45309,#fbbf24);}
 .bar.mood > i{background:linear-gradient(90deg,#065f46,#34d399);}
+.bar.thick{height:16px;flex:1;min-width:0;}
+.cond-row{display:flex;align-items:center;gap:8px;}
+.cond-row .cond-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:.82rem;
+  flex:0 1 auto;min-width:0;}
+.cond-row .cond-pct{white-space:nowrap;font-weight:700;min-width:34px;text-align:right;flex:none;}
+.cond-row .btn{flex:none;white-space:nowrap;padding:6px 9px;}
 .barline{display:flex;justify-content:space-between;font-size:.8rem;color:var(--dim);margin-bottom:4px;}
 .statbox{background:var(--surf3);border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-bottom:8px;}
 
@@ -170,6 +186,14 @@ td.num,th.num{text-align:center;width:26px;}
 .scoreboard .sc{font-family:'Barlow Condensed';font-size:2.1rem;font-weight:700;letter-spacing:1px;
   background:var(--surf5);border:1px solid var(--line);border-radius:8px;padding:2px 12px;}
 .clock{text-align:center;font-family:'Barlow Condensed';font-size:.85rem;color:var(--flood);letter-spacing:1px;grid-column:1/-1;}
+.pitchclock{position:absolute;left:8px;top:8px;z-index:16;background:rgba(4,10,14,.74);
+  border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:4px 9px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  box-shadow:0 3px 10px rgba(0,0,0,.5);pointer-events:none;}
+.pitchclock .pc-row{display:flex;align-items:center;gap:5px;}
+.pitchclock .pc-row .kitdot{margin-right:0;}
+.pitchclock b{font-family:'Barlow Condensed';font-size:1rem;color:#fff;letter-spacing:.5px;}
+.pitchclock .pc-min{font-family:'Barlow Condensed';font-size:.66rem;color:var(--flood);letter-spacing:.6px;white-space:nowrap;}
 
 /* ---- stadyum kabuğu ---- */
 .stadium{position:relative;border-radius:12px;overflow:hidden;margin-bottom:8px;
@@ -272,6 +296,104 @@ td.num,th.num{text-align:center;width:26px;}
 .varbox .vres{font-family:'Barlow Condensed';font-size:1.5rem;}
 .confetti{position:absolute;top:-6%;width:5px;height:9px;z-index:12;opacity:.95;animation:conf 1.6s linear forwards;}
 @keyframes conf{to{transform:translateY(2400%) rotate(720deg);opacity:0}}
+
+/* ---- gol kutlaması ---- */
+.pl.celebrate .body{animation:celeBody 1.3s ease-in-out;}
+@keyframes celeBody{
+  0%{transform:translateY(0) rotate(0)}
+  15%{transform:translateY(-38%) rotate(-8deg)}
+  30%{transform:translateY(0) rotate(6deg)}
+  45%{transform:translateY(-20%) rotate(-4deg)}
+  60%{transform:translateY(0) scale(1.12) rotate(3deg)}
+  75%{transform:translateY(-10%) scale(1.06) rotate(-2deg)}
+  100%{transform:translateY(0) scale(1) rotate(0)}
+}
+.pl.celebrate{z-index:9;}
+.pl.celebrate .jersey{box-shadow:0 0 10px 3px var(--flood);}
+.goalburst{position:absolute;transform:translate(-50%,-50%);z-index:15;pointer-events:none;
+  font-family:'Barlow Condensed';font-weight:700;color:var(--flood);letter-spacing:1px;
+  font-size:clamp(1.1rem,6vw,1.9rem);text-shadow:0 0 10px rgba(0,0,0,.7),0 0 18px var(--flood);
+  animation:burstUp 1.5s cubic-bezier(.2,.8,.3,1) forwards;white-space:nowrap;}
+@keyframes burstUp{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+  14%{opacity:1;transform:translate(-50%,-70%) scale(1.25)}
+  26%{transform:translate(-50%,-65%) scale(1)}
+  78%{opacity:1;transform:translate(-50%,-115%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-140%) scale(.92)}
+}
+.sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--flood);z-index:14;
+  pointer-events:none;box-shadow:0 0 6px 2px var(--flood);animation:sparkleOut .9s ease-out forwards;}
+@keyframes sparkleOut{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:var(--sxy) scale(.3)}}
+
+/* ---- hücum / defans hızlı seçim ---- */
+.atkdef-fab{position:absolute;right:6px;bottom:6px;z-index:20;display:flex;flex-direction:row;gap:6px;
+  background:rgba(4,10,14,.5);padding:4px;border-radius:11px;backdrop-filter:blur(2px);}
+.atkdef-btn{display:flex;flex-direction:row;align-items:center;gap:4px;background:var(--panel2);
+  border:1px solid var(--line);border-radius:9px;padding:5px 9px;color:var(--ink);font-weight:700;
+  font-size:.62rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4);min-width:0;white-space:nowrap;}
+.atkdef-btn:disabled{opacity:.4;cursor:not-allowed;}
+.atkdef-btn.active-atk{border-color:#ef4444;background:#3a1414;color:#ffd9d9;}
+.atkdef-btn.active-def{border-color:#3b82f6;background:#122238;color:#d9e8ff;}
+.atkdef-ic{font-size:.95rem;line-height:1;}
+.atkdef-icons{font-size:.62rem;min-height:10px;letter-spacing:1px;}
+
+/* ---- tribün ritim ---- */
+.crowd.chanting{animation:crowdPulse .85s ease-in-out;}
+@keyframes crowdPulse{0%,100%{filter:brightness(1)}45%{filter:brightness(1.9) saturate(1.3)}}
+
+/* ---- maç öncesi tünel / el sıkışma ---- */
+.tunnel{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;}
+.tunnel .vs-row{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;}
+.tunnel .side{display:flex;flex-direction:column;align-items:center;gap:8px;width:38%;}
+.tunnel .kit{width:64px;}
+.tunnel .kit .jersey{position:relative;display:block;width:100%;aspect-ratio:1/1.05;
+  clip-path:polygon(0% 20%,22% 2%,37% 11%,63% 11%,78% 2%,100% 20%,87% 37%,79% 28%,79% 100%,21% 100%,21% 28%,13% 37%);
+  box-shadow:0 4px 14px rgba(0,0,0,.55);}
+.tunnel .kit .jersey::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 32% 18%, rgba(255,255,255,.55), transparent 55%),
+             linear-gradient(180deg, rgba(255,255,255,.16), transparent 30%, transparent 70%, rgba(0,0,0,.28) 100%);
+  pointer-events:none;}
+.tunnel .kit .jersey::after{content:'';position:absolute;left:50%;top:2%;width:34%;height:14%;transform:translateX(-50%);
+  border-radius:0 0 50% 50%;background:rgba(0,0,0,.22);pointer-events:none;}
+.tunnel .kit .shorts{display:block;width:64%;height:22%;margin:2px auto 0;border-radius:0 0 3px 3px;
+  box-shadow:inset 0 2px 2px rgba(255,255,255,.2), inset 0 -2px 3px rgba(0,0,0,.35);}
+.tunnel .side.l .kit{animation:tunnelInL 1.1s ease-out both;}
+.tunnel .side.r .kit{animation:tunnelInR 1.1s ease-out both;}
+@keyframes tunnelInL{0%{transform:translateX(-140%);opacity:0}100%{transform:translateX(0);opacity:1}}
+@keyframes tunnelInR{0%{transform:translateX(140%);opacity:0}100%{transform:translateX(0);opacity:1}}
+.tunnel .vs{font-family:'Barlow Condensed';font-size:1.4rem;color:var(--flood);font-weight:700;}
+.tunnel .shake{font-size:1.6rem;animation:shakeHands 1.4s ease-in-out .9s both;}
+@keyframes shakeHands{0%{transform:scale(.6) rotate(0);opacity:0}30%{opacity:1;transform:scale(1.15) rotate(-8deg)}
+  45%{transform:scale(1) rotate(8deg)}60%{transform:scale(1.1) rotate(-6deg)}75%{transform:scale(1) rotate(4deg)}100%{transform:scale(1) rotate(0)}}
+.tunnel .tname{font-size:.8rem;color:var(--dim);text-align:center;}
+
+/* ---- antrenman mini-oyunu ---- */
+.tg-track{position:relative;height:34px;border-radius:999px;background:var(--surf4);
+  border:1px solid var(--line);overflow:hidden;margin-top:10px;}
+.tg-zone{position:absolute;top:2px;bottom:2px;border-radius:999px;}
+.tg-zone.red{background:rgba(248,113,113,.32);border:1px solid #ef4444;z-index:1;}
+.tg-zone.orange{background:rgba(251,191,36,.38);border:1px solid #f59e0b;z-index:2;}
+.tg-zone.green{background:rgba(52,211,153,.42);border:1px solid var(--good);z-index:3;}
+.tg-marker{position:absolute;top:-3px;bottom:-3px;width:4px;margin-left:-2px;background:var(--flood);
+  border-radius:2px;box-shadow:0 0 8px var(--flood);z-index:4;}
+.tg-result{font-family:'Barlow Condensed';font-size:1.3rem;text-align:center;margin-top:8px;}
+.tg-legend{display:flex;justify-content:center;gap:12px;margin-top:8px;font-size:.74rem;color:var(--dim);flex-wrap:wrap;}
+.tg-legend span{display:inline-flex;align-items:center;gap:4px;}
+.tg-legend i{display:inline-block;width:9px;height:9px;border-radius:3px;}
+
+/* ---- sezon sonu ödül töreni ---- */
+.awardstage{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;
+  position:relative;overflow:hidden;border-radius:10px;padding:22px 10px;}
+.awardstage .trophy{font-size:3.4rem;animation:trophyPop .9s cubic-bezier(.2,.9,.3,1.3) both;
+  filter:drop-shadow(0 0 16px var(--flood));}
+@keyframes trophyPop{0%{transform:scale(0) rotate(-25deg);opacity:0}70%{transform:scale(1.15) rotate(6deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+.awardstage .aline{font-family:'Barlow Condensed';font-size:1rem;letter-spacing:2px;color:var(--dim);text-transform:uppercase;}
+.awardstage .aname{font-family:'Barlow Condensed';font-size:1.7rem;font-weight:700;color:var(--flood);}
+.awardstage .asub{font-size:.86rem;color:var(--dim);}
+.spotlight{position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:conic-gradient(from 0deg at 50% -20%, transparent 0 78%, rgba(255,255,255,.06) 82%, transparent 86% 100%);
+  animation:spinLight 6s linear infinite;}
+@keyframes spinLight{to{transform:rotate(360deg)}}
 .livebar{display:flex;height:7px;border-radius:999px;overflow:hidden;border:1px solid var(--line);margin-top:6px;}
 .livebar i{display:block;height:100%;}
 
@@ -281,7 +403,7 @@ td.num,th.num{text-align:center;width:26px;}
 .actionsheet.show{pointer-events:auto;}
 .actionsheet .prompt,.actionsheet .acts{pointer-events:auto;box-shadow:0 -6px 24px rgba(0,0,0,.5);}
 .commentary{background:var(--surf4);border:1px solid var(--line);border-radius:10px;padding:10px;
-  height:150px;overflow-y:auto;font-size:.84rem;line-height:1.5;}
+  height:150px;overflow-y:auto;font-size:.84rem;line-height:1.5;margin:8px 0;}
 .commentary div{padding:2px 0;border-bottom:1px solid var(--line2);}
 .commentary .hi{color:var(--flood);font-weight:600;}
 .commentary .gl{color:var(--good);font-weight:700;}
@@ -310,6 +432,42 @@ td.num,th.num{text-align:center;width:26px;}
 .modal.on{display:flex;}
 .modal .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;max-width:460px;width:100%;
   max-height:84vh;overflow:auto;}
+.modal.fullscreen{padding:0;}
+.modal.fullscreen .box{max-width:100%;width:100%;height:100%;max-height:100%;border-radius:0;overflow:hidden;
+  padding:12px;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));}
+
+/* ---------- Kadro dizilişi (mini saha) ---------- */
+.lineup-legend{display:flex;gap:12px;align-items:center;font-size:.76rem;color:var(--dim);margin-bottom:8px;flex-wrap:wrap;}
+.lineup-legend b{display:inline-flex;align-items:center;gap:4px;font-weight:600;color:var(--dim);}
+.lineup-legend i{display:inline-block;width:9px;height:9px;border-radius:3px;}
+.lineup-pitch{position:relative;width:100%;height:300px;border-radius:10px;overflow:hidden;margin-bottom:14px;
+  background:repeating-linear-gradient(180deg,#1c6a37 0,#1c6a37 34px,#1a6233 34px,#1a6233 68px);
+  border:1px solid #0e3d1e;}
+.lineup-pitch .lineup-midline{position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.45);}
+.lineup-pitch .lineup-midcircle{position:absolute;left:50%;top:50%;width:64px;height:64px;border:2px solid rgba(255,255,255,.4);
+  border-radius:50%;transform:translate(-50%,-50%);}
+.lineup-pitch .lineup-goal{position:absolute;left:50%;width:56px;height:10px;border:2px solid rgba(255,255,255,.4);
+  border-top:0;transform:translateX(-50%);}
+.lineup-pitch .lineup-goal.top{top:0;border-top:0;border-bottom:2px solid rgba(255,255,255,.4);border-radius:0 0 6px 6px;}
+.lineup-pitch .lineup-goal.bot{bottom:0;border-radius:6px 6px 0 0;}
+.lineup-pl{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;z-index:2;}
+.lineup-tag{font-size:.62rem;font-weight:800;padding:3px 6px;border-radius:7px;white-space:nowrap;color:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.35);}
+.lineup-tag.us{background:var(--us);}
+.lineup-tag.them{background:var(--them);}
+.lineup-tag.mine{background:var(--flood);color:#241c00;box-shadow:0 0 0 2px #fff,0 1px 3px rgba(0,0,0,.35);}
+.lineup-name{font-size:.58rem;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.75);white-space:nowrap;
+  max-width:78px;overflow:hidden;text-overflow:ellipsis;}
+.lineup-pct{font-size:.56rem;font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.75);}
+
+.lineup-full{display:flex;flex-direction:column;height:100%;}
+.lineup-full h3{flex:none;margin:0 0 8px;}
+.lineup-full .lineup-legend{flex:none;font-size:.86rem;}
+.lineup-full .lineup-pitch{flex:1 1 auto;height:auto;min-height:0;width:100%;border-radius:12px;margin-bottom:12px;}
+.lineup-full .lineup-tag{font-size:.82rem;padding:5px 9px;border-radius:9px;}
+.lineup-full .lineup-name{font-size:.74rem;max-width:120px;}
+.lineup-full .lineup-pct{font-size:.72rem;}
+.lineup-full .btn{flex:none;margin-top:0;}
 
 /* ---------- Newspaper ---------- */
 .paper{background:#f3ece0;color:#181410;border-radius:10px;padding:16px 14px;border:1px solid #cdbfa8;
@@ -473,7 +631,11 @@ td.num,th.num{text-align:center;width:26px;}
           <div class="stadium" id="stadium">
             <div class="crowd top" id="crowdTop"></div>
             <div class="pitch" id="pitch">
-              <div class="line" style="left:50%;top:0;bottom:0;width:2px"></div>
+              <div class="pitchclock" id="pitchclock">
+              <span class="pc-row"><span id="pc-kit-h"></span><b id="pc-score">0-0</b><span id="pc-kit-a"></span></span>
+              <span class="pc-min" id="pc-min">İlk yarı • 0'</span>
+            </div>
+            <div class="line" style="left:50%;top:0;bottom:0;width:2px"></div>
               <div class="line" style="left:0;top:22%;width:14%;height:2px"></div>
               <div class="line" style="left:0;bottom:22%;width:14%;height:2px"></div>
               <div class="line" style="left:14%;top:22%;width:2px;height:56%"></div>
@@ -496,34 +658,39 @@ td.num,th.num{text-align:center;width:26px;}
               <div class="ball" id="ball" style="left:50%;top:50%"></div>
               <div class="overlay" id="ov" style="display:none"><div class="big" id="ov-txt"></div><div class="sub" id="ov-sub"></div></div>
               <div id="varLayer"></div>
+              <div class="atkdef-fab" id="atkdefFab">
+                <button class="atkdef-btn atk" id="btn-atk" onclick="bumpStance('atk')">
+                  <span class="atkdef-ic">⚔️</span>
+                  <span class="atkdef-lbl">Hücum</span>
+                  <span class="atkdef-icons" id="atk-icons"></span>
+                </button>
+                <button class="atkdef-btn def" id="btn-def" onclick="bumpStance('def')">
+                  <span class="atkdef-ic">🛡️</span>
+                  <span class="atkdef-lbl">Defans</span>
+                  <span class="atkdef-icons" id="def-icons"></span>
+                </button>
+              </div>
             </div>
             <div class="crowd bot" id="crowdBot"></div>
           </div>
-          <div class="mini" id="stad-line" style="text-align:center;margin-bottom:8px"></div>
-          <div class="statbox" style="margin-bottom:8px">
-            <div class="barline"><span id="me-label">Sen — kondisyon</span><b id="me-sta">100%</b></div>
-            <div class="bar energy"><i id="me-sta-bar" style="width:100%"></i></div>
+          <div class="commentary" id="log"></div>
+          <div class="statbox" style="margin-top:8px;margin-bottom:8px">
+            <div class="cond-row">
+              <span id="me-label" class="cond-label">Sen — kondisyon</span>
+              <span class="bar energy thick"><i id="me-sta-bar" style="width:100%"></i></span>
+              <b id="me-sta" class="cond-pct">100%</b>
+              <button class="btn sm" id="btn-drink">⚡ (<span id="drinkN">0</span>)</button>
+            </div>
             <div class="mini" id="me-line" style="margin-top:5px"></div>
           </div>
-          <div class="statbox" style="margin-bottom:8px">
-            <div class="barline"><span>Gayret kademesi</span><b id="effort-label">Normal</b></div>
-            <div class="row" style="gap:6px;flex-wrap:wrap">
-              <button class="btn sm" data-effort="0">Ekonomik</button>
-              <button class="btn sm" data-effort="1">Normal</button>
-              <button class="btn sm" data-effort="2">Yüksek</button>
-              <button class="btn sm" data-effort="3">Maksimum</button>
-            </div>
-            <div class="mini" id="effort-note" style="margin-top:5px"></div>
-          </div>
-          <div class="commentary" id="log"></div>
-          <div class="row wrap" style="margin-top:10px">
-            <button class="btn sm" id="btn-drink">⚡ Enerji içeceği (<span id="drinkN">0</span>)</button>
+          <div class="row wrap">
             <button class="btn sm" id="btn-med">🧰 İlk yardım (<span id="medN">0</span>)</button>
             <button class="btn sm" id="btn-sub">🔁 Değişiklik iste</button>
             <button class="btn sm" id="btn-squad">👥 Kadro</button>
             <button class="btn sm" id="btn-stats">📊 İstatistik</button>
             <button class="btn sm primary" id="btn-finish" style="display:none">Maçı bitir</button>
           </div>
+          <div class="mini" id="stad-line" style="text-align:center;margin-bottom:8px"></div>
         </div>
       </div>
     </section>
@@ -532,13 +699,13 @@ td.num,th.num{text-align:center;width:26px;}
     <section class="view" id="v-career">
       <div class="tabs" data-tabs="career">
         <button class="on" data-pane="c-profile">Profil</button>
-        <button data-pane="c-train">Antrenman</button>
+        <button data-pane="c-train">Antrenman<span class="tabdot" id="dot-train"></span></button>
         <button data-pane="c-room">Soyunma Odası</button>
         <button data-pane="c-shop">Mağaza</button>
         <button data-pane="c-stad">Stadyum</button>
-        <button data-pane="c-sponsor">Sponsorlar</button>
-        <button data-pane="c-contract">Sözleşme</button>
-        <button data-pane="c-badges">Başarımlar</button>
+        <button data-pane="c-sponsor">Sponsorlar<span class="tabdot" id="dot-sponsor-tab"></span></button>
+        <button data-pane="c-contract">Sözleşme<span class="tabdot" id="dot-contract-tab"></span></button>
+        <button data-pane="c-badges">Başarımlar<span class="tabdot" id="dot-badges-tab"></span></button>
       </div>
       <div class="pane on" id="c-profile"><div id="profileBox"></div></div>
       <div class="pane" id="c-train"><div id="trainBox"></div></div>
@@ -582,11 +749,11 @@ td.num,th.num{text-align:center;width:26px;}
   <div class="acts" id="acts" style="display:none"></div>
 </div>
 <nav id="bottom">
-  <button data-view="v-match" class="on"><i>⚽</i>Maç</button>
-  <button data-view="v-career"><i>👤</i>Kariyer</button>
-  <button data-view="v-league"><i>🏆</i>Lig</button>
-  <button data-view="v-paper"><i>📰</i>Gazete</button>
-  <button data-view="v-life"><i>🌆</i>Yaşam</button>
+  <button data-view="v-match" class="on"><i>⚽</i>Maç<span class="navdot" id="dot-match"></span></button>
+  <button data-view="v-career"><i>👤</i>Kariyer<span class="navdot" id="dot-career"></span></button>
+  <button data-view="v-league"><i>🏆</i>Lig<span class="navdot" id="dot-league"></span></button>
+  <button data-view="v-paper"><i>📰</i>Gazete<span class="navdot" id="dot-paper"></span></button>
+  <button data-view="v-life"><i>🌆</i>Yaşam<span class="navdot" id="dot-life"></span></button>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -842,7 +1009,7 @@ function toast(msg){
   clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 2200);
 }
 function modal(html){ $('modalBox').innerHTML = html; $('modal').classList.add('on'); }
-function closeModal(){ $('modal').classList.remove('on'); $('modalBox').innerHTML=''; }
+function closeModal(){ $('modal').classList.remove('on','fullscreen'); $('modalBox').innerHTML=''; }
 
 /* ---------- Gündüz / Gece modu ---------- */
 const THEME_KEY = 'sahaKariyerTema';
@@ -1411,6 +1578,7 @@ function render(){
   $('t-sub').textContent = p.role==='Teknik Direktör' ? `${p.team} • Teknik Direktör` : `${p.team} • ${posByKey(p.posKey).label} • ${p.age} yaş`;
   $('t-money').textContent = TL(p.money);
   $('t-ovr').textContent = 'GÜÇ ' + userOverall();
+  updateNavBadges();
 
   if(S.inMatch) return;   // maç ekranı kendi kendini günceller
 
@@ -1421,6 +1589,39 @@ function render(){
     case 'v-paper':  renderPaper(); break;
     case 'v-life':   renderLife(); break;
   }
+}
+function setNavDot(id, count){
+  const el = $(id); if(!el) return;
+  if(count>0){
+    el.classList.add('on');
+    if(count>1){ el.textContent = count>9?'9+':String(count); el.classList.add('dotnum'); }
+    else { el.textContent=''; el.classList.remove('dotnum'); }
+  } else {
+    el.classList.remove('on'); el.textContent='';
+  }
+}
+function updateNavBadges(){
+  if(!S) return;
+  const p = S.p;
+  // Maç: bu hafta oynanacak bir karşılaşma ya da kapatılacak bir sezon var mı?
+  const matchDue = S.inMatch ? 0 :
+    (S.week>34 ? 1 : (!S.weekDone && (myFixtureThisWeek()||myCupTieThisWeek()||euroFixtureThisWeek()||euroKOFixtureThisWeek()||nationalPending()) ? 1 : 0));
+  setNavDot('dot-match', matchDue);
+  // Kariyer: toplanmayı bekleyen başarım + imzalanabilir sponsorluk + jübile fırsatı
+  let careerN = (p.badgesEligible||[]).length;
+  if(p.role!=='Teknik Direktör'){
+    careerN += SPONSORS.filter(s=>p.fame>=s.req && !p.sponsors.includes(s.id)).length;
+    if(p.age>=32) careerN += 1;
+  }
+  setNavDot('dot-career', careerN);
+  // Yaşam: kullanılmayı bekleyen gün hakkı
+  setNavDot('dot-life', p.role!=='Teknik Direktör' ? (p.lifePoints||0) : 0);
+  // Kariyer alt sekmeleri: hangisinde yeni bir gelişme var?
+  const isPlayer = p.role!=='Teknik Direktör';
+  setNavDot('dot-train', isPlayer ? (p.trainPoints||0) : 0);
+  setNavDot('dot-sponsor-tab', isPlayer ? SPONSORS.filter(s=>p.fame>=s.req && !p.sponsors.includes(s.id)).length : 0);
+  setNavDot('dot-contract-tab', isPlayer && p.age>=32 ? 1 : 0);
+  setNavDot('dot-badges-tab', (p.badgesEligible||[]).length);
 }
 
 /* ---------- HUB ---------- */
@@ -1547,7 +1748,35 @@ function renderProfile(){
   const b = BOOTS.find(x=>x.id===p.boot);
   const avg = p.season.apps ? (p.season.ratingSum/p.season.apps).toFixed(2) : '—';
   const attrs = Object.keys(ATTR_LABEL).filter(k=> k!=='klc' || po.grp==='GK');
+  let healthCard = '';
+  if(p.injuryWeeks>0){
+    const backWeek = S.week + p.injuryWeeks;
+    healthCard = `<div class="card" style="border-color:var(--bad)">
+      <h3 style="color:var(--bad)">🚑 Sakatsın</h3>
+      <div class="statbox">
+        <div class="spread"><span class="sub">Teşhis</span><b>${p.injuryName||'Sakatlık'}</b></div>
+        <div class="spread"><span class="sub">Kalan süre</span><b>${p.injuryWeeks} hafta</b></div>
+        <div class="spread"><span class="sub">Tahmini dönüş</span><b>${backWeek}. hafta</b></div>
+      </div>
+      <p class="sub" style="margin-top:6px">Fizyoterapist kullanarak toparlanmayı hızlandırabilirsin.</p>
+    </div>`;
+  } else if(p.banWeeks>0){
+    const backWeek = S.week + p.banWeeks;
+    healthCard = `<div class="card" style="border-color:#f59e0b">
+      <h3 style="color:#f59e0b">🟥 Cezalısın</h3>
+      <div class="statbox">
+        <div class="spread"><span class="sub">Kalan süre</span><b>${p.banWeeks} hafta</b></div>
+        <div class="spread"><span class="sub">Tahmini dönüş</span><b>${backWeek}. hafta</b></div>
+      </div>
+    </div>`;
+  } else {
+    healthCard = `<div class="card" style="border-color:var(--good)">
+      <h3 style="color:var(--good)">✅ Sağlıklısın</h3>
+      <p class="sub">Sakatlığın veya cezan yok, maça çıkabilirsin.</p>
+    </div>`;
+  }
   $('profileBox').innerHTML = `
+  ${healthCard}
   <div class="card">
     <h3>${p.name} <span class="chip">#${p.num}</span></h3>
     <div class="statbox">
@@ -1601,7 +1830,7 @@ function renderTrain(){
     <h3>Antrenman <span class="chip">${p.trainPoints} seans</span></h3>
     <p class="sub">Her seans kondisyondan 14 götürür. Yaşın arttıkça gelişim yavaşlar, potansiyel tavanına yaklaştıkça artış küçülür.</p>
     <div class="btngrid" style="margin-top:10px">
-      ${keys.map(k=>`<button class="btn" onclick="train('${k}')" ${p.trainPoints<1||p.fitness<20?'disabled':''}>
+      ${keys.map(k=>`<button class="btn" onclick="openTrainGame('${k}')" ${p.trainPoints<1||p.fitness<20?'disabled':''}>
         ${ATTR_LABEL[k]} <span class="sub">${p.attrs[k]}</span></button>`).join('')}
     </div>
     <hr class="sep">
@@ -1612,16 +1841,68 @@ function renderTrain(){
     <p class="sub" style="margin-top:8px">Kondisyon: ${Math.round(p.fitness)}% • Kalan gün: ${p.lifePoints}</p>
   </div>`;
 }
-function train(k){
+let trainGame = null;
+function openTrainGame(k){
   const p=S.p;
   if(p.trainPoints<1) return toast('Bu hafta antrenman hakkın kalmadı.');
   if(p.fitness<20) return toast('Çok yorgunsun, önce dinlen.');
+  const gwBase = clamp(30 - Math.round((p.attrs[k]||40)/9), 12, 28); // yetenek seviyesine göre taban değer
+  const gw = Math.max(6, Math.round(gwBase * 0.5)); // yeşil bölge belirgin şekilde küçültüldü — +4 almak zorlaşsın
+  const ow = Math.round(gw * 1.9); // turuncu bölge genişliği (yeşili kapsar, belirgin biçimde daha geniş)
+  const rw = Math.round(gw * 2.8); // kırmızı bölge genişliği (turuncuyu kapsar, en geniş bölge)
+  const half = Math.ceil(rw/2);
+  const zoneCenter = ri(half+2, 100-half-2);
+  const period = ri(650, 950);
+  trainGame = {k, zoneCenter, gw, ow, rw, t0:null, period, raf:null, pos:50};
+  modal(`<h3>${ATTR_LABEL[k]} antrenmanı</h3>
+    <p class="sub">Gösterge tam zamanında <b>DUR!</b>'a bas: yeşilde +4, turuncuda +2, kırmızıda +1 puan. Bölgelerin dışında puan yok.</p>
+    <div class="tg-track" id="tg-track">
+      <div class="tg-zone red" style="left:${zoneCenter-rw/2}%;width:${rw}%"></div>
+      <div class="tg-zone orange" style="left:${zoneCenter-ow/2}%;width:${ow}%"></div>
+      <div class="tg-zone green" style="left:${zoneCenter-gw/2}%;width:${gw}%"></div>
+      <div class="tg-marker" id="tg-marker" style="left:0%"></div>
+    </div>
+    <div class="tg-legend">
+      <span><i style="background:var(--good)"></i>+4</span>
+      <span><i style="background:#f59e0b"></i>+2</span>
+      <span><i style="background:#ef4444"></i>+1</span>
+      <span><i style="background:var(--surf4);border:1px solid var(--line)"></i>0</span>
+    </div>
+    <button class="btn primary block" style="margin-top:12px" onclick="stopTrainGame()">DUR!</button>
+    <div class="tg-result" id="tg-result"></div>`);
+  requestAnimationFrame(tickTrainGame);
+}
+function tickTrainGame(ts){
+  if(!trainGame) return;
+  const el = document.getElementById('tg-marker');
+  if(!el){ trainGame=null; return; } // modal başka bir şeyle kapatıldı
+  if(trainGame.t0===null) trainGame.t0 = ts;
+  const period = trainGame.period;
+  const t = (ts - trainGame.t0) % (period*2);
+  const pos = t < period ? (t/period)*100 : 100-((t-period)/period)*100;
+  trainGame.pos = pos;
+  el.style.left = pos+'%';
+  trainGame.raf = requestAnimationFrame(tickTrainGame);
+}
+function stopTrainGame(){
+  if(!trainGame) return;
+  cancelAnimationFrame(trainGame.raf);
+  const {k, zoneCenter, gw, ow, rw, pos} = trainGame;
+  const dist = Math.abs(pos - zoneCenter);
+  let points, label, cls;
+  if(dist<=gw/2){ points=4; label='MÜKEMMEL ZAMANLAMA! +4'; cls='color:var(--good)'; }
+  else if(dist<=ow/2){ points=2; label='İyi zamanlama +2'; cls='color:#f59e0b'; }
+  else if(dist<=rw/2){ points=1; label='Fena değil +1'; cls='color:#ef4444'; }
+  else { points=0; label='Kaçırdın... +0'; cls='color:var(--dim)'; }
+  trainGame = null;
+  const r = document.getElementById('tg-result');
+  if(r){ r.style.cssText=cls; r.textContent = label; }
+  setTimeout(()=>{ closeModal(); resolveTrain(k, points); }, 550);
+}
+function resolveTrain(k, points){
+  const p=S.p;
   p.trainPoints--; p.fitness = clamp(p.fitness-14);
-  const room = p.potential - userOverall();
-  const ageF = p.age<=21?1.3 : p.age<=26?1 : p.age<=30?0.6 : 0.3;
-  let gain = 0;
-  if(room>0 && chance(0.55 + room*0.02)) gain = ri(1, Math.max(1, Math.round(2*ageF)));
-  if(p.attrs[k]>=95) gain = 0;
+  const gain = points;
   p.attrs[k] = clamp(p.attrs[k]+gain,1,99);
   p.trust = clamp(p.trust+ (gain?2:1));
   insertUserIntoSquad();
@@ -2263,21 +2544,45 @@ const EFFORT = [
   {n:'Yüksek',    inv:1.55, drain:1.60, edge:0.03,  note:'Daha çok topla buluşursun, kondisyon hızlı erir.'},
   {n:'Maksimum',  inv:2.10, drain:2.45, edge:0.06,  note:'Her topa çıkarsın. Bacakların 60. dakikada biter, sakatlık riski artar.'}
 ];
-function setEffort(i){
-  if(!M || !M.userOn) return;
-  M.effort = clamp(i,0,3);
-  updateEffortUI();
-  const e = EFFORT[M.effort];
-  say(`🎚️ ${S.p.name} gayret kademesini <b>${e.n}</b> seviyesine aldı.`);
-}
 function updateEffortUI(){
   const i = M ? M.effort : 1;
-  $('effort-label').textContent = EFFORT[i].n;
-  $('effort-note').textContent = EFFORT[i].note;
+  const lbl = $('effort-label'); if(lbl) lbl.textContent = EFFORT[i].n;
+  const note = $('effort-note'); if(note) note.textContent = EFFORT[i].note;
   document.querySelectorAll('[data-effort]').forEach(b=>{
     b.classList.toggle('primary', +b.dataset.effort===i);
     b.disabled = !(M && M.userOn);
   });
+}
+function bumpStance(kind){
+  if(!M || M.ended) return;
+  if(!M.userOn) return toast('Sahada değilken kullanamazsın.');
+  const me = M.us.squad.find(x=>x.isUser); if(!me) return;
+  const key = kind==='atk' ? 'atkLevel' : 'defLevel';
+  const otherKey = kind==='atk' ? 'defLevel' : 'atkLevel';
+  if((M[otherKey]||0) > 0){
+    toast(kind==='atk' ? '⚔️ Önce defans modunu kapatmalısın.' : '🛡️ Önce hücum modunu kapatmalısın.');
+    return;
+  }
+  const lvl = M[key]||0;
+  if(lvl>=3){
+    M[key] = 0;
+    M.effort = 1; // boost kapatılınca varsayılan Normal tempoya dön
+    toast(kind==='atk' ? '⚔️ Hücum modu kapatıldı — tempo Normal.' : '🛡️ Defans modu kapatıldı — tempo Normal.');
+  } else {
+    M[key] = lvl+1;
+    M.effort = M[key]; // 1 kılıç/kalkan = Normal, 2 = Yüksek, 3 = Maksimum
+    const e = EFFORT[M.effort];
+    toast(kind==='atk' ? `⚔️ Hücum modu ${M[key]}/3 — tempo ${e.n}` : `🛡️ Defans modu ${M[key]}/3 — tempo ${e.n}`);
+  }
+  updateStanceUI();
+  updateClock();
+}
+function updateStanceUI(){
+  const a = M ? (M.atkLevel||0) : 0, d = M ? (M.defLevel||0) : 0;
+  const ai = $('atk-icons'); if(ai) ai.textContent = '⚔️'.repeat(a);
+  const di = $('def-icons'); if(di) di.textContent = '🛡️'.repeat(d);
+  const ba = $('btn-atk'); if(ba){ ba.classList.toggle('active-atk', a>0); ba.disabled = !(M && M.userOn) || d>0; }
+  const bd = $('btn-def'); if(bd){ bd.classList.toggle('active-def', d>0); bd.disabled = !(M && M.userOn) || a>0; }
 }
 
 const COMP_LABEL = {lig:'Süper Lig', kupa:'Türkiye Kupası', euro:'Şampiyonlar Ligi', euroko:'Şampiyonlar Ligi', milli:'A Milli Takım'};
@@ -2339,6 +2644,7 @@ function startMatch(comp){
     them:{name:opp, score:0, squad:themSquad, subs:0},
     ballX:50, ballY:50, momentum:0,
     userOn:true, drinkUsed:false, boost:0, effort:1, tactic:'dengeli',
+    atkLevel:0, defLevel:0,
     weather: pick(WEATHER),
     rating:6.0, notes:[], timer:null, speed:1, paused:true, ended:false,
     varBusy:false, patched:false, _inj:null,
@@ -2360,6 +2666,10 @@ function startMatch(comp){
   $('live-comp').textContent = compTxt;
   $('sb-home').innerHTML = `<span id="kit-home">${kitDot(fx.h,true)}</span><br>${fx.h}`;
   $('sb-away').innerHTML = `<span id="kit-away">${kitDot(fx.a,true)}</span><br>${fx.a}`;
+  $('pc-kit-h').innerHTML = kitDot(fx.h);
+  $('pc-kit-a').innerHTML = kitDot(fx.a);
+  $('pc-score').textContent = '0-0';
+  $('pc-min').textContent = `İlk yarı • 0'`;
   $('sb-score').textContent = '0 - 0';
   $('sb-weather').textContent = `${M.weather.ic} ${M.weather.n}`;
   $('log').innerHTML = '';
@@ -2374,9 +2684,39 @@ function startMatch(comp){
   buildPitch();
   updateSpeedButtons();
   updateEffortUI();
+  updateStanceUI();
   Sfx.init(); Sfx.ambienceStart();
   render();
-  chooseTactic();
+  tunnelScreen();
+}
+
+function tunnelScreen(){
+  const shortsCol = kc => kc ? (kc.kit==='solid' ? kc.c2 : kc.c1) : '#333';
+  const kitHtml = teamName => `<div class="kit">
+      <span class="jersey" style="background:${kitBackground(teamName)}"></span>
+      <span class="shorts" style="background:${shortsCol(kitColors(teamName))}"></span>
+    </div>`;
+  $('ov').style.display='flex';
+  $('ov-txt').textContent = 'OYUNCU TÜNELİ';
+  $('ov-sub').innerHTML = `
+    <div class="tunnel">
+      <div class="vs-row">
+        <div class="side l">
+          ${kitHtml(M.fx.h)}
+          <div class="tname">${M.fx.h}</div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="side r">
+          ${kitHtml(M.fx.a)}
+          <div class="tname">${M.fx.a}</div>
+        </div>
+      </div>
+      <div class="shake">🤝</div>
+      <div class="sub">Takımlar sahaya çıkıyor, kaptanlar el sıkışıyor...</div>
+    </div>`;
+  Sfx.crowd(2.0, 0.18, 750);
+  setTimeout(()=>{ Sfx.whistleOnce(0,0.22,0.16); }, 1500);
+  setTimeout(()=>{ if(M && !M.ended) chooseTactic(); }, 2400);
 }
 
 function chooseTactic(){
@@ -2533,6 +2873,18 @@ function ballToPlayer(side, pl, jitter){
   M.ballX = clamp(pos.x + rnd(-j,j), 4, 96);
   M.ballY = clamp(pos.y + rnd(-j,j), 6, 94);
   movePitch();
+  // movePitch() repositions every player with its own independent jitter, which can
+  // leave this exact player a little off from where the ball was just placed. Snap the
+  // ball onto this player's actual rendered spot so it visibly sits right in front of them.
+  const arr = side==='us' ? M.us.squad : M.them.squad;
+  const idx = arr.indexOf(pl);
+  const node = idx>=0 ? $(`${side}-${idx}`) : null;
+  if(node && node.style.left && node.style.top){
+    M.ballX = parseFloat(node.style.left);
+    M.ballY = parseFloat(node.style.top);
+    const ball = $('ball');
+    if(ball){ ball.style.left = M.ballX+'%'; ball.style.top = M.ballY+'%'; }
+  }
 }
 function movePitch(){
   if(!M) return;
@@ -2676,16 +3028,22 @@ function updateScore(){
   const hs = M.usHome ? M.us.score : M.them.score;
   const as = M.usHome ? M.them.score : M.us.score;
   $('sb-score').textContent = `${hs} - ${as}`;
+  const pc = $('pc-score'); if(pc) pc.textContent = `${hs}-${as}`;
 }
 function updateClock(){
   if(!M) return;
   const label = M.half===1?'İlk yarı':'İkinci yarı';
-  $('sb-clock').textContent = `${label} • ${M.minute}'${M.stoppage?` +${M.stoppage}`:''}`;
+  const clockTxt = `${label} • ${M.minute}'${M.stoppage?` +${M.stoppage}`:''}`;
+  $('sb-clock').textContent = clockTxt;
+  const pm = $('pc-min'); if(pm) pm.textContent = clockTxt;
   const me = M.us.squad.find(x=>x.isUser);
   const st = M.userOn ? Math.round(me.stamina) : 0;
   $('me-sta').textContent = M.userOn ? st+'%' : 'oyunda değil';
   $('me-sta-bar').style.width = (M.userOn?st:0)+'%';
-  $('me-line').textContent = `Puan ${M.rating.toFixed(1)} • ${me.mGoals} gol, ${me.mAssists} asist${M.boost>0?` • ⚡ enerji (${M.boost} dk)`:''}${M.userOn?'':' • kenardasın'}`;
+  const lineParts = [];
+  if(M.boost>0) lineParts.push(`⚡ enerji (${M.boost} dk)`);
+  if(!M.userOn) lineParts.push('kenardasın');
+  $('me-line').textContent = lineParts.join(' • ');
   $('me-label').textContent = M.userOn ? `${S.p.name} — kondisyon` : `${S.p.name} — oyundan çıktı`;
 }
 function schedule(){
@@ -2721,7 +3079,7 @@ function tick(){
 
   // top hareketi
   const pw = teamPower(M.us,'all') - teamPower(M.them,'all');
-  M.momentum = clamp(M.momentum + rnd(-14,14) + pw*0.25 + TACTICS[M.tactic].bias, -45, 45);
+  M.momentum = clamp(M.momentum + rnd(-14,14) + pw*0.25 + TACTICS[M.tactic].bias + (M.atkLevel-M.defLevel)*3, -45, 45);
   M.ballX = clamp(50 + M.momentum + rnd(-8,8), 6, 94);
   M.ballY = clamp(M.ballY + rnd(-22,22), 10, 90);
   M.stats.momSum += M.momentum; M.stats.momN++;
@@ -2734,12 +3092,17 @@ function tick(){
     const love = S.p.love;
     const losing = (M.us.score < M.them.score);
     if(love<35 && losing && chance(0.55)){
-      Sfx.boo(); say(`Tribünden yuhalamalar yükseliyor, taraftar performanstan memnun değil.`,'bd');
+      Sfx.boo(); pulseCrowd(); say(`Tribünden yuhalamalar yükseliyor, taraftar performanstan memnun değil.`,'bd');
     } else {
       Sfx.chant(chance(0.5)?'ole':'clap');
+      pulseCrowd();
       say(pick([`Tribünler ayakta: "${M.usHome?M.us.name.toUpperCase():M.oppName.toUpperCase()}!" tezahüratı yankılanıyor.`,
         `Taraftar takımını çekiyor, stat inliyor.`,`Tribünden alkışlı destek geliyor.`]));
     }
+  }
+  // ritmik arka plan tezahürat döngüsü — dakika 11'in ortasında ikinci, hafif bir nabız
+  if(M.minute%5===0 && M.comp!=='milli' && chance(0.3)){
+    Sfx.chant('clap'); pulseCrowd();
   }
 
   // olaylar
@@ -2769,7 +3132,13 @@ function drainStamina(){
     if(me.stamina<45 && !M.warn45){ M.warn45=true; say(`😮‍💨 ${S.p.name} nefes nefese kaldı — kondisyon %${Math.round(me.stamina)}.`); }
     if(me.stamina<28 && !M.warn28){ M.warn28=true; say(`🥵 <b>Bacakların tutmuyor.</b> Hoca kenarda değişiklik için oyuncu hazırlıyor.`,'bd'); }
     if(me.stamina<14 && !M.warn14){ M.warn14=true; say(`⚠️ Tamamen tükendin, her müdahale sakatlık riski.`,'bd'); }
-    if(me.stamina<12 && M.effort>1){ M.effort=1; updateEffortUI(); say(`🎚️ Hoca kenardan bağırıyor: "Tempoyu düşür!" Gayret kademen <b>Normal</b>'e indi.`); }
+    if(me.stamina<12 && M.effort>1){
+      M.effort=1;
+      if(M.atkLevel>1) M.atkLevel=1;
+      if(M.defLevel>1) M.defLevel=1;
+      updateStanceUI();
+      say(`🎚️ Hoca kenardan bağırıyor: "Tempoyu düşür!" Hücum/defans yoğunluğun <b>Normal</b>'e indi.`);
+    }
   }
 }
 
@@ -2804,6 +3173,9 @@ function phase(){
     involve *= (clamp(me.stamina,20,100)/100 + 0.15) * EFFORT[M.effort].inv;
     if(M.tactic==='hucum') involve *= usAttack?1.15:0.9;
     if(M.tactic==='defans') involve *= usAttack?0.85:1.15;
+    const atkLvl = M.atkLevel||0, defLvl = M.defLevel||0;
+    if(usAttack) involve *= (1 + atkLvl*0.28 - defLvl*0.12); // hücum kılıcı arttıkça top daha çok sana gelsin
+    else         involve *= (1 + defLvl*0.28 - atkLvl*0.12); // defans kalkanı arttıkça top daha çok sana gelsin
     involve = Math.min(involve, 0.92);
     if(chance(involve)) return userTurn(usAttack);
   }
@@ -2821,6 +3193,11 @@ function autoPhase(atk, def, usAttack){
   let q = clamp((atkP - defP)/400 + 0.13, 0.03, 0.30);
   if(atk===M.us) q = clamp(q + TACTICS[M.tactic].atk, 0.02, 0.5);
   else q = clamp(q - TACTICS[M.tactic].def, 0.02, 0.5);
+  const stanceNet = (M.atkLevel||0) - (M.defLevel||0);
+  if(stanceNet){
+    if(atk===M.us) q = clamp(q + stanceNet*0.015, 0.02, 0.5);
+    else q = clamp(q - stanceNet*0.02, 0.02, 0.5);
+  }
   usAttack ? M.stats.shotsUs++ : M.stats.shotsThem++;
 
   if(chance(q)){
@@ -2883,6 +3260,7 @@ function scoreGoal(isUsTeam, scorer, assist){
   M.ballY = clamp(M.ballY, 38, 62);
   movePitch();
   $('ball').classList.add('goal-flash');
+  celebrateGoal(isUsTeam, scorer);
   if(isUsTeam) confettiBurst();
   updateLiveStats();
   clearTimeout(M._goalResetTimer);
@@ -2891,6 +3269,46 @@ function scoreGoal(isUsTeam, scorer, assist){
     if(M){ M.ballX=50; M.ballY=50; movePitch(); }
   }, 700);
   maybeVarGoal(isUsTeam, scorer, assist);
+}
+function celebrateGoal(isUsTeam, scorer){
+  const side = isUsTeam ? 'us' : 'them';
+  const squad = isUsTeam ? M.us.squad : M.them.squad;
+  const i = squad.indexOf(scorer);
+  const node = i>-1 ? $(`${side}-${i}`) : null;
+  const pit = $('pitch');
+  if(node){
+    node.classList.remove('celebrate'); void node.offsetWidth;
+    node.classList.add('celebrate');
+    setTimeout(()=>{ if(node) node.classList.remove('celebrate'); }, 1300);
+  }
+  if(pit){
+    const bx = clamp(M.ballX, 16, 84), by = clamp(M.ballY,20,80);
+    const b = document.createElement('div');
+    b.className='goalburst';
+    b.style.left = bx+'%'; b.style.top = by+'%';
+    b.textContent = scorer.isUser ? `⚽ ${scorer.name.split(' ').slice(-1)[0].toUpperCase()}!` : 'GOOOL!';
+    pit.appendChild(b);
+    setTimeout(()=>b.remove(), 1550);
+    for(let k=0;k<10;k++){
+      const s = document.createElement('i');
+      s.className='sparkle';
+      s.style.left = bx+'%'; s.style.top = by+'%';
+      const ang = Math.random()*Math.PI*2, dist = 22+Math.random()*30;
+      s.style.setProperty('--sxy', `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`);
+      s.style.animationDelay = (Math.random()*0.15)+'s';
+      pit.appendChild(s);
+      setTimeout(()=>s.remove(), 1100);
+    }
+  }
+  pulseCrowd();
+}
+function pulseCrowd(){
+  ['crowdTop','crowdBot'].forEach(id=>{
+    const el = $(id); if(!el) return;
+    el.classList.remove('chanting'); void el.offsetWidth;
+    el.classList.add('chanting');
+    setTimeout(()=>{ if(el) el.classList.remove('chanting'); }, 900);
+  });
 }
 
 function foulEvent(){
@@ -3337,6 +3755,7 @@ function renderHalfTime(){
   const canDrink = M.userOn && !M.drinkUsed && S.p.drinks>0;
   $('ov-sub').innerHTML = `${M.htTalk}
     <div class="sub" style="margin-top:8px">Kondisyonun: <b>${Math.round(me.stamina)}%</b></div>
+    <div class="sub">Puan ${M.rating.toFixed(1)} • ${me.mGoals} gol, ${me.mAssists} asist</div>
     ${M.userOn?`<div class="row wrap" style="margin-top:10px;justify-content:center;gap:8px">
       <button class="btn ${canDrink?'green':''}" ${canDrink?'':'disabled'} onclick="drinkEnergy(true)">
         ⚡ Enerji içeceği iç (${S.p.drinks})</button>
@@ -3389,6 +3808,7 @@ function endUserOnPitch(reason){
   M.userOn = false;
   if(M.paused){ M.paused = false; schedule(); }
   updateEffortUI();
+  updateStanceUI();
   $('btn-sub').disabled = true; $('btn-drink').disabled = true; $('btn-med').disabled = true;
   clearAsk();
   updateClock();
@@ -3434,19 +3854,47 @@ function showStats(){
     </div>
     <button class="btn primary block" style="margin-top:12px" onclick="closeModal()">Kapat</button>`);
 }
+function lineupPitch(){
+  if(!M) return '';
+  // SLOT_POS index sırası: 0 GK,1 RB,2 CB,3 CB,4 LB,5 DM,6 CM,7 AM,8 RW,9 ST,10 LW
+  const rawX = [50,80,60,40,20,38,62,50,84,50,16];
+  const rawY = [94,76,80,80,76,58,58,38,28,12,28]; // 94=kaleci hattı, 12=forvet hattı
+  const staClr = s => s>=70?'var(--good)':s>=40?'#f59e0b':'#ef4444';
+  const mk = (team, mirrored) => team.squad.filter(pl=>pl.on && rawX[pl.slot]!=null).map(pl=>{
+    const x = rawX[pl.slot];
+    const yr = rawY[pl.slot];
+    const y = mirrored ? 50 - (yr/100)*50 : 50 + (yr/100)*50;
+    const cls = pl.isUser ? 'mine' : (mirrored?'them':'us');
+    const short = pl.name.trim().split(/\s+/).slice(-1)[0];
+    const sta = Math.round(pl.stamina);
+    return `<div class="lineup-pl" style="left:${x}%;top:${y}%">
+      <span class="lineup-tag ${cls}">${posByKey(pl.posKey).short}</span>
+      <span class="lineup-name">${short}</span>
+      <span class="lineup-pct" style="color:${staClr(sta)}">${sta}%</span>
+    </div>`;
+  }).join('');
+  return `<div class="lineup-legend">
+      <b><i style="background:var(--them)"></i>${M.them.name}</b>
+      <b><i style="background:var(--us)"></i>${M.us.name}</b>
+      <b><i style="background:var(--flood)"></i>Sen</b>
+    </div>
+    <div class="lineup-pitch">
+      <div class="lineup-goal top"></div>
+      <div class="lineup-midcircle"></div>
+      <div class="lineup-midline"></div>
+      <div class="lineup-goal bot"></div>
+      ${mk(M.them, true)}
+      ${mk(M.us, false)}
+    </div>`;
+}
 function showSquad(){
   if(!M) return;
-  const rows = T => T.squad.filter(p=>p.on).map(p=>`
-    <div class="squadrow">
-      <span class="pos-tag">${posByKey(p.posKey).short}</span>
-      <span class="nm">${p.isUser?'<b style="color:var(--flood)">'+p.name+'</b>':p.name}</span>
-      <span class="mini">${Math.round(p.stamina)}%</span>
-      <span class="bar energy"><i style="width:${p.stamina}%"></i></span>
-    </div>`).join('');
-  modal(`<h3 style="color:var(--flood)">Sahadaki kadrolar</h3>
-    <p class="sub">${M.us.name} (${M.us.subs}/5 değişiklik)</p>${rows(M.us)}
-    <hr class="sep"><p class="sub">${M.them.name} (${M.them.subs}/5)</p>${rows(M.them)}
-    <button class="btn primary block" style="margin-top:12px" onclick="closeModal()">Kapat</button>`);
+  $('modal').classList.add('fullscreen');
+  modal(`<div class="lineup-full">
+      <h3 style="color:var(--flood)">Sahadaki kadrolar</h3>
+      ${lineupPitch()}
+      <button class="btn primary block" onclick="closeModal()">Kapat</button>
+    </div>`);
 }
 
 /* ---------- maç sonu ---------- */
@@ -3873,7 +4321,53 @@ function makePaper(wk){
   paperIndex = 0;
 }
 
-/* ---------- sezon sonu ---------- */
+/* ---------- sezon sonu ödül töreni ---------- */
+function awardsCeremony(stages, cb){
+  if(!stages.length) return cb();
+  let i = 0;
+  const showNext = ()=>{
+    if(i>=stages.length){ return cb(); }
+    const st = stages[i++];
+    modal(`<div class="awardstage" id="award-stage">
+        <div class="spotlight"></div>
+        <div class="trophy">${st.icon}</div>
+        <div class="aline">${st.line}</div>
+        <div class="aname">${st.name}</div>
+        ${st.sub?`<div class="asub">${st.sub}</div>`:''}
+        ${st.win?'<div class="asub" style="color:var(--good)"><b>Bu sensin!</b></div>':''}
+        <button class="btn primary sm" style="margin-top:6px;position:relative;z-index:2" onclick="advanceAwards()">${i>=stages.length?'Devam':'Sıradaki ▸'}</button>
+      </div>`);
+    Sfx.init();
+    if(st.win){ Sfx.goal(); confettiCeremony(); } else { Sfx.chant('ole'); }
+    awardsAdvance = showNext;
+  };
+  showNext();
+}
+let awardsAdvance = null;
+function advanceAwards(){ if(awardsAdvance){ const f = awardsAdvance; awardsAdvance=null; f(); } }
+function confettiCeremony(){
+  const pit = $('award-stage'); if(!pit) return;
+  const cols = ['#ffd24a','#34d399','#60a5fa','#f87171','#ffffff'];
+  for(let i=0;i<22;i++){
+    const c = document.createElement('i');
+    c.className='confetti'; c.style.position='absolute';
+    c.style.left = rnd(5,95)+'%'; c.style.top='-6%';
+    c.style.background = pick(cols);
+    c.style.animationDelay = (Math.random()*0.4)+'s';
+    pit.appendChild(c);
+    setTimeout(()=>c.remove(), 2200);
+  }
+}
+function buildAwardStages(tbl, champ, scorer, p, extra){
+  const stages = [];
+  stages.push({icon:'🏆', line:'ŞAMPİYON', name:champ.n, sub:`${champ.p} puan`, win: champ.n===p.team});
+  if(S.cup && S.cup.winner) stages.push({icon:'🥇', line:'TÜRKİYE KUPASI', name:S.cup.winner, win:S.cup.winner===p.team});
+  if(S.euro && S.euro.winner) stages.push({icon:'⭐', line:'ŞAMPİYONLAR LİGİ', name:S.euro.winner, win:S.euro.winner===p.team});
+  if(scorer) stages.push({icon:'👟', line:'GOL KRALI', name:scorer[0].split('|')[0], sub:`${scorer[1]} gol • ${scorer[0].split('|')[1]}`, win:scorer[0].split('|')[0]===p.name});
+  if(extra && extra.moty) stages.push({icon:'🌟', line:'YILIN OYUNCUSU', name:extra.moty, win:extra.moty===p.name});
+  if(extra && extra.young) stages.push({icon:'💎', line:'YILIN GENÇ YETENEĞİ', name:extra.young, win:extra.young===p.name});
+  return stages;
+}
 function endSeason(){
   if(S.p.role==='Teknik Direktör'){ return endSeasonManager(); }
   const tbl = sortTable();
@@ -3882,6 +4376,17 @@ function endSeason(){
   S._qualEuroTeams = tbl.slice(0,2).map(t=>t.n);
   const scorer = Object.entries(S.scorers).sort((a,b)=>b[1]-a[1])[0];
   const avg = p.season.apps ? p.season.ratingSum/p.season.apps : 6;
+  const isMoty = p.season.apps>=20 && avg>=7.4;
+  const isYoung = p.age<=21 && p.season.apps>=15 && (p.season.goals+p.season.assists)>=8;
+  const rivalMoty = pick(STAR_PLAYERS[champ.n]||STAR_PLAYERS[pick(tbl.slice(0,4).map(t=>t.n))]||[{name:randName()}]);
+  const stages = buildAwardStages(tbl, champ, scorer, p, {
+    moty: isMoty ? p.name : rivalMoty.name,
+    young: isYoung ? p.name : null
+  });
+  awardsCeremony(stages, ()=>showSeasonSummary(tbl, champ, scorer, avg));
+}
+function showSeasonSummary(tbl, champ, scorer, avg){
+  const p = S.p;
   let txt = `<h3 style="color:var(--flood)">${S.seasonLabel} sezonu kapandı</h3>
     <div class="statbox"><div class="spread"><span class="sub">Şampiyon</span><b>${champ.n} (${champ.p})</b></div>
     <div class="spread"><span class="sub">Kupa</span><b>${S.cup.winner||'—'}</b></div>
@@ -4037,15 +4542,18 @@ function endSeasonManager(){
   const champ = tbl[0];
   const p = S.p;
   const scorer = Object.entries(S.scorers).sort((a,b)=>b[1]-a[1])[0];
-  const txt = `<h3 style="color:var(--flood)">${S.seasonLabel} sezonu kapandı</h3>
-    <div class="statbox"><div class="spread"><span class="sub">Şampiyon</span><b>${champ.n} (${champ.p})</b></div>
-    <div class="spread"><span class="sub">Kupa</span><b>${S.cup.winner||'—'}</b></div>
-    <div class="spread"><span class="sub">Gol kralı</span><b>${scorer?scorer[0].split('|')[0]+' ('+scorer[1]+')':'—'}</b></div>
-    <div class="spread"><span class="sub">${p.team} sırası</span><b>${tbl.findIndex(t=>t.n===p.team)+1}.</b></div></div>
-    ${champ.n===p.team?'<p style="color:var(--good)"><b>🏆 Teknik direktörlüğünde şampiyon oldunuz!</b></p>':''}
-    <button class="btn primary block" style="margin-top:12px" onclick="managerNextSeason()">Yeni sezona başla</button>`;
-  if(champ.n===p.team) p.career.trophies.push(`${S.seasonLabel} Süper Lig (TD)`);
-  modal(txt);
+  const stages = buildAwardStages(tbl, champ, scorer, p, {});
+  awardsCeremony(stages, ()=>{
+    const txt = `<h3 style="color:var(--flood)">${S.seasonLabel} sezonu kapandı</h3>
+      <div class="statbox"><div class="spread"><span class="sub">Şampiyon</span><b>${champ.n} (${champ.p})</b></div>
+      <div class="spread"><span class="sub">Kupa</span><b>${S.cup.winner||'—'}</b></div>
+      <div class="spread"><span class="sub">Gol kralı</span><b>${scorer?scorer[0].split('|')[0]+' ('+scorer[1]+')':'—'}</b></div>
+      <div class="spread"><span class="sub">${p.team} sırası</span><b>${tbl.findIndex(t=>t.n===p.team)+1}.</b></div></div>
+      ${champ.n===p.team?'<p style="color:var(--good)"><b>🏆 Teknik direktörlüğünde şampiyon oldunuz!</b></p>':''}
+      <button class="btn primary block" style="margin-top:12px" onclick="managerNextSeason()">Yeni sezona başla</button>`;
+    if(champ.n===p.team) p.career.trophies.push(`${S.seasonLabel} Süper Lig (TD)`);
+    modal(txt);
+  });
 }
 function managerNextSeason(){
   closeModal();
@@ -4108,7 +4616,6 @@ function bindUI(){
     });
   });
   document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click', ()=>setSpeed(+b.dataset.speed)));
-  document.querySelectorAll('[data-effort]').forEach(b=>b.addEventListener('click', ()=>setEffort(+b.dataset.effort)));
   $('btn-drink').addEventListener('click', drinkEnergy);
   $('btn-med').addEventListener('click', useMedkitManual);
   $('btn-sub').addEventListener('click', requestSub);
