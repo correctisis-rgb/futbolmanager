@@ -570,6 +570,26 @@ td.num,th.num{text-align:center;width:26px;}
   border:1px solid var(--line);box-shadow:inset 0 0 10px rgba(0,0,0,.4);}
 .shoprow{display:flex;gap:10px;align-items:center;}
 .shoprow .sinfo{flex:1;min-width:0;}
+/* ---------- Sağlık: vücut risk haritası ---------- */
+.anatomy-wrap{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:8px;}
+.anatomy-svg{width:132px;flex:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));}
+.riskzone{cursor:pointer;}
+.riskzone circle{transition:filter .15s;}
+.riskzone:hover circle{filter:brightness(1.15);}
+.anatomy-legend{flex:1;min-width:180px;display:flex;flex-direction:column;gap:5px;}
+.riskrow{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:var(--surf3);
+  border:1px solid var(--line);cursor:pointer;transition:background .15s;}
+.riskrow:hover{background:var(--surf4);}
+.riskdot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 0 2px rgba(255,255,255,.12);}
+.riskname{flex:1;font-size:.86rem;}
+.riskpct{font-family:'Barlow Condensed';font-size:1.02rem;font-weight:800;}
+/* ---------- Sosyal medya akışı ---------- */
+.social-feed{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+.postcard{background:var(--surf3);border:1px solid var(--line);border-radius:10px;padding:8px 10px;}
+.postcard.back{border-color:var(--bad);background:linear-gradient(90deg,rgba(248,113,113,.10),transparent 70%);}
+.postmeta{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;font-weight:700;margin-bottom:3px;}
+.posttxt{font-size:.9rem;margin-bottom:6px;}
+.poststats{display:flex;flex-wrap:wrap;gap:10px;font-size:.78rem;color:var(--dim);}
 .badge-card{background:var(--surf3);border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-bottom:8px;
   display:flex;justify-content:space-between;align-items:center;gap:8px;transition:box-shadow .3s,border-color .3s;}
 .badge-card.got{border-color:#caa42e;background:linear-gradient(135deg,rgba(255,210,74,.14),var(--surf3));
@@ -756,6 +776,7 @@ td.num,th.num{text-align:center;width:26px;}
       <div class="tabs" data-tabs="career">
         <button class="on" data-pane="c-profile">Profil</button>
         <button data-pane="c-train">Antrenman<span class="tabdot" id="dot-train"></span></button>
+        <button data-pane="c-health">Sağlık<span class="tabdot" id="dot-health"></span></button>
         <button data-pane="c-room">Soyunma Odası</button>
         <button data-pane="c-shop">Mağaza</button>
         <button data-pane="c-stad">Stadyum</button>
@@ -765,6 +786,7 @@ td.num,th.num{text-align:center;width:26px;}
       </div>
       <div class="pane on" id="c-profile"><div id="profileBox"></div></div>
       <div class="pane" id="c-train"><div id="trainBox"></div></div>
+      <div class="pane" id="c-health"><div id="healthBox"></div></div>
       <div class="pane" id="c-room"><div id="roomBox"></div></div>
       <div class="pane" id="c-shop"><div id="shopBox"></div></div>
       <div class="pane" id="c-stad"><div id="stadBox"></div></div>
@@ -1363,10 +1385,59 @@ const WEATHER = [
   {id:'ruzgar',n:'Rüzgarlı', ic:'💨', drain:1.05, tech:-0.03}
 ];
 const INJURY_TYPES = [
-  {n:'Kas zorlanması', w:[1,2]}, {n:'Bilek burkulması', w:[1,3]},
-  {n:'Adale yırtığı', w:[3,6]}, {n:'Diz sıkışması', w:[2,4]},
-  {n:'Sarsıntı', w:[1,2]}, {n:'Kasık zorlanması', w:[2,4]}, {n:'Ayak bileği zedelenmesi', w:[1,3]}
+  {n:'Kas zorlanması', w:[1,2], part:'uyluk'}, {n:'Bilek burkulması', w:[1,3], part:'bilek'},
+  {n:'Adale yırtığı', w:[3,6], part:'uyluk'}, {n:'Diz sıkışması', w:[2,4], part:'diz'},
+  {n:'Sarsıntı', w:[1,2], part:'bas'}, {n:'Kasık zorlanması', w:[2,4], part:'kasik'},
+  {n:'Ayak bileği zedelenmesi', w:[1,3], part:'bilek'}, {n:'Sırt spazmı', w:[1,2], part:'sirt'}
 ];
+
+/* ---------- sakatlık risk bölgeleri: belirli yetenekler fizik'e göre yüksekse risk artar ---------- */
+const BODY_PARTS = [
+  {id:'bas',   n:'Baş / Boyun',   ic:'🧠'},
+  {id:'sirt',  n:'Sırt / Bel',    ic:'🦴'},
+  {id:'kasik', n:'Kasık',         ic:'🔻'},
+  {id:'uyluk', n:'Uyluk / Kas',   ic:'🦵'},
+  {id:'diz',   n:'Diz',           ic:'🦿'},
+  {id:'bilek', n:'Bilek / Ayak',  ic:'🦶'}
+];
+function bodyRiskAll(){
+  const p = S.p; if(!p) return {};
+  const a = p.attrs, fiz = a.fiz||50;
+  const age = p.age||24, fit = p.fitness!=null?p.fitness:100;
+  const boot = BOOTS.find(x=>x.id===p.boot) || BOOTS[0];
+  const sb = SB();
+  const hist = p.injuryHistory||[];
+  const histCount = pid => hist.filter(h=>h.part===pid).length;
+  const ageAdj = age>=30 ? (age-29)*1.7 : age<=21 ? -3 : 0;
+  const fitAdj = fit<55 ? (55-fit)*0.32 : fit>88 ? -3 : 0;
+  const raw = {
+    uyluk: (a.hiz*0.55 + a.sut*0.45) - fiz*0.95,
+    diz:   a.drib - fiz*0.85,
+    bilek: (a.drib*0.5 + a.hiz*0.5) - fiz*0.85 - boot.bonus*1.4,
+    kasik: a.sut - fiz*0.9,
+    sirt:  (userOverall() - fiz) * 0.65,
+    bas:   (a.def-45)*0.22
+  };
+  const out = {};
+  BODY_PARTS.forEach(bp=>{
+    let v = Math.max(0, raw[bp.id]||0) * 0.85;
+    v += ageAdj + fitAdj + histCount(bp.id)*3.5;
+    v *= sb.injury; // çim bakımı riski düşürür
+    v -= sb.heal*1.1; // fizyoterapi merkezi riski düşürür
+    out[bp.id] = Math.round(clamp(v, 3, 96));
+  });
+  return out;
+}
+function riskColor(pct){ return pct<30 ? '#22c55e' : pct<60 ? '#f59e0b' : '#ef4444'; }
+function riskLabel(pct){ return pct<30 ? 'Düşük risk' : pct<60 ? 'Orta risk' : 'Yüksek risk'; }
+function pickInjuryWeighted(){
+  const risks = bodyRiskAll();
+  const weighted = INJURY_TYPES.map(t=>({t, w: Math.max(2, risks[t.part]||10)}));
+  const total = weighted.reduce((s,x)=>s+x.w,0);
+  let r = Math.random()*total;
+  for(const x of weighted){ r -= x.w; if(r<=0) return x.t; }
+  return weighted[weighted.length-1].t;
+}
 function ACH(k){ const p=S&&S.p; return (p&&p.ach&&p.ach[k])||0; }
 function bumpAch(k,n){ const p=S.p; if(!p) return; p.ach=p.ach||{}; p.ach[k]=(p.ach[k]||0)+(n===undefined?1:n); }
 const TRP = (p,txt)=> p.career.trophies.some(t=>t.includes(txt));
@@ -1538,9 +1609,9 @@ function newPlayerObj(name, age, posKey, team, foot, num){
     fitness: 100, morale: 70, trust: 55, happiness: 70, fame: 8,
     money: 45000, wage: 60000, contractYears: 3, goalBonus: 25000,
     boot: 'b0', owned:['b0'], drinks: 2, dr:{e1:2,e2:0,e3:0}, medkits: 1, luxury: [],
-    rel: 0, partner: null, kids: 0,
+    rel: 0, partner: null, kids: 0, social: {followers: ri(300,900), posts: []},
     lifePoints: 3, trainPoints: 2,
-    injuryWeeks: 0, injuryName: null, banWeeks: 0, yellowStreak: 0,
+    injuryWeeks: 0, injuryName: null, injuryHistory: [], banWeeks: 0, yellowStreak: 0,
     caps: 0, natGoals: 0, natCalled: false, captain: false, love: 55,
     sponsors: [], badges: [], badgesEligible: [], teammateRel: {}, tacticPref: 'dengeli', transferRequested: false,
     season:{apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,ratingSum:0,cleanSheet:0,saves:0},
@@ -1724,6 +1795,8 @@ function load(){
     S = o; S.inMatch = false;
     if(!S.stadium) S.stadium = newStadium(S.p.team);
     if(S.p.medkits==null) S.p.medkits = 1;
+    if(!S.p.injuryHistory) S.p.injuryHistory = [];
+    if(!S.p.social) S.p.social = {followers: ri(300,900) + Math.round((S.p.fame||0)*140), posts: []};
     if(!S.p.dr){ S.p.dr = {e1:(S.p.drinks||0), e2:0, e3:0}; }
     if(S.p.medQ==null) S.p.medQ = 0.55;
     if(!S.p.badgesEligible) S.p.badgesEligible = [];
@@ -1787,7 +1860,7 @@ function render(){
 
   switch(currentView){
     case 'v-match':  renderHub(); break;
-    case 'v-career': renderProfile(); renderTrain(); renderShop(); renderStad(); renderContract(); renderRoom(); renderSponsor(); renderBadges(); break;
+    case 'v-career': renderProfile(); renderTrain(); renderHealth(); renderShop(); renderStad(); renderContract(); renderRoom(); renderSponsor(); renderBadges(); break;
     case 'v-league': renderTable(); renderFix(); renderCup(); renderStats(); renderEuro(); renderNat(); break;
     case 'v-paper':  renderPaper(); break;
     case 'v-life':   renderLife(); break;
@@ -1822,6 +1895,7 @@ function updateNavBadges(){
   // Kariyer alt sekmeleri: hangisinde yeni bir gelişme var?
   const isPlayer = p.role!=='Teknik Direktör';
   setNavDot('dot-train', isPlayer ? (p.trainPoints||0) : 0);
+  setNavDot('dot-health', isPlayer && p.injuryWeeks>0 ? 1 : 0);
   setNavDot('dot-sponsor-tab', isPlayer ? SPONSORS.filter(s=>p.fame>=s.req && !p.sponsors.includes(s.id)).length : 0);
   setNavDot('dot-contract-tab', isPlayer && p.age>=32 ? 1 : 0);
   setNavDot('dot-badges-tab', (p.badgesEligible||[]).length);
@@ -2022,6 +2096,84 @@ function renderProfile(){
     <hr class="sep">
     <button class="btn red sm" onclick="confirmWipe()">Kariyeri sıfırla</button>
   </div>`;
+}
+
+/* ---------- SAĞLIK: vücut risk haritası + sakatlık geçmişi ---------- */
+function bodySilhouetteSVG(risks){
+  const z = id => risks[id]||0;
+  const dot = (id,x,y,r)=>{
+    const c = riskColor(z(id));
+    return `<g class="riskzone" onclick="openBodyHistory('${id}')">
+      <circle cx="${x}" cy="${y}" r="${r}" fill="${c}" fill-opacity=".88" stroke="#0b1418" stroke-width="1.6"/>
+      <text x="${x}" y="${y+3.4}" text-anchor="middle" font-size="9" font-weight="800" fill="#0b1418" font-family="'Barlow Condensed',sans-serif">${z(id)}</text>
+    </g>`;
+  };
+  return `<svg viewBox="0 0 200 380" class="anatomy-svg">
+    <g fill="#3b4a55" stroke="#22303a" stroke-width="1.4">
+      <circle cx="100" cy="30" r="20"/>
+      <rect x="92" y="46" width="16" height="16" rx="4"/>
+      <rect x="58" y="58" width="84" height="108" rx="24"/>
+      <rect x="28" y="64" width="26" height="92" rx="13"/>
+      <rect x="146" y="64" width="26" height="92" rx="13"/>
+      <rect x="62" y="158" width="76" height="28" rx="14"/>
+      <rect x="63" y="182" width="32" height="82" rx="14"/>
+      <rect x="105" y="182" width="32" height="82" rx="14"/>
+      <circle cx="79" cy="268" r="13"/><circle cx="121" cy="268" r="13"/>
+      <rect x="67" y="278" width="24" height="70" rx="10"/>
+      <rect x="109" y="278" width="24" height="70" rx="10"/>
+      <ellipse cx="79" cy="358" rx="17" ry="11"/><ellipse cx="121" cy="358" rx="17" ry="11"/>
+    </g>
+    ${dot('bas',100,30,19)}
+    ${dot('sirt',100,100,20)}
+    ${dot('kasik',100,172,15)}
+    ${dot('uyluk',79,222,15)}${dot('uyluk',121,222,15)}
+    ${dot('diz',79,268,13)}${dot('diz',121,268,13)}
+    ${dot('bilek',79,358,13)}${dot('bilek',121,358,13)}
+  </svg>`;
+}
+function renderHealth(){
+  const p = S.p;
+  const risks = bodyRiskAll();
+  const hist = (p.injuryHistory||[]);
+  const worst = BODY_PARTS.slice().sort((a,b)=>risks[b.id]-risks[a.id])[0];
+  $('healthBox').innerHTML = `
+  <div class="card">
+    <h3>🩺 Vücut risk haritası</h3>
+    <p class="sub">Yeteneklerin fizik gücüne göre dengesiz büyürse ilgili bölgenin sakatlık riski artar. Antrenmanda <b>Fizik</b>'i geliştirerek riski dengeleyebilirsin. Bölgeye dokunarak geçmişini görebilirsin.</p>
+    <div class="anatomy-wrap">
+      ${bodySilhouetteSVG(risks)}
+      <div class="anatomy-legend">
+        ${BODY_PARTS.map(bp=>`<div class="riskrow" onclick="openBodyHistory('${bp.id}')">
+          <span class="riskdot" style="background:${riskColor(risks[bp.id])}"></span>
+          <span class="riskname">${bp.ic} ${bp.n}</span>
+          <b class="riskpct" style="color:${riskColor(risks[bp.id])}">%${risks[bp.id]}</b>
+        </div>`).join('')}
+      </div>
+    </div>
+    ${worst && risks[worst.id]>=45?`<p class="sub" style="margin-top:8px;color:${riskColor(risks[worst.id])}">⚠️ En riskli bölgen: <b>${worst.n}</b> (%${risks[worst.id]}). Fizik antrenmanına ağırlık ver.</p>`:''}
+  </div>
+  <div class="card">
+    <h3>Sakatlık geçmişi <span class="chip">${hist.length}</span></h3>
+    ${hist.length?`<table>
+      <tr><th>Sezon</th><th>Hafta</th><th>Bölge</th><th>Teşhis</th><th class="num">Süre</th></tr>
+      ${hist.slice(0,20).map(h=>{
+        const bp = BODY_PARTS.find(x=>x.id===h.part);
+        return `<tr><td>${h.season}</td><td class="num">${h.week}</td><td>${bp?bp.ic+' '+bp.n:'—'}</td><td>${h.name}</td><td class="num">${h.weeks} hf</td></tr>`;
+      }).join('')}
+    </table>`:'<p class="sub">Henüz bir sakatlık geçmişin yok.</p>'}
+  </div>`;
+}
+function openBodyHistory(partId){
+  const p = S.p, bp = BODY_PARTS.find(x=>x.id===partId);
+  const risks = bodyRiskAll();
+  const items = (p.injuryHistory||[]).filter(h=>h.part===partId);
+  modal(`<h3 style="color:${riskColor(risks[partId])}">${bp.ic} ${bp.n}</h3>
+    <div class="statbox spread"><span class="sub">Şu anki risk</span><b style="color:${riskColor(risks[partId])}">%${risks[partId]} • ${riskLabel(risks[partId])}</b></div>
+    <p class="sub" style="margin-top:8px">${items.length} geçmiş sakatlık bu bölgede.</p>
+    ${items.length?`<table style="margin-top:6px"><tr><th>Sezon</th><th>Hafta</th><th>Teşhis</th><th class="num">Süre</th></tr>
+      ${items.map(h=>`<tr><td>${h.season}</td><td class="num">${h.week}</td><td>${h.name}</td><td class="num">${h.weeks} hf</td></tr>`).join('')}
+    </table>`:'<p class="sub">Bu bölgede henüz sakatlık geçirmedin.</p>'}
+    <button class="btn primary block" style="margin-top:12px" onclick="closeModal()">Kapat</button>`);
 }
 
 /* ---------- ANTRENMAN ---------- */
@@ -2689,7 +2841,6 @@ const LIFE_ACTS = [
   {id:'family', n:'Aileni ziyaret et', d:'Memlekete git, anne yemeği ye.', cost:0},
   {id:'friends',n:'Arkadaşlarla buluş', d:'Sahilde yürüyüş, kahve.', cost:2000},
   {id:'club',   n:'Gece kulübüne git', d:'Eğlenceli ama riskli. Basın peşinde.', cost:20000},
-  {id:'social', n:'Sosyal medya içeriği', d:'Sponsorlu paylaşım, ün ve para.', cost:0},
   {id:'charity',n:'Çocuk hastanesini ziyaret et', d:'İyilik yap, sevil.', cost:60000},
   {id:'date',   n:'Özel hayat adımı at', d:'Flört, ilişki, nişan, evlilik...', cost:0},
   {id:'holiday',n:'Kısa tatil', d:'Kafa dağıt ama hoca kızabilir.', cost:120000},
@@ -2715,6 +2866,7 @@ function renderLife(){
       <button class="btn sm" onclick="doLife('${a.id}')" ${p.lifePoints<1||p.money<a.cost?'disabled':''}>Yap</button>
     </div>`).join('')}
   </div>
+  ${renderSocialCard()}
   <div class="card">
     <h3>Yaşam günlüğü</h3>
     ${S.news.filter(n=>n.tag==='magazin'||n.tag==='ozel').slice(0,10).map(n=>
@@ -2745,13 +2897,6 @@ function doLife(id){
         msg='Görüntülerin basına düştü. Hocanın güveni sarsıldı.';
       } else { msg='Kimse görmedi. Kafan dağıldı ama bacakların ağır.'; }
       break;
-    case 'social':{
-      const earn = Math.round(2000 + p.fame*1800);
-      p.money+=earn; p.fame=clamp(p.fame+5);
-      if(chance(0.15)){ p.morale=clamp(p.morale-6); addNews(`${p.name}'ın paylaşımı taraftarı kızdırdı.`,'magazin'); msg='Paylaşım ters tepti.'; }
-      else { msg=`Sponsorlu paylaşım: ${TL(earn)} kazandın, ün +5.`; }
-      break;
-    }
     case 'charity':
       p.fame=clamp(p.fame+6); p.happiness=clamp(p.happiness+12); p.morale=clamp(p.morale+5);
       addNews(`${p.name} çocuk hastanesini ziyaret etti, tedavi masraflarını üstlendi.`,'ozel');
@@ -2783,6 +2928,110 @@ function doLife(id){
       break;
   }
   toast(msg); save(); render();
+}
+
+/* =========================================================
+   SOSYAL MEDYA — takipçi, paylaşım, beğeni/yorum
+   ========================================================= */
+const SOCIAL_KINDS = [
+  {id:'training', ic:'💪', n:'Antrenman paylaşımı',   d:'Güvenli — düşük risk, istikrarlı etkileşim.',        mul:1.00, risk:0.04},
+  {id:'match',    ic:'⚽', n:'Sezon performansı',      d:'Golün/asistin varsa daha çok ilgi görür.',           mul:1.30, risk:0.05},
+  {id:'fan',      ic:'🧡', n:'Taraftara teşekkür',      d:'Güvenli — taraftarla bağını güçlendirir.',           mul:1.10, risk:0.03},
+  {id:'lifestyle',ic:'📸', n:'Günlük hayat paylaşımı', d:'En çok beğeniyi toplar ama ters de tepebilir.',      mul:1.65, risk:0.22},
+  {id:'sponsor',  ic:'🤝', n:'Sponsorlu paylaşım',      d:'Ekstra kazanç getirir. Önce sponsorun olmalı.',      mul:1.20, risk:0.16}
+];
+function fmtFollowers(n){
+  if(n>=1000000) return (n/1000000).toFixed(1).replace('.0','')+'M';
+  if(n>=1000) return (n/1000).toFixed(1).replace('.0','')+'B'; // bin
+  return String(Math.round(n));
+}
+function socialCaptions(kindId, p){
+  if(kindId==='training') return ['Bugün de tam gaz! 💪 #antrenman','Sahada ter döktük, yarın maça hazırız.','Küçük detaylar büyük farklar yaratır. 🎯'];
+  if(kindId==='match') return [`Bu sezon ${p.season.goals} gol, ${p.season.assists} asist... daha bitmedi! ⚽`,`${p.team} formasıyla mücadeleye devam! 💙`,'Sahada verdiğimiz emek boşa gitmiyor.'];
+  if(kindId==='fan') return ['Siz olmadan hiçbir şey aynı olmazdı taraftarım! 🧡','Tribündeki o tezahürat hâlâ kulaklarımda. 🙏','Bu forma sizin emeğinizle anlam kazanıyor.'];
+  if(kindId==='lifestyle') return ['Bugünün karesi 📸','Sahil, güneş, huzur ☀️','Antrenman sonrası kafa dinleme vakti. 🎧'];
+  if(kindId==='sponsor'){
+    const s = SPONSORS.filter(x=>(p.sponsors||[]).includes(x.id));
+    if(!s.length) return ['Yeni bir iş birliği yakında! 👀'];
+    return s.map(x=>`${x.ic||'🤝'} ${x.n} ile yeni bir iş birliğindeyiz! (reklam)`);
+  }
+  return ['Yeni bir gün, yeni bir hedef!'];
+}
+function renderSocialCard(){
+  const p = S.p;
+  p.social = p.social || {followers:500, posts:[]};
+  const soc = p.social;
+  const posts = soc.posts||[];
+  return `<div class="card">
+    <div class="spread" style="align-items:center">
+      <h3 style="margin:0">📱 Sosyal medya</h3>
+      <span class="chip ovr">${fmtFollowers(soc.followers)} takipçi</span>
+    </div>
+    <p class="sub" style="margin:6px 0 8px">Paylaşım yaptıkça takipçin, beğenin ve ünün artar. Her paylaşım bir günlük hakkı kullanır.</p>
+    ${SOCIAL_KINDS.map(k=>{
+      const locked = k.id==='sponsor' && !(p.sponsors||[]).length;
+      return `<div class="statbox spread">
+        <div><b>${k.ic} ${k.n}</b><div class="sub">${locked?'Önce bir sponsorluk anlaşman olmalı.':k.d}</div></div>
+        <button class="btn sm" onclick="doSocialPost('${k.id}')" ${p.lifePoints<1||locked?'disabled':''}>Paylaş</button>
+      </div>`;
+    }).join('')}
+    ${posts.length?`<hr class="sep">
+      <div class="social-feed">
+        ${posts.slice(0,8).map(post=>{
+          const k = SOCIAL_KINDS.find(x=>x.id===post.kind)||SOCIAL_KINDS[0];
+          return `<div class="postcard${post.backlash?' back':''}">
+            <div class="postmeta"><span>${k.ic} ${k.n}</span><span class="sub">${post.season} • ${post.week}. hafta</span></div>
+            <div class="posttxt">${post.text}</div>
+            <div class="poststats">
+              <span>❤️ ${post.likes}</span><span>💬 ${post.comments}</span>
+              <span style="color:${post.followerGain>=0?'var(--good)':'var(--bad)'}">${post.followerGain>=0?'+':''}${post.followerGain} takipçi</span>
+              ${post.money?`<span style="color:var(--good)">+${TL(post.money)}</span>`:''}
+              ${post.backlash?'<span style="color:var(--bad)">⚠️ Ters tepti</span>':''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`:''}
+  </div>`;
+}
+function doSocialPost(kindId){
+  const p = S.p;
+  if(p.lifePoints<1) return toast('Bu haftaki günlerin bitti.');
+  const k = SOCIAL_KINDS.find(x=>x.id===kindId); if(!k) return;
+  if(kindId==='sponsor' && !(p.sponsors||[]).length) return toast('Önce bir sponsorluk anlaşman olmalı.');
+  p.lifePoints--;
+  p.social = p.social || {followers:500, posts:[]};
+  const soc = p.social;
+  const followers = soc.followers;
+  const engageRate = (ri(22,55)/1000) * k.mul;
+  let likes = Math.max(8, Math.round(followers*engageRate));
+  let comments = Math.max(1, Math.round(likes*ri(3,9)/100));
+  let followerGain = Math.round(likes*ri(4,11)/100) + Math.round(p.fame*ri(1,3));
+  let fameGain = clamp((followerGain/3200) + (kindId==='match'?0.4:kindId==='fan'?0.25:0.15), 0, 6);
+  let moneyGain = 0, backlash = false;
+  if(chance(k.risk)){
+    backlash = true;
+    followerGain = Math.round(followerGain*0.15) - Math.round(followers*0.01);
+    likes = Math.round(likes*0.4); comments = Math.round(comments*1.6);
+    p.morale = clamp(p.morale-5); p.happiness = clamp(p.happiness-3);
+    fameGain = -1.5;
+  }
+  if(kindId==='sponsor' && !backlash){
+    moneyGain = Math.round(3000 + p.fame*900);
+    p.money += moneyGain;
+  }
+  soc.followers = Math.max(50, Math.round(followers + followerGain));
+  p.fame = clamp(p.fame + fameGain);
+  const text = pick(socialCaptions(kindId, p));
+  soc.posts = soc.posts || [];
+  soc.posts.unshift({kind:kindId, text, week:S.week, season:S.seasonLabel, likes, comments, followerGain, backlash, money:moneyGain});
+  soc.posts = soc.posts.slice(0,25);
+  if(backlash){
+    addNews(`${p.name}'ın sosyal medya paylaşımı tepki çekti.`,'magazin');
+    toast('Paylaşım ters tepti — takipçi kaybı ve moral düşüşü.');
+  } else {
+    toast(`Paylaştın: ❤️ ${likes} • +${followerGain} takipçi${moneyGain?` • +${TL(moneyGain)}`:''}`);
+  }
+  save(); render();
 }
 </script>
 <script>
@@ -3719,7 +3968,7 @@ function injuryEvent(){
 
 /* ---------- kullanıcı sakatlığı + özel ilk yardım paketi ---------- */
 function userInjury(T, v){
-  const t = pick(INJURY_TYPES);
+  const t = pickInjuryWeighted();
   const weeks = ri(t.w[0], t.w[1]);
   M.paused = true; clearTimeout(M.timer);
   M._inj = {t, weeks};
@@ -3776,10 +4025,13 @@ function useMedkit(){
   }
 }
 function applyUserInjury(){
-  const inj = (M && M._inj) || {t:pick(INJURY_TYPES), weeks:2};
+  const inj = (M && M._inj) || {t:pickInjuryWeighted(), weeks:2};
   const T = M.us, me = M.us.squad.find(x=>x.isUser);
   S.p.injuryWeeks = inj.weeks;
   S.p.injuryName = inj.t.n;
+  S.p.injuryHistory = S.p.injuryHistory || [];
+  S.p.injuryHistory.unshift({part:inj.t.part||'uyluk', name:inj.t.n, weeks:inj.weeks, week:S.week, season:S.seasonLabel});
+  S.p.injuryHistory = S.p.injuryHistory.slice(0,40);
   M._inj = null;
   say(`${S.p.name} devam edemiyor ve oyundan çıkıyor.`);
   doSub(T, me, true);
