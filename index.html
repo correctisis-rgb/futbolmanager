@@ -186,14 +186,52 @@ td.num,th.num{text-align:center;width:26px;}
 .scoreboard .sc{font-family:'Barlow Condensed';font-size:2.1rem;font-weight:700;letter-spacing:1px;
   background:var(--surf5);border:1px solid var(--line);border-radius:8px;padding:2px 12px;}
 .clock{text-align:center;font-family:'Barlow Condensed';font-size:.85rem;color:var(--flood);letter-spacing:1px;grid-column:1/-1;}
-.pitchclock{position:absolute;left:8px;top:8px;z-index:16;background:rgba(4,10,14,.74);
-  border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:4px 9px;
-  display:flex;flex-direction:column;align-items:center;gap:2px;
+/* ---- tek satır skor barı (sahanın sol üstü) ---- */
+.pitchclock{position:absolute;left:8px;top:8px;z-index:16;background:rgba(4,10,14,.78);
+  border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 10px;
+  display:flex;flex-direction:row;align-items:center;gap:6px;max-width:calc(100% - 120px);
   box-shadow:0 3px 10px rgba(0,0,0,.5);pointer-events:none;}
-.pitchclock .pc-row{display:flex;align-items:center;gap:5px;}
-.pitchclock .pc-row .kitdot{margin-right:0;}
-.pitchclock b{font-family:'Barlow Condensed';font-size:1rem;color:#fff;letter-spacing:.5px;}
-.pitchclock .pc-min{font-family:'Barlow Condensed';font-size:.66rem;color:var(--flood);letter-spacing:.6px;white-space:nowrap;}
+.pitchclock .kitdot{margin-right:0;flex:none;}
+.pitchclock b{font-family:'Barlow Condensed';color:#fff;letter-spacing:.5px;white-space:nowrap;}
+.pitchclock .pc-ab{font-size:.92rem;font-weight:700;}
+.pitchclock .pc-sc{font-size:1.02rem;font-weight:700;background:rgba(255,255,255,.14);
+  border-radius:6px;padding:0 6px;}
+.pitchclock .pc-min{font-family:'Barlow Condensed';font-size:1.02rem;font-weight:700;color:var(--flood);
+  letter-spacing:.6px;white-space:nowrap;border-left:1px solid rgba(255,255,255,.22);padding-left:8px;margin-left:2px;}
+
+/* ---- kondisyon şeridi: alt tribünün üstüne yedirilmiş ---- */
+.crowd.bot{min-height:42px;}
+.condstrip{position:absolute;left:0;right:0;bottom:0;z-index:18;padding:5px 9px 6px;
+  background:linear-gradient(0deg,rgba(3,9,12,.95) 40%,rgba(3,9,12,.72) 75%,rgba(3,9,12,0));
+  border-top:1px solid rgba(255,255,255,.12);}
+.condstrip .cond-label{color:#dbe7ee;text-shadow:0 1px 3px rgba(0,0,0,.8);}
+.condstrip .cond-pct{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);}
+.condstrip .btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28);color:#fff;}
+.condstrip .btn:hover{background:rgba(255,255,255,.22);}
+.condstrip .bar{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.12);}
+.condstrip .bar.thick{height:15px;}
+.condstrip .btn{padding:4px 8px;font-size:.78rem;}
+.condstrip .cond-label{font-size:.78rem;}
+
+/* ---- hız tuşları (sahanın sağ üstü) ---- */
+.speedfab{position:absolute;right:8px;top:8px;z-index:17;display:flex;gap:3px;
+  background:rgba(4,10,14,.78);border:1px solid rgba(255,255,255,.25);border-radius:999px;
+  padding:3px;box-shadow:0 3px 10px rgba(0,0,0,.5);}
+.speedfab .spd{font-family:'Barlow Condensed';font-size:.82rem;font-weight:700;letter-spacing:.5px;
+  color:#e7eef2;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;padding:2px 9px;cursor:pointer;line-height:1.35;transition:background .2s,color .2s;}
+.speedfab .spd:hover{background:rgba(255,255,255,.2);}
+.speedfab .spd.primary{background:linear-gradient(180deg,#facc15,#f59e0b);color:#14213d;border-color:#fde68a;}
+
+/* ---- enerji içeceği aktifken kondisyon barı ---- */
+.bar{position:relative;}
+.bar > em{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-style:normal;font-size:.68rem;font-weight:800;letter-spacing:.3px;color:#062a2a;
+  text-shadow:0 1px 0 rgba(255,255,255,.45);pointer-events:none;}
+.bar.energy.boost{border-color:#22d3ee;box-shadow:0 0 0 1px rgba(34,211,238,.35),0 0 12px rgba(34,211,238,.35);}
+.bar.energy.boost > i{background:linear-gradient(90deg,#0891b2,#22d3ee,#a7f3d0);
+  background-size:200% 100%;animation:boostflow 1.1s linear infinite;}
+@keyframes boostflow{0%{background-position:0% 0}100%{background-position:200% 0}}
 
 /* ---- stadyum kabuğu ---- */
 .stadium{position:relative;border-radius:12px;overflow:hidden;margin-bottom:8px;
@@ -409,6 +447,23 @@ td.num,th.num{text-align:center;width:26px;}
 .commentary .gl{color:var(--good);font-weight:700;}
 .commentary .bd{color:var(--bad);}
 .commentary b{color:var(--ink);}
+/* ---- oyuncunun kendi adının geçtiği satırlar: belirgin renkli arkaplan ---- */
+.commentary .me-event{
+  background:linear-gradient(90deg, rgba(250,204,21,.20), rgba(250,204,21,.06) 85%);
+  border-left:3px solid #facc15;
+  border-radius:6px;
+  padding:4px 8px 4px 7px!important;
+  margin:2px 0;
+  box-shadow:0 0 0 1px rgba(250,204,21,.12);
+}
+.commentary .me-event.gl{
+  background:linear-gradient(90deg, rgba(52,211,153,.26), rgba(52,211,153,.07) 85%);
+  border-left-color:var(--good);
+}
+.commentary .me-event.bd{
+  background:linear-gradient(90deg, rgba(248,113,113,.24), rgba(248,113,113,.06) 85%);
+  border-left-color:var(--bad);
+}
 
 .prompt{background:linear-gradient(180deg,#7c2d12,#9a3412);border:1px solid #c2410c;border-radius:10px;
   padding:10px;text-align:center;font-weight:700;margin-bottom:8px;}
@@ -610,13 +665,7 @@ td.num,th.num{text-align:center;width:26px;}
 
       <div id="live" style="display:none">
         <div class="card">
-          <h3><span id="live-comp">Süper Lig</span>
-            <span class="row" style="gap:4px">
-              <button class="btn sm" data-speed="1">1x</button>
-              <button class="btn sm" data-speed="2">2x</button>
-              <button class="btn sm" data-speed="4">4x</button>
-            </span>
-          </h3>
+          <h3><span id="live-comp">Süper Lig</span></h3>
           <div class="scoreboard">
             <div class="tn" id="sb-home"><span id="kit-home"></span><br>—</div>
             <div class="sc" id="sb-score">0 - 0</div>
@@ -632,9 +681,16 @@ td.num,th.num{text-align:center;width:26px;}
             <div class="crowd top" id="crowdTop"></div>
             <div class="pitch" id="pitch">
               <div class="pitchclock" id="pitchclock">
-              <span class="pc-row"><span id="pc-kit-h"></span><b id="pc-score">0-0</b><span id="pc-kit-a"></span></span>
-              <span class="pc-min" id="pc-min">İlk yarı • 0'</span>
-            </div>
+                <span id="pc-kit-h"></span><b class="pc-ab" id="pc-ab-h">—</b>
+                <b class="pc-sc" id="pc-score">0-0</b>
+                <b class="pc-ab" id="pc-ab-a">—</b><span id="pc-kit-a"></span>
+                <span class="pc-min" id="pc-min">0'</span>
+              </div>
+              <div class="speedfab" id="speedFab">
+                <button class="spd" data-speed="1">1x</button>
+                <button class="spd" data-speed="2">2x</button>
+                <button class="spd" data-speed="4">4x</button>
+              </div>
             <div class="line" style="left:50%;top:0;bottom:0;width:2px"></div>
               <div class="line" style="left:0;top:22%;width:14%;height:2px"></div>
               <div class="line" style="left:0;bottom:22%;width:14%;height:2px"></div>
@@ -672,17 +728,17 @@ td.num,th.num{text-align:center;width:26px;}
               </div>
             </div>
             <div class="crowd bot" id="crowdBot"></div>
-          </div>
-          <div class="commentary" id="log"></div>
-          <div class="statbox" style="margin-top:8px;margin-bottom:8px">
-            <div class="cond-row">
-              <span id="me-label" class="cond-label">Sen — kondisyon</span>
-              <span class="bar energy thick"><i id="me-sta-bar" style="width:100%"></i></span>
-              <b id="me-sta" class="cond-pct">100%</b>
-              <button class="btn sm" id="btn-drink">⚡ (<span id="drinkN">0</span>)</button>
+            <div class="condstrip">
+              <div class="cond-row">
+                <span id="me-label" class="cond-label">Sen — kondisyon</span>
+                <span class="bar energy thick" id="me-sta-wrap"><i id="me-sta-bar" style="width:100%"></i><em id="me-boost-txt"></em></span>
+                <b id="me-sta" class="cond-pct">100%</b>
+                <button class="btn sm" id="btn-drink">⚡ <span id="drinkN">0</span></button>
+              </div>
             </div>
-            <div class="mini" id="me-line" style="margin-top:5px"></div>
           </div>
+          <div class="mini" id="me-line" style="margin:0 0 6px;text-align:center"></div>
+          <div class="commentary" id="log"></div>
           <div class="row wrap">
             <button class="btn sm" id="btn-med">🧰 İlk yardım (<span id="medN">0</span>)</button>
             <button class="btn sm" id="btn-sub">🔁 Değişiklik iste</button>
@@ -1203,6 +1259,27 @@ const POSITIONS = [
 ];
 const posByKey = k => POSITIONS.find(p=>p.k===k) || POSITIONS[15];
 
+/* ---------- takım kısaltmaları (skor barı için) ---------- */
+const TEAM_ABBR = {
+  'Galatasaray':'GS', 'Fenerbahçe':'FB', 'Beşiktaş':'BJK', 'Trabzonspor':'TS',
+  'Başakşehir':'IBB', 'Göztepe':'GÖZ', 'Samsunspor':'SAM', 'Kocaelispor':'KOC',
+  'Alanyaspor':'ALA', 'Rizespor':'RİZ', 'Konyaspor':'KON', 'Antalyaspor':'ANT',
+  'Gençlerbirliği':'GB', 'Kasımpaşa':'KSM', 'Kayserispor':'KAY', 'Eyüpspor':'EYÜ',
+  'Fatih Karagümrük':'FKG', 'Gaziantep FK':'GFK',
+  'Türkiye A Milli':'TUR', 'Türkiye':'TUR',
+  'Madrid Kraliyet':'MAD', 'Bavyera Münih':'MÜN', 'Manchester Kırmızı':'MAN',
+  'Milano Rossoneri':'MİL', 'Paris Başkent':'PAR', 'Londra Mavileri':'LON',
+  'Amsterdam Aslanları':'AMS', 'Lizbon Yeşilleri':'LİZ', 'Torino Zebraları':'TOR',
+  'Dortmund Sarıları':'DOR'
+};
+function abbr(name){
+  if(!name) return '—';
+  if(TEAM_ABBR[name]) return TEAM_ABBR[name];
+  const w = String(name).trim().split(/\s+/);
+  if(w.length>1) return w.map(x=>x[0]).join('').toUpperCase().slice(0,4);
+  return name.slice(0,3).toUpperCase();
+}
+
 /* mevkiye göre başlangıç yetenek şablonu */
 const TEMPLATE = {
   GK:{hiz:40,sut:20,pas:45,drib:30,def:45,fiz:62,klc:66},
@@ -1253,12 +1330,31 @@ const BOOTS = [
   {id:'b4',n:'Özel dikim krampon', cost:220000, bonus:9, desc:'Ayağına özel kalıp.'}
 ];
 const SPONSORS = [
-  {id:'sp1', n:'Yerel süt markası',      weekly:6000,  cost:0,      req:0},
-  {id:'sp2', n:'Spor giyim mağazası',    weekly:14000, cost:0,      req:15},
-  {id:'sp3', n:'Enerji içeceği markası', weekly:26000, cost:0,      req:35},
-  {id:'sp4', n:'Uluslararası spor markası', weekly:55000, cost:0,   req:60},
-  {id:'sp5', n:'Otomobil markası',       weekly:90000, cost:0,      req:80}
+  {id:'sp1',  n:'Yerel süt markası',            ic:'🥛', weekly:4000,    cost:0, req:0},
+  {id:'sp2',  n:'Spor giyim mağazası',          ic:'👕', weekly:9000,   cost:0, req:8},
+  {id:'sp3',  n:'Enerji içeceği markası',       ic:'⚡', weekly:17000,   cost:0, req:14},
+  {id:'sp4',  n:'Mahalle spor salonu',          ic:'🏋️', weekly:6000,    cost:0, req:5},
+  {id:'sp5',  n:'Yerel banka şubesi',           ic:'🏦', weekly:13000,   cost:0, req:12},
+  {id:'sp6',  n:'Şehir içi kargo firması',      ic:'📦', weekly:15500,   cost:0, req:18},
+  {id:'sp7',  n:'Telekom operatörü',            ic:'📱', weekly:24500,   cost:0, req:24},
+  {id:'sp8',  n:'Hazır giyim zinciri',          ic:'🛍️', weekly:29000,   cost:0, req:30},
+  {id:'sp9',  n:'Uluslararası spor markası',    ic:'👟', weekly:36000,   cost:0, req:36},
+  {id:'sp10', n:'Fast-food zinciri',            ic:'🍔', weekly:40500,   cost:0, req:42},
+  {id:'sp11', n:'Akıllı saat markası',          ic:'⌚', weekly:45500,   cost:0, req:48},
+  {id:'sp12', n:'Ulusal market zinciri',        ic:'🛒', weekly:50500,   cost:0, req:54},
+  {id:'sp13', n:'Otomobil markası',             ic:'🚗', weekly:58500,   cost:0, req:60},
+  {id:'sp14', n:'Havayolu şirketi',             ic:'✈️', weekly:71500,  cost:0, req:65},
+  {id:'sp15', n:'Kulaklık & ses markası',       ic:'🎧', weekly:81000,  cost:0, req:70},
+  {id:'sp16', n:'Akıllı telefon devi',          ic:'📲', weekly:97500,  cost:0, req:75},
+  {id:'sp17', n:'Global kredi kartı',           ic:'💳', weekly:117000,  cost:0, req:80},
+  {id:'sp18', n:'Lüks saat markası',            ic:'💎', weekly:143000,  cost:0, req:85},
+  {id:'sp19', n:'Dünya çapında içecek devi',    ic:'🥤', weekly:182000,  cost:0, req:90},
+  {id:'sp20', n:'Video oyunu kapak yüzü',       ic:'🎮', weekly:227500,  cost:0, req:95}
 ];
+function sponsorWeekly(){
+  const p=S.p; if(!p||!p.sponsors) return 0;
+  return SPONSORS.filter(s=>p.sponsors.includes(s.id)).reduce((t,s)=>t+s.weekly,0);
+}
 const WEATHER = [
   {id:'gunes', n:'Güneşli',  ic:'☀️', drain:1.00, tech:0.00},
   {id:'bulut', n:'Parçalı bulutlu', ic:'⛅', drain:1.00, tech:0.00},
@@ -1271,19 +1367,66 @@ const INJURY_TYPES = [
   {n:'Adale yırtığı', w:[3,6]}, {n:'Diz sıkışması', w:[2,4]},
   {n:'Sarsıntı', w:[1,2]}, {n:'Kasık zorlanması', w:[2,4]}, {n:'Ayak bileği zedelenmesi', w:[1,3]}
 ];
+function ACH(k){ const p=S&&S.p; return (p&&p.ach&&p.ach[k])||0; }
+function bumpAch(k,n){ const p=S.p; if(!p) return; p.ach=p.ach||{}; p.ach[k]=(p.ach[k]||0)+(n===undefined?1:n); }
+const TRP = (p,txt)=> p.career.trophies.some(t=>t.includes(txt));
 const BADGES = [
-  {id:'bd1', n:'İlk Gol',            d:'Kariyerinde ilk golünü attın.',        chk:p=>p.career.goals>=1,   reward:15000},
-  {id:'bd2', n:'Hat-trick',          d:'Bir maçta 3 gol attın.',               chk:p=>p._hattrick,          reward:50000},
-  {id:'bd3', n:'Yüz Maç',            d:'Kariyerinde 100 maça çıktın.',         chk:p=>p.career.apps>=100,   reward:75000},
-  {id:'bd4', n:'Elli Gol',           d:'Kariyerinde 50 gol attın.',            chk:p=>p.career.goals>=50,   reward:100000},
-  {id:'bd5', n:'Şampiyon',           d:'Süper Lig şampiyonu oldun.',           chk:p=>p.career.trophies.some(t=>t.includes('Süper Lig')), reward:200000},
-  {id:'bd6', n:'Kupa Kahramanı',     d:'Türkiye Kupası kazandın.',             chk:p=>p.career.trophies.some(t=>t.includes('Kupası') && !t.includes('Avrupa')), reward:150000},
-  {id:'bd7', n:'Gol Kralı',         d:'Bir sezonu gol krallığıyla kapattın.', chk:p=>p.career.trophies.some(t=>t.includes('Gol Kralı')), reward:180000},
-  {id:'bd8', n:'Ay-Yıldızlı',       d:"A Milli Takım'a ilk kez çağrıldın.",    chk:p=>p.caps>=1,            reward:60000},
-  {id:'bd9', n:'Yüz Kap',           d:'Milli takımda 100 kapya ulaştın.',      chk:p=>p.caps>=100,          reward:250000},
-  {id:'bd10',n:'Kaptan',            d:'Takımının kaptanı oldun.',              chk:p=>p.captain,            reward:40000},
-  {id:'bd11',n:'Avrupa Fatihi',     d:'Şampiyonlar Ligi kazandın.',            chk:p=>p.career.trophies.some(t=>t.includes('Şampiyonlar Ligi')), reward:400000},
-  {id:'bd12',n:'Efsane',           d:'Potansiyelinin zirvesine ulaştın (90+ güç).', chk:p=>userOverall()>=90, reward:300000}
+  /* --- gol & asist --- */
+  {id:'bd1', n:'İlk Gol',            d:'Kariyerinde ilk golünü attın.',              chk:p=>p.career.goals>=1,    reward:11000},
+  {id:'bd2', n:'Hat-trick',          d:'Bir maçta 3 gol attın.',                     chk:p=>p._hattrick||ACH('hattricks')>=1, reward:36000},
+  {id:'bd4', n:'Elli Gol',           d:'Kariyerinde 50 gol attın.',                  chk:p=>p.career.goals>=50,   reward:72000},
+  {id:'bd13',n:'Yüz Gol',            d:'Kariyerinde 100 gol attın.',                 chk:p=>p.career.goals>=100,  reward:144000},
+  {id:'bd14',n:'İki Yüz Gol',        d:'Kariyerinde 200 gol attın.',                 chk:p=>p.career.goals>=200,  reward:288000},
+  {id:'bd16',n:'İlk Asist',          d:'Kariyerinde ilk asistini yaptın.',           chk:p=>p.career.assists>=1,  reward:9000},
+  {id:'bd17',n:'Asist Kralı',        d:'Kariyerinde 50 asist yaptın.',               chk:p=>p.career.assists>=50, reward:86000},
+  {id:'bd19',n:'Çift Gol',           d:'Bir maçta 2 gol attın.',                     chk:p=>ACH('braces')>=1,     reward:18000},
+  {id:'bd20',n:'On Hat-trick',       d:'Kariyerinde 10 kez hat-trick yaptın.',       chk:p=>ACH('hattricks')>=10, reward:252000},
+  {id:'bd21',n:'Çifte Asist',        d:'Bir maçta 2 asist yaptın.',                  chk:p=>ACH('doubleAssists')>=1, reward:18000},
+  {id:'bd22',n:'Sezonun Bombacısı',  d:'Bir sezonda 20 gol attın.',                  chk:p=>p.season.goals>=20,   reward:108000},
+  {id:'bd23',n:'Otuzluk Sezon',      d:'Bir sezonda 30 gol attın.',                  chk:p=>p.season.goals>=30,   reward:216000},
+  /* --- maç & kariyer --- */
+  {id:'bd24',n:'İlk Maç',            d:'Profesyonel ilk maçına çıktın.',             chk:p=>p.career.apps>=1,     reward:7000},
+  {id:'bd25',n:'Elli Maç',           d:'Kariyerinde 50 maça çıktın.',                chk:p=>p.career.apps>=50,    reward:29000},
+  {id:'bd3', n:'Yüz Maç',            d:'Kariyerinde 100 maça çıktın.',               chk:p=>p.career.apps>=100,   reward:54000},
+  {id:'bd26',n:'İki Yüz Maç',        d:'Kariyerinde 200 maça çıktın.',               chk:p=>p.career.apps>=200,   reward:130000},
+  {id:'bd28',n:'Kadrolu Adam',       d:'5 sezon tamamladın.',                        chk:p=>p.career.seasons.length>=5,  reward:144000},
+  {id:'bd30',n:'Maçın Adamı',        d:'İlk kez maçın adamı seçildin.',              chk:p=>p.career.motm>=1,     reward:22000},
+  {id:'bd31',n:'Yıldız Oyuncu',      d:'25 kez maçın adamı seçildin.',               chk:p=>p.career.motm>=25,    reward:158000},
+  {id:'bd33',n:'Mükemmel Performans',d:'Bir maçta 9.0 ve üzeri puan aldın.',         chk:p=>ACH('rating9')>=1,    reward:43000},
+  {id:'bd34',n:'Yüz Galibiyet',      d:'100 maç kazandın.',                          chk:p=>ACH('wins')>=100,     reward:180000},
+  {id:'bd35',n:'Deplasman Kabusu',   d:'25 deplasman galibiyeti aldın.',             chk:p=>ACH('awayWins')>=25,  reward:115000},
+  /* --- kupalar --- */
+  {id:'bd5', n:'Şampiyon',           d:'Süper Lig şampiyonu oldun.',                 chk:p=>TRP(p,'Süper Lig'),   reward:144000},
+  {id:'bd6', n:'Kupa Kahramanı',     d:'Türkiye Kupası kazandın.',                   chk:p=>TRP(p,'Türkiye Kupası'), reward:108000},
+  {id:'bd7', n:'Gol Kralı',          d:'Bir sezonu gol krallığıyla kapattın.',       chk:p=>TRP(p,'Gol Kralı'),   reward:130000},
+  {id:'bd11',n:'Avrupa Fatihi',      d:'Şampiyonlar Ligi kazandın.',                 chk:p=>TRP(p,'Şampiyonlar Ligi'), reward:288000},
+  {id:'bd37',n:'Yılın Oyuncusu',     d:'Sezonun en iyi oyuncusu seçildin.',          chk:p=>TRP(p,'Yılın Oyuncusu'), reward:216000},
+  {id:'bd38',n:'Genç Yetenek',       d:'Yılın genç yeteneği seçildin.',              chk:p=>TRP(p,'Yılın Genç Yeteneği'), reward:108000},
+  {id:'bd39',n:'Üçleme',             d:'Lig, kupa ve Avrupa kupasını kazandın.',     chk:p=>TRP(p,'Süper Lig')&&TRP(p,'Türkiye Kupası')&&TRP(p,'Şampiyonlar Ligi'), reward:648000},
+  {id:'bd40',n:'Kupa Koleksiyoncusu',d:'Toplam 10 kupa kazandın.',                   chk:p=>p.career.trophies.length>=10, reward:360000},
+  {id:'bd41',n:'Avrupa Gecesi',      d:'Avrupa kupalarında 20 maça çıktın.',         chk:p=>ACH('euroApps')>=20,  reward:122000},
+  {id:'bd42',n:'Avrupa Bombacısı',   d:'Avrupa kupalarında 15 gol attın.',           chk:p=>ACH('euroGoals')>=15, reward:166000},
+  /* --- milli takım --- */
+  {id:'bd8', n:'Ay-Yıldızlı',        d:"A Milli Takım'a ilk kez çağrıldın.",          chk:p=>p.caps>=1,           reward:43000},
+  {id:'bd43',n:'Elli Kap',           d:'Milli takımda 50 maça çıktın.',              chk:p=>p.caps>=50,           reward:101000},
+  {id:'bd9', n:'Yüz Kap',            d:'Milli takımda 100 kapya ulaştın.',           chk:p=>p.caps>=100,          reward:180000},
+  {id:'bd44',n:'Milli Gol',          d:'Milli takımda 20 gol attın.',                chk:p=>p.natGoals>=20,       reward:130000},
+  {id:'bd10',n:'Kaptan',             d:'Takımının kaptanı oldun.',                   chk:p=>p.captain,            reward:29000},
+  /* --- gelişim & ün --- */
+  {id:'bd12',n:'Efsane',             d:'Potansiyelinin zirvesine ulaştın (90+ güç).',chk:p=>userOverall()>=90,    reward:216000},
+  {id:'bd45',n:'Yükselen Değer',     d:'80 güce ulaştın.',                           chk:p=>userOverall()>=80,    reward:72000},
+  {id:'bd46',n:'Yıldızlaşma',        d:'Ün puanın 60 oldu.',                         chk:p=>p.fame>=60,           reward:65000},
+  {id:'bd47',n:'Dünya Yıldızı',      d:'Ün puanın 90 oldu.',                         chk:p=>p.fame>=90,           reward:230000},
+  /* --- hayat, para, alışveriş --- */
+  {id:'bd48',n:'İlk Milyon',         d:'Kasanda 1.000.000 ₺ biriktirdin.',           chk:p=>p.money>=1000000,     reward:36000},
+  {id:'bd49',n:'Yatırımcı',          d:'5 işletme/fabrika sahibi oldun.',            chk:p=>p.luxury.filter(id=>{const l=LUX.find(x=>x.id===id);return l&&l.cat==='is';}).length>=5, reward:288000},
+  {id:'bd50',n:'Yat Sahibi',         d:'Bir yat satın aldın.',                       chk:p=>['l10','l11','l12'].some(x=>p.luxury.includes(x)), reward:144000},
+  {id:'bd51',n:'Fabrika Patronu',    d:'Bir fabrika satın aldın.',                   chk:p=>['l24','l25','l26','l27','l28','l29'].some(x=>p.luxury.includes(x)), reward:180000},
+  {id:'bd52',n:'Gökyüzünün Efendisi',d:'Özel jet ya da helikopter aldın.',           chk:p=>p.luxury.includes('l13')||p.luxury.includes('l14'), reward:216000},
+  {id:'bd53',n:'Reklam Yüzü',        d:'10 sponsorluk anlaşması imzaladın.',         chk:p=>p.sponsors.length>=10, reward:187000},
+  {id:'bd54',n:'Marka Değeri',       d:'20 sponsorluk anlaşmasının hepsini aldın.',  chk:p=>p.sponsors.length>=20, reward:432000},
+  {id:'bd55',n:'Aile Babası',        d:'Evlendin ve çocuğun oldu.',                  chk:p=>!!p.partner&&p.kids>=1, reward:86000},
+  {id:'bd56',n:'Mücadeleci',         d:'İlk yardım paketiyle 5 kez sahada kaldın.',  chk:p=>ACH('medkitSaves')>=5, reward:94000},
 ];
 /* başarım şartı sağlandığında: sadece bildir, ödülü kariyerdeki "Başarımlar" sekmesinden elle topla */
 function checkBadges(){
@@ -1309,14 +1452,73 @@ function claimBadge(id){
   addNews(`${p.name} "${b.n}" başarımını kazandı ve ${TL(b.reward||0)} prim aldı.`,'magazin');
   save(); render();
 }
+function claimAllBadges(){
+  const p = S.p;
+  checkBadges();
+  const elig = (p.badgesEligible||[]).slice();
+  const ready = BADGES.filter(b=>!p.badges.includes(b.id) && (elig.includes(b.id) || b.chk(p)));
+  if(!ready.length) return toast('Toplanacak hazır başarım yok.');
+  let total = 0;
+  ready.forEach(b=>{
+    p.badges.push(b.id);
+    p.badgesEligible = (p.badgesEligible||[]).filter(x=>x!==b.id);
+    p.money += b.reward||0;
+    total += b.reward||0;
+  });
+  toast(`🏅 ${ready.length} başarım toplandı (+${TL(total)})`);
+  addNews(`${p.name} bir seferde ${ready.length} başarım topladı ve toplam ${TL(total)} prim aldı.`,'magazin');
+  save(); render();
+}
 
-const LUX = [
-  {id:'l1',n:'Ehliyet + ikinci el araba', cost:180000,  mut:8,  un:2},
-  {id:'l2',n:'BMW M4',                    cost:900000,  mut:14, un:6},
-  {id:'l3',n:'Şehir merkezinde daire',    cost:3500000, mut:18, un:5},
-  {id:'l4',n:'Boğaz manzaralı villa',     cost:12000000,mut:28, un:12},
-  {id:'l5',n:'Aileye ev aldım',           cost:2500000, mut:30, un:4}
+const LUX_CATS = [
+  {k:'tasit', n:'🚗 Taşıtlar ve yatlar'},
+  {k:'kat',   n:'🏢 Gayrimenkul — daireler, katlar, villalar'},
+  {k:'is',    n:'🏭 İşletmeler ve fabrikalar (haftalık gelir)'},
+  {k:'yasam', n:'💎 Yaşam ve lüks'}
 ];
+const LUX = [
+  /* --- taşıtlar / yatlar --- */
+  {id:'l1', cat:'tasit', ic:'🚙', n:'Ehliyet + ikinci el araba',     cost:180000,    mut:8,  un:2,  inc:0},
+  {id:'l2', cat:'tasit', ic:'🏎️', n:'BMW M4',                        cost:900000,    mut:14, un:6,  inc:0},
+  {id:'l6', cat:'tasit', ic:'🛵', n:'Motosiklet (şehir içi)',        cost:320000,    mut:7,  un:2,  inc:0},
+  {id:'l7', cat:'tasit', ic:'🚘', n:'Mercedes G-Serisi',             cost:4200000,   mut:18, un:9,  inc:0},
+  {id:'l8', cat:'tasit', ic:'🏁', n:'Ferrari 296 GTB',               cost:16000000,  mut:26, un:16, inc:0},
+  {id:'l9', cat:'tasit', ic:'⛵', n:'Küçük yelkenli tekne',          cost:2800000,   mut:14, un:5,  inc:0},
+  {id:'l10',cat:'tasit', ic:'🛥️', n:'Motor yat (18 m)',              cost:9500000,   mut:22, un:10, inc:0},
+  {id:'l11',cat:'tasit', ic:'🚤', n:'Lüks yat (32 m, mürettebatlı)', cost:45000000,  mut:34, un:22, inc:0},
+  {id:'l12',cat:'tasit', ic:'🛳️', n:'Mega yat (60 m, helipadli)',    cost:180000000, mut:48, un:38, inc:0},
+  {id:'l13',cat:'tasit', ic:'🚁', n:'Özel helikopter',               cost:38000000,  mut:28, un:18, inc:0},
+  {id:'l14',cat:'tasit', ic:'✈️', n:'Özel jet',                      cost:150000000, mut:42, un:34, inc:0},
+  /* --- katlar / gayrimenkul --- */
+  {id:'l3', cat:'kat',   ic:'🏙️', n:'Şehir merkezinde daire',        cost:3500000,   mut:18, un:5,  inc:0},
+  {id:'l4', cat:'kat',   ic:'🏡', n:'Boğaz manzaralı villa',         cost:12000000,  mut:28, un:12, inc:0},
+  {id:'l15',cat:'kat',   ic:'🏬', n:'Rezidans katı (yüksek kat)',    cost:7500000,   mut:20, un:7,  inc:20000},
+  {id:'l16',cat:'kat',   ic:'🌆', n:'Çatı katı / penthouse',         cost:28000000,  mut:32, un:18, inc:50000},
+  {id:'l17',cat:'kat',   ic:'🏢', n:'İş merkezinde tam kat (kiralık)',cost:42000000, mut:16, un:10, inc:145000},
+  {id:'l18',cat:'kat',   ic:'🏘️', n:'Apartman bloğu (8 kat)',        cost:85000000,  mut:24, un:14, inc:285000},
+  {id:'l19',cat:'kat',   ic:'🏖️', n:'Bodrum yalı katı',              cost:60000000,  mut:36, un:20, inc:75000},
+  /* --- işletmeler / fabrikalar --- */
+  {id:'l20',cat:'is',    ic:'☕', n:'Kahve dükkânı',                 cost:2200000,   mut:8,  un:3,  inc:35000},
+  {id:'l21',cat:'is',    ic:'🍽️', n:'Butik restoran',                cost:6500000,   mut:12, un:6,  inc:90000},
+  {id:'l22',cat:'is',    ic:'⚽', n:'Kendi futbol okulun',           cost:14000000,  mut:22, un:12, inc:130000},
+  {id:'l23',cat:'is',    ic:'🏨', n:'Sahil oteli',                   cost:75000000,  mut:26, un:18, inc:495000},
+  {id:'l24',cat:'is',    ic:'🧵', n:'Tekstil fabrikası',             cost:30000000,  mut:10, un:6,  inc:230000},
+  {id:'l25',cat:'is',    ic:'🍞', n:'Gıda fabrikası',                cost:48000000,  mut:12, un:8,  inc:360000},
+  {id:'l26',cat:'is',    ic:'⚡', n:'Enerji içeceği fabrikası',      cost:70000000,  mut:16, un:14, inc:540000},
+  {id:'l27',cat:'is',    ic:'👟', n:'Krampon & spor giyim fabrikası',cost:110000000, mut:20, un:20, inc:825000},
+  {id:'l28',cat:'is',    ic:'🔩', n:'Otomotiv yan sanayi fabrikası', cost:160000000, mut:14, un:12, inc:1155000},
+  {id:'l29',cat:'is',    ic:'🔋', n:'Batarya & enerji fabrikası',    cost:240000000, mut:18, un:18, inc:1760000},
+  /* --- yaşam --- */
+  {id:'l5', cat:'yasam', ic:'🏠', n:'Aileye ev aldım',               cost:2500000,   mut:30, un:4,  inc:0},
+  {id:'l30',cat:'yasam', ic:'⌚', n:'Koleksiyon saat',               cost:5500000,   mut:16, un:8,  inc:0},
+  {id:'l31',cat:'yasam', ic:'🎨', n:'Sanat koleksiyonu',             cost:22000000,  mut:20, un:11, inc:0},
+  {id:'l32',cat:'yasam', ic:'🐎', n:'Yarış atı',                     cost:18000000,  mut:18, un:13, inc:45000},
+  {id:'l33',cat:'yasam', ic:'❤️', n:'Kendi hayır vakfın',            cost:35000000,  mut:45, un:28, inc:0}
+];
+function businessWeekly(){
+  const p=S.p; if(!p||!p.luxury) return 0;
+  return LUX.filter(l=>p.luxury.includes(l.id)).reduce((t,l)=>t+(l.inc||0),0);
+}
 
 /* =========================================================
    OYUN DURUMU
@@ -1335,7 +1537,7 @@ function newPlayerObj(name, age, posKey, team, foot, num){
     potential: ri(78, 94),
     fitness: 100, morale: 70, trust: 55, happiness: 70, fame: 8,
     money: 45000, wage: 60000, contractYears: 3, goalBonus: 25000,
-    boot: 'b0', owned:['b0'], drinks: 2, medkits: 1, luxury: [],
+    boot: 'b0', owned:['b0'], drinks: 2, dr:{e1:2,e2:0,e3:0}, medkits: 1, luxury: [],
     rel: 0, partner: null, kids: 0,
     lifePoints: 3, trainPoints: 2,
     injuryWeeks: 0, injuryName: null, banWeeks: 0, yellowStreak: 0,
@@ -1437,8 +1639,8 @@ function newGame(cfg){
   };
   TEAMS.forEach(t => S.squads[t.n] = makeSquad(t.n, t.s));
   insertUserIntoSquad();
-  S.p.wage = Math.round(30000 + (teamObj.s-60)*4500);
-  S.p.goalBonus = Math.round(S.p.wage*0.4);
+  S.p.wage = Math.round(20000 + (teamObj.s-60)*3000);
+  S.p.goalBonus = Math.round(S.p.wage*0.32);
   addNews(`${S.p.name}, ${S.p.team} ile profesyonel sözleşme imzaladı.`,'transfer');
   addNews(`${S.seasonLabel} Süper Lig sezonu başlıyor. 18 takım, 34 hafta.`,'lig');
   save();
@@ -1522,6 +1724,7 @@ function load(){
     S = o; S.inMatch = false;
     if(!S.stadium) S.stadium = newStadium(S.p.team);
     if(S.p.medkits==null) S.p.medkits = 1;
+    if(!S.p.dr){ S.p.dr = {e1:(S.p.drinks||0), e2:0, e3:0}; }
     if(S.p.medQ==null) S.p.medQ = 0.55;
     if(!S.p.badgesEligible) S.p.badgesEligible = [];
     return true;
@@ -1847,9 +2050,9 @@ function openTrainGame(k){
   if(p.trainPoints<1) return toast('Bu hafta antrenman hakkın kalmadı.');
   if(p.fitness<20) return toast('Çok yorgunsun, önce dinlen.');
   const gwBase = clamp(30 - Math.round((p.attrs[k]||40)/9), 12, 28); // yetenek seviyesine göre taban değer
-  const gw = Math.max(6, Math.round(gwBase * 0.5)); // yeşil bölge belirgin şekilde küçültüldü — +4 almak zorlaşsın
-  const ow = Math.round(gw * 1.9); // turuncu bölge genişliği (yeşili kapsar, belirgin biçimde daha geniş)
-  const rw = Math.round(gw * 2.8); // kırmızı bölge genişliği (turuncuyu kapsar, en geniş bölge)
+  const gw = Math.max(6, Math.round(gwBase * 0.5)); // yeşil bölge küçük — +4 almak zorlaşsın
+  const ow = Math.round(gw * 2.4); // turuncu bölge belirgin biçimde daha geniş
+  const rw = Math.round(gw * 3.6); // kırmızı bölge en geniş bölge — yeşil buna göre iyice küçük görünsün
   const half = Math.ceil(rw/2);
   const zoneCenter = ri(half+2, 100-half-2);
   const period = ri(650, 950);
@@ -1929,7 +2132,7 @@ function renderShop(){
   $('shopBox').innerHTML = `
   <div class="card">
     <h3>Kramponlar</h3>
-    ${BOOTS.map(b=>{
+    ${BOOTS.slice().sort((a,b)=>a.cost-b.cost).map(b=>{
       const owned = p.owned.includes(b.id), eq = p.boot===b.id;
       const col = ['#9ca3af','#f97316','#38bdf8','#a855f7','#facc15'][BOOTS.indexOf(b)] || '#9ca3af';
       return `<div class="statbox shoprow">
@@ -1942,18 +2145,30 @@ function renderShop(){
     }).join('')}
   </div>
   <div class="card">
-    <h3>Enerji içeceği paketleri <span class="chip">${p.drinks} adet</span></h3>
-    <p class="sub">Maç içinde içersen kondisyon +30 ve 15 dakika performans bonusu (maç başına 1 adet). Maç sonunda toparlanma için de kullanılır.</p>
-    ${DRINK_PACKS.map(d=>`<div class="statbox shoprow">
-        ${Icon.drink(['#64748b','#f59e0b','#ea580c','#eab308'][DRINK_PACKS.indexOf(d)]||'#f59e0b')}
-        <div class="sinfo"><b>${d.n}</b><div class="sub">${d.desc}</div></div>
-        <button class="btn sm ${p.money>=d.cost?'primary':''}" ${p.money<d.cost?'disabled':''} onclick="buyDrink('${d.id}')">${TL(d.cost)}</button>
-      </div>`).join('')}
+    <h3>Enerji içecekleri <span class="chip">${syncDrinks()} adet</span></h3>
+    <p class="sub">Üç çeşit var; güçlüsü daha çok kondisyon verir ama daha pahalı. Maç başına <b>1 adet</b> içebilirsin, maç sonu toparlanmada da kullanılır.</p>
+    ${ENERGY.slice().sort((a,b)=>a.cost-b.cost).map(e=>{
+      const have = drInv()[e.id]||0;
+      return `<div class="statbox">
+        <div class="shoprow" style="margin-bottom:7px">
+          ${Icon.drink(e.col)}
+          <div class="sinfo"><b>${e.ic} ${e.n}</b> <span class="chip">${have} adet</span>
+            <div class="sub">${e.desc}</div></div>
+        </div>
+        <div class="row wrap" style="gap:6px">
+          ${ENERGY_PACKS.map(pk=>{
+            const c = packCost(e,pk);
+            return `<button class="btn sm ${p.money>=c?'primary':''}" ${p.money<c?'disabled':''}
+              onclick="buyDrink('${e.id}',${pk.q})">${pk.n} • ${TL(c)}</button>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('')}
   </div>
   <div class="card">
     <h3>🧰 Özel ilk yardım paketi <span class="chip">${p.medkits||0} adet</span></h3>
     <p class="sub">Maç içinde sakatlanırsan, sağlık ekibi oyundan çıkarmadan önce <b>sana sorar</b>. Kullanırsan büyük ihtimalle toparlanıp maça devam edersin. Ağır sakatlıklarda işe yaramayabilir.</p>
-    ${MEDKITS.map(m=>`<div class="statbox shoprow">
+    ${MEDKITS.slice().sort((a,b)=>a.cost-b.cost).map(m=>`<div class="statbox shoprow">
         ${Icon.medkit()}
         <div class="sinfo"><b>${m.n}</b><div class="sub">${m.desc} • Başarı: %${Math.round(m.p*100)}</div></div>
         <button class="btn sm ${p.money>=m.cost?'primary':''}" ${p.money<m.cost?'disabled':''} onclick="buyMed('${m.id}')">${TL(m.cost)}</button>
@@ -1961,16 +2176,20 @@ function renderShop(){
   </div>
   <div class="card">
     <h3>Özel hayat alışverişi</h3>
-    ${LUX.map(l=>{
-      const has = p.luxury.includes(l.id);
-      const icon = l.id==='l1'?Icon.license():l.id==='l2'?Icon.car('#dc2626'):l.id==='l3'?Icon.building():l.id==='l4'?Icon.villa():Icon.home();
-      return `<div class="statbox shoprow">
-        ${icon}
-        <div class="sinfo"><b>${l.n}</b><div class="sub">Mutluluk +${l.mut} • Ün +${l.un}</div></div>
-        ${has?'<span class="chip ovr">Sahipsin</span>':
-          `<button class="btn sm ${p.money>=l.cost?'primary':''}" ${p.money<l.cost?'disabled':''} onclick="buyLux('${l.id}')">${TL(l.cost)}</button>`}
-      </div>`;
-    }).join('')}
+    <p class="sub">Yatlar, katlar, fabrikalar... İşletmeler ve kiralık gayrimenkuller her hafta sana gelir getirir.</p>
+    <div class="statbox spread"><span class="sub">Sahip olduğun işletmelerin haftalık geliri</span><b style="color:var(--good)">${TL(businessWeekly())}</b></div>
+    ${LUX_CATS.map(cat=>`
+      <h3 style="margin-top:14px">${cat.n}</h3>
+      ${LUX.filter(l=>l.cat===cat.k).sort((a,b)=>a.cost-b.cost).map(l=>{
+        const has = p.luxury.includes(l.id);
+        return `<div class="statbox shoprow">
+          <span style="font-size:1.45rem;flex:none">${l.ic||'💠'}</span>
+          <div class="sinfo"><b>${l.n}</b><div class="sub">Mutluluk +${l.mut} • Ün +${l.un}${l.inc?` • <span style="color:var(--good)">+${TL(l.inc)}/hafta</span>`:''}</div></div>
+          ${has?'<span class="chip ovr">Sahipsin</span>':
+            `<button class="btn sm ${p.money>=l.cost?'primary':''}" ${p.money<l.cost?'disabled':''} onclick="buyLux('${l.id}')">${TL(l.cost)}</button>`}
+        </div>`;
+      }).join('')}
+    `).join('')}
   </div>`;
 }
 function buyBoot(id){ const b=BOOTS.find(x=>x.id===id),p=S.p;
@@ -1978,20 +2197,68 @@ function buyBoot(id){ const b=BOOTS.find(x=>x.id===id),p=S.p;
   p.money-=b.cost; p.owned.push(id); p.boot=id; insertUserIntoSquad();
   toast(`${b.n} alındı ve giyildi.`); save(); render(); }
 function equip(id){ S.p.boot=id; insertUserIntoSquad(); toast('Krampon değişti.'); save(); render(); }
-const DRINK_PACKS = [
-  {id:'d1',  n:'Tekli şişe',      ic:'⚡', qty:1,  cost:25000,  desc:'1 adet enerji içeceği.'},
-  {id:'d3',  n:'3\'lü paket',     ic:'🥤', qty:3,  cost:66000,  desc:'3 adet — şişe başı 22.000 ₺.'},
-  {id:'d6',  n:'6\'lı kutu',      ic:'📦', qty:6,  cost:120000, desc:'6 adet — şişe başı 20.000 ₺.'},
-  {id:'d12', n:'Sezonluk koli (12)', ic:'🚚', qty:12, cost:216000, desc:'12 adet — şişe başı 18.000 ₺. En avantajlısı.'}
+/* üç çeşit enerji içeceği: kondisyon kazancı arttıkça fiyat da artar */
+const ENERGY = [
+  {id:'e1', n:'Klasik enerji içeceği',   ic:'⚡', col:'#f59e0b', gain:15, boost:8,  cost:20000,
+   desc:'Basit kafeinli şişe. Kondisyon +15, 8 dakika performans bonusu.'},
+  {id:'e2', n:'İzotonik güç içeceği',    ic:'🥤', col:'#ea580c', gain:40, boost:15, cost:60000,
+   desc:'Tuz ve mineral takviyeli. Kondisyon +40, 15 dakika performans bonusu.'},
+  {id:'e3', n:'Profesyonel enerji jeli', ic:'🧪', col:'#22d3ee', gain:60, boost:24, cost:135000,
+   desc:'Takım doktorunun karışımı. Kondisyon +60, 24 dakika performans bonusu.'}
 ];
+const ENERGY_PACKS = [
+  {q:1, mul:1.00, n:'1 adet'},
+  {q:3, mul:0.90, n:'3 adet (%10 indirim)'},
+  {q:6, mul:0.82, n:'6 adet (%18 indirim)'}
+];
+const packCost = (e,pk) => Math.round(e.cost*pk.q*pk.mul/1000)*1000;
+function drInv(){
+  const p = S.p;
+  if(!p.dr) p.dr = {e1:(p.drinks||0), e2:0, e3:0};
+  ENERGY.forEach(e=>{ if(typeof p.dr[e.id]!=='number') p.dr[e.id]=0; });
+  return p.dr;
+}
+function drinksTotal(){ const d=drInv(); return ENERGY.reduce((t,e)=>t+(d[e.id]||0),0); }
+function syncDrinks(){ S.p.drinks = drinksTotal(); return S.p.drinks; }
+function bestDrinkId(){
+  const d = drInv();
+  for(let i=ENERGY.length-1;i>=0;i--) if(d[ENERGY[i].id]>0) return ENERGY[i].id;
+  return null;
+}
+function updateDrinkN(){ const el=$('drinkN'); if(el) el.textContent = syncDrinks(); }
+/* içecek seçme penceresi (maç içi ve devre arası) */
+function openDrinkPicker(fromHalfTime){
+  if(!M || !M.userOn) return toast('Sahada değilsin.');
+  if(M.drinkUsed) return toast('Bu maçta zaten bir içecek içtin.');
+  const d = drInv();
+  if(drinksTotal()<1) return toast('Enerji içeceğin yok. Mağazadan alabilirsin.');
+  modal(`<h3 style="color:var(--flood)">⚡ Hangi içeceği içiyorsun?</h3>
+    <p class="sub">Maç başına yalnızca bir içecek içebilirsin.</p>
+    ${ENERGY.map(e=>{
+      const n = d[e.id]||0;
+      return `<div class="statbox shoprow">
+        <span style="font-size:1.5rem;flex:none">${e.ic}</span>
+        <div class="sinfo"><b>${e.n}</b> <span class="chip">${n} adet</span>
+          <div class="sub">Kondisyon +${e.gain} • ${e.boost} dk bonus</div></div>
+        <button class="btn sm ${n>0?'green':''}" ${n>0?'':'disabled'}
+          onclick="closeModal();drinkEnergy('${e.id}',${fromHalfTime?'true':'false'})">İç</button>
+      </div>`;
+    }).join('')}
+    <button class="btn block" style="margin-top:10px" onclick="closeModal()">Vazgeç</button>`);
+}
 const MEDKITS = [
   {id:'m1', n:'Standart ilk yardım çantası', ic:'🧰', qty:1, cost:60000,  p:0.55, desc:'Soğuk sprey, bandaj, ağrı kesici.'},
   {id:'m3', n:'Profesyonel set (3 adet)',    ic:'🩺', qty:3, cost:165000, p:0.70, desc:'Kinesio bant + takım doktoru müdahalesi.'},
   {id:'m5', n:'Klinik seti (5 adet)',        ic:'🚑', qty:5, cost:300000, p:0.80, desc:'Enjeksiyon destekli acil müdahale seti.'}
 ];
-function buyDrink(id){ const p=S.p; const d=DRINK_PACKS.find(x=>x.id===id)||DRINK_PACKS[0];
-  if(p.money<d.cost) return toast('Para yetmiyor.');
-  p.money-=d.cost; p.drinks+=d.qty; toast(`${d.n} alındı: +${d.qty} içecek.`); save(); render(); }
+function buyDrink(id, qty){
+  const p=S.p; const e=ENERGY.find(x=>x.id===id)||ENERGY[0];
+  const pk = ENERGY_PACKS.find(x=>x.q===+qty) || ENERGY_PACKS[0];
+  const cost = packCost(e,pk);
+  if(p.money<cost) return toast('Para yetmiyor.');
+  const d = drInv();
+  p.money-=cost; d[e.id]+=pk.q; syncDrinks();
+  toast(`${e.n} alındı: +${pk.q} adet.`); save(); render(); }
 function buyMed(id){ const p=S.p; const m=MEDKITS.find(x=>x.id===id);
   if(p.money<m.cost) return toast('Para yetmiyor.');
   p.money-=m.cost; p.medkits=(p.medkits||0)+m.qty; p.medQ=Math.max(p.medQ||0.55, m.p);
@@ -2092,7 +2359,7 @@ function buyLux(id){ const l=LUX.find(x=>x.id===id),p=S.p;
   if(p.money<l.cost) return toast('Para yetmiyor.');
   p.money-=l.cost; p.luxury.push(id); p.happiness=clamp(p.happiness+l.mut); p.fame=clamp(p.fame+l.un);
   addNews(`${p.name} kendine ${l.n.toLowerCase()} aldı. Sosyal medya konuşuyor.`,'magazin');
-  toast(`${l.n} alındı.`); save(); render(); }
+  toast(l.inc?`${l.n} alındı. Haftalık +${TL(l.inc)} gelir.`:`${l.n} alındı.`); save(); render(); }
 
 /* ---------- SOYUNMA ODASI ---------- */
 function closeMates(){
@@ -2180,17 +2447,21 @@ function requestTransfer(){
 /* ---------- SPONSORLAR ---------- */
 function renderSponsor(){
   const p = S.p;
+  const signed = SPONSORS.filter(x=>p.sponsors.includes(x.id));
+  const total = sponsorWeekly();
   $('sponsorBox').innerHTML = `
   <div class="card">
-    <h3>Sponsorluk anlaşmaları</h3>
-    <p class="sub">Ününe göre açılır, her hafta otomatik öder.</p>
-    ${SPONSORS.map(s=>{
+    <h3>Sponsorluk anlaşmaları <span class="chip">${signed.length}/${SPONSORS.length}</span></h3>
+    <p class="sub">Ününe göre açılır, her hafta otomatik hesabına yatar.</p>
+    <div class="statbox spread"><span class="sub">Toplam haftalık sponsorluk geliri</span><b style="color:var(--good)">${TL(total)}</b></div>
+    ${SPONSORS.slice().sort((a,b)=>a.weekly-b.weekly).map(s=>{
       const has = p.sponsors.includes(s.id);
       const open = p.fame>=s.req;
-      return `<div class="statbox spread">
-        <div><b>${s.n}</b><div class="sub">${TL(s.weekly)}/hafta • Gerekli ün: ${s.req}</div></div>
+      return `<div class="statbox shoprow">
+        <span style="font-size:1.35rem;flex:none">${s.ic||'🤝'}</span>
+        <div class="sinfo"><b>${s.n}</b><div class="sub">${TL(s.weekly)}/hafta • Gerekli ün: ${s.req}${open||has?'':` • senin ünün: ${Math.round(p.fame)}`}</div></div>
         ${has?'<span class="chip ovr">Anlaşman var</span>':
-          `<button class="btn sm ${open?'primary':''}" ${open?'':'disabled'} onclick="signSponsor('${s.id}')">İmzala</button>`}
+          `<button class="btn sm ${open?'primary':''}" ${open?'':'disabled'} onclick="signSponsor('${s.id}')">${open?'İmzala':'🔒'}</button>`}
       </div>`;
     }).join('')}
   </div>`;
@@ -2208,8 +2479,13 @@ function renderBadges(){
   const p = S.p;
   checkBadges();
   const elig = p.badgesEligible||[];
-  $('badgesBox').innerHTML = `<div class="card"><h3>Başarımlar <span class="chip">${p.badges.length}/${BADGES.length}</span></h3>
-    <p class="sub" style="margin-bottom:8px">Şartını sağladığın başarımlar burada "Topla" butonuyla belirir — ödülü almak için tıklaman gerekir.</p>
+  const readyCount = BADGES.filter(b=>!p.badges.includes(b.id) && (elig.includes(b.id) || b.chk(p))).length;
+  $('badgesBox').innerHTML = `<div class="card">
+    <div class="spread" style="align-items:center">
+      <h3 style="margin:0">Başarımlar <span class="chip">${p.badges.length}/${BADGES.length}</span></h3>
+      ${readyCount>0?`<button class="btn sm primary" onclick="claimAllBadges()">✨ Tümünü Topla (${readyCount})</button>`:''}
+    </div>
+    <p class="sub" style="margin:6px 0 8px">Şartını sağladığın başarımlar burada "Topla" butonuyla belirir — ödülü almak için tıklaman gerekir.</p>
     ${BADGES.map(b=>{
       const got = p.badges.includes(b.id);
       const ready = !got && (elig.includes(b.id) || b.chk(p));
@@ -2647,7 +2923,7 @@ function startMatch(comp){
     atkLevel:0, defLevel:0,
     weather: pick(WEATHER),
     rating:6.0, notes:[], timer:null, speed:1, paused:true, ended:false,
-    varBusy:false, patched:false, _inj:null,
+    varBusy:false, patched:false, fast:false, _inj:null,
     stats:{shotsUs:0, shotsThem:0, momSum:0, momN:0}
   };
   const me = M.us.squad.find(x=>x.isUser);
@@ -2668,15 +2944,20 @@ function startMatch(comp){
   $('sb-away').innerHTML = `<span id="kit-away">${kitDot(fx.a,true)}</span><br>${fx.a}`;
   $('pc-kit-h').innerHTML = kitDot(fx.h);
   $('pc-kit-a').innerHTML = kitDot(fx.a);
+  $('pc-ab-h').textContent = abbr(fx.h);
+  $('pc-ab-a').textContent = abbr(fx.a);
   $('pc-score').textContent = '0-0';
-  $('pc-min').textContent = `İlk yarı • 0'`;
+  $('pc-min').textContent = `0'`;
+  const _sf = $('speedFab'); if(_sf) _sf.style.display='flex';
+  const _bw = $('me-sta-wrap'); if(_bw) _bw.classList.remove('boost');
+  const _bt = $('me-boost-txt'); if(_bt) _bt.textContent='';
   $('sb-score').textContent = '0 - 0';
   $('sb-weather').textContent = `${M.weather.ic} ${M.weather.n}`;
   $('log').innerHTML = '';
   $('acts').style.display='none'; $('prompt').style.display='none';
   $('btn-finish').style.display='none';
   $('btn-sub').disabled = false; $('btn-drink').disabled = false;
-  $('drinkN').textContent = p.drinks;
+  updateDrinkN();
   $('medN').textContent = p.medkits||0;
   $('btn-med').disabled = false;
   dressStadium();
@@ -2934,7 +3215,9 @@ function confettiBurst(){
 function say(txt, cls=''){
   const l = $('log');
   const d = document.createElement('div');
-  if(cls) d.className = cls;
+  const isMe = !!(S && S.p && S.p.name && txt.indexOf(S.p.name)>=0);
+  const classes = [cls, isMe?'me-event':''].filter(Boolean).join(' ');
+  if(classes) d.className = classes;
   d.innerHTML = (M && M.minute? `<span style="color:#64748b">${M.minute}'</span> ` : '') + txt;
   l.appendChild(d); l.scrollTop = l.scrollHeight;
   while(l.childElementCount>220) l.removeChild(l.firstChild);
@@ -3035,13 +3318,18 @@ function updateClock(){
   const label = M.half===1?'İlk yarı':'İkinci yarı';
   const clockTxt = `${label} • ${M.minute}'${M.stoppage?` +${M.stoppage}`:''}`;
   $('sb-clock').textContent = clockTxt;
-  const pm = $('pc-min'); if(pm) pm.textContent = clockTxt;
+  const pm = $('pc-min');
+  if(pm) pm.textContent = `${M.minute}'${M.stoppage?`+${M.stoppage}`:''}`;
   const me = M.us.squad.find(x=>x.isUser);
   const st = M.userOn ? Math.round(me.stamina) : 0;
   $('me-sta').textContent = M.userOn ? st+'%' : 'oyunda değil';
   $('me-sta-bar').style.width = (M.userOn?st:0)+'%';
+  // enerji içeceği aktifken bar rengi değişir ve kalan dakika barın üstünde yazar
+  const bw = $('me-sta-wrap'), bt = $('me-boost-txt');
+  const boostOn = M.boost>0 && M.userOn;
+  if(bw) bw.classList.toggle('boost', boostOn);
+  if(bt) bt.textContent = boostOn ? `⚡ ${M.boost} dk` : '';
   const lineParts = [];
-  if(M.boost>0) lineParts.push(`⚡ enerji (${M.boost} dk)`);
   if(!M.userOn) lineParts.push('kenardasın');
   $('me-line').textContent = lineParts.join(' • ');
   $('me-label').textContent = M.userOn ? `${S.p.name} — kondisyon` : `${S.p.name} — oyundan çıktı`;
@@ -3051,7 +3339,19 @@ function schedule(){
   clearTimeout(M.timer);
   M.timer = setTimeout(tick, 760/M.speed);
 }
-function setSpeed(v){ if(!M) return; M.speed=v; updateSpeedButtons(); }
+/* sakatlanıp oyundan çıktıysan (ve iyileşmediysen) maçın kalanını hızlandırıp bitir */
+function fastForwardMatch(reason){
+  if(!M || M.ended || M.fast) return;
+  M.fast = true;
+  M.speed = 18;
+  const fab = $('speedFab'); if(fab) fab.style.display='none';
+  updateSpeedButtons();
+  say(`⏩ ${S.p.name} sahada olmadığı için maçın kalanı hızlandırıldı.`,'hi');
+  toast(reason==='sakatlık' ? '🚑 Sakatlandın — maçın kalanı hızlandırılıyor.' : 'Maç hızlandırılıyor.');
+  if(M.paused){ M.paused=false; }
+  clearTimeout(M.timer); schedule();
+}
+function setSpeed(v){ if(!M || M.fast) return; M.speed=v; updateSpeedButtons(); }
 function updateSpeedButtons(){
   document.querySelectorAll('[data-speed]').forEach(b=>{
     b.classList.toggle('primary', M && +b.dataset.speed===M.speed);
@@ -3462,7 +3762,7 @@ function useMedkit(){
   const me = M.us.squad.find(x=>x.isUser);
   if(ok){
     me.stamina = clamp(me.stamina-12, 5, 100);
-    M.patched = true;
+    M.patched = true; bumpAch('medkitSaves');
     say(`🧰 <b>Ayağa kalktı!</b> ${p.name} ilk yardım paketiyle toparlandı ve oyuna devam ediyor. Tribün ayakta alkışlıyor.`,'gl');
     Sfx.crowd(1.8,0.26,900);
     addRating(0.25,'mücadele');
@@ -3487,7 +3787,9 @@ function applyUserInjury(){
   say(`Teşhis: <b>${inj.t.n}</b>. Tahmini yokluk: ${S.p.injuryWeeks} hafta.`,'bd');
   endUserOnPitch('sakatlık');
   M.paused = false;
-  save(); schedule();
+  save();
+  fastForwardMatch('sakatlık');
+  schedule();
 }
 function useMedkitManual(){
   if(!M || !M.userOn) return toast('Sahada değilsin.');
@@ -3745,6 +4047,12 @@ function halfTime(){
               : 'Hoca soyunma odasında sesini yükseltti: "Bu oyunla olmaz!"';
   M.paused = true;
   M.htTalk = talk;
+  // maç hızlandırıldıysa devre arasını bekletme
+  if(M.fast){
+    say('⏩ Devre arası geçildi.','hi');
+    setTimeout(()=>{ if(M && !M.ended) startSecondHalf(); }, 700);
+    return;
+  }
   $('ov').style.display='flex';
   $('ov-txt').textContent = 'DEVRE ARASI';
   renderHalfTime();
@@ -3752,13 +4060,13 @@ function halfTime(){
 }
 function renderHalfTime(){
   const me = M.us.squad.find(x=>x.isUser);
-  const canDrink = M.userOn && !M.drinkUsed && S.p.drinks>0;
+  const canDrink = M.userOn && !M.drinkUsed && drinksTotal()>0;
   $('ov-sub').innerHTML = `${M.htTalk}
     <div class="sub" style="margin-top:8px">Kondisyonun: <b>${Math.round(me.stamina)}%</b></div>
     <div class="sub">Puan ${M.rating.toFixed(1)} • ${me.mGoals} gol, ${me.mAssists} asist</div>
     ${M.userOn?`<div class="row wrap" style="margin-top:10px;justify-content:center;gap:8px">
-      <button class="btn ${canDrink?'green':''}" ${canDrink?'':'disabled'} onclick="drinkEnergy(true)">
-        ⚡ Enerji içeceği iç (${S.p.drinks})</button>
+      <button class="btn ${canDrink?'green':''}" ${canDrink?'':'disabled'} onclick="openDrinkPicker(true)">
+        ⚡ Enerji içeceği iç (${drinksTotal()})</button>
       <button class="btn ${(S.p.medkits>0&&me.stamina<=70)?'':''}" ${(S.p.medkits>0)?'':'disabled'} onclick="useMedkitManual();renderHalfTime()">🧰 İlk yardım (${S.p.medkits||0})</button></div>`:''}
     <div style="margin-top:12px"><button class="btn primary" onclick="startSecondHalf()">İkinci yarıya çık</button></div>`;
 }
@@ -3826,16 +4134,20 @@ function requestSub(){
   S.p.trust = clamp(S.p.trust-3);
   endUserOnPitch('istek');
 }
-function drinkEnergy(fromHalfTime){
+function drinkEnergy(id, fromHalfTime){
   if(!M || !M.userOn) return;
   if(M.drinkUsed) return toast('Bu maçta bir tane içtin.');
-  if(S.p.drinks<1) return toast('Enerji içeceğin yok. Mağazadan alabilirsin.');
-  S.p.drinks--; M.drinkUsed = true; M.boost = 15;
+  const d = drInv();
+  if(typeof id!=='string' || !d[id]) id = bestDrinkId();
+  if(!id) return toast('Enerji içeceğin yok. Mağazadan alabilirsin.');
+  const e = ENERGY.find(x=>x.id===id);
+  d[id]--; syncDrinks();
+  M.drinkUsed = true; M.boost = e.boost; M.boostMax = e.boost;
+  bumpAch('drinksUsed');
   const me = M.us.squad.find(x=>x.isUser);
-  me.stamina = clamp(me.stamina+30);
-  $('drinkN').textContent = S.p.drinks;
-  say(`⚡ ${S.p.name} enerji içeceğini içti — bacaklar yeniden taze.`);
-  $('drinkN').textContent = S.p.drinks;
+  me.stamina = clamp(me.stamina+e.gain);
+  updateDrinkN();
+  say(`⚡ ${S.p.name} ${e.n.toLowerCase()} içti — kondisyon +${e.gain}, ${e.boost} dakika bonus.`);
   if(fromHalfTime) renderHalfTime();
   updateClock(); save();
 }
@@ -3915,6 +4227,14 @@ function finishMatch(){
   if(posByKey(p.posKey).grp==='GK' && M.them.score===0){ addRating(0.5,'gol yemedi'); if(!isMilli) p.season.cleanSheet++; }
   const rating = clamp(M.rating, 3, 10);
   if(me.mGoals>=3) p._hattrick = true;
+  // başarım sayaçları
+  p.ach = p.ach || {};
+  if(M.us.score>M.them.score){ bumpAch('wins'); if(!M.usHome) bumpAch('awayWins'); if(M.us.score-M.them.score>=3) bumpAch('bigWins'); }
+  if(me.mGoals>=2) bumpAch('braces');
+  if(me.mGoals>=3) bumpAch('hattricks');
+  if(me.mAssists>=2) bumpAch('doubleAssists');
+  if(rating>=9) bumpAch('rating9');
+  if(isEuro){ bumpAch('euroApps'); if(me.mGoals) bumpAch('euroGoals', me.mGoals); }
 
   let motm = rating>=8.2 && M.us.score>=M.them.score;
   if(motm && M.comp==='lig'){ p._weeklyMotm = true; p._weeklyMotmWeek = S.week; }
@@ -3931,16 +4251,16 @@ function finishMatch(){
     p.caps++; p.natGoals += me.mGoals;
   }
 
-  // kazanç
-  let earn = isMilli ? 45000 : p.wage;
+  // kazanç (bir tık daha zor — her şeye hemen ulaşılmasın)
+  let earn = isMilli ? 30000 : Math.round(p.wage*0.72);
   if(!isMilli){
-    if(M.us.score>M.them.score) earn += Math.round(p.wage*0.6);
-    else if(M.us.score===M.them.score) earn += Math.round(p.wage*0.2);
-    earn += me.mGoals*p.goalBonus + me.mAssists*Math.round(p.goalBonus*0.5);
-    if(motm) earn += Math.round(p.wage*0.3);
-    if(isEuro) earn = Math.round(earn*1.6);
+    if(M.us.score>M.them.score) earn += Math.round(p.wage*0.42);
+    else if(M.us.score===M.them.score) earn += Math.round(p.wage*0.14);
+    earn += me.mGoals*p.goalBonus + me.mAssists*Math.round(p.goalBonus*0.4);
+    if(motm) earn += Math.round(p.wage*0.22);
+    if(isEuro) earn = Math.round(earn*1.35);
     if(M.usHome) earn = Math.round(earn*SB().prim);   // stadyum geliri payı
-  } else earn += me.mGoals*20000;
+  } else earn += me.mGoals*14000;
   p.money += earn;
 
   // moral / güven / kondisyon
@@ -3993,15 +4313,23 @@ function renderPmDrink(){
   const box = $('pm-drink'); if(!box) return;
   const p = S.p;
   box.innerHTML = `<div class="spread"><span class="sub">Maç sonu kondisyon</span><b id="pm-fit">${Math.round(p.fitness)}%</b></div>
-    <div class="sub" style="margin:6px 0">Soyunma odasında toparlanma içeceği: her biri +18 kondisyon.</div>
-    <button class="btn sm ${p.drinks>0&&p.fitness<100?'green':''}" ${p.drinks>0&&p.fitness<100?'':'disabled'} onclick="recoveryDrink()">
-      ⚡ İçecek kullan (${p.drinks})</button>`;
+    <div class="sub" style="margin:6px 0">Soyunma odasında toparlanma: içeceğin verdiği kondisyonun yaklaşık yarısı kadar toparlarsın.</div>
+    <div class="row wrap" style="gap:6px">
+      ${ENERGY.map(e=>{
+        const n = drInv()[e.id]||0, ok = n>0 && p.fitness<100;
+        return `<button class="btn sm ${ok?'green':''}" ${ok?'':'disabled'} onclick="recoveryDrink('${e.id}')">
+          ${e.ic} +${Math.round(e.gain*0.55)} (${n})</button>`;
+      }).join('')}
+    </div>`;
 }
-function recoveryDrink(){
-  const p = S.p;
-  if(p.drinks<1) return toast('Enerji içeceğin yok.');
+function recoveryDrink(id){
+  const p = S.p, d = drInv();
+  if(typeof id!=='string' || !d[id]) id = bestDrinkId();
+  if(!id) return toast('Enerji içeceğin yok.');
   if(p.fitness>=100) return toast('Kondisyonun zaten tam.');
-  p.drinks--; p.fitness = clamp(p.fitness+18);
+  const e = ENERGY.find(x=>x.id===id);
+  d[id]--; syncDrinks();
+  p.fitness = clamp(p.fitness + Math.round(e.gain*0.55));
   toast(`Toparlandın: kondisyon %${Math.round(p.fitness)}`);
   renderPmDrink(); save(); render();
 }
@@ -4171,7 +4499,7 @@ function processEuroWeek(wk){
           addNews(`🏆 Şampiyonlar Ligi'ni ${e.winner} kazandı!`,'kupa');
           if(e.winner===S.p.team){
             S.p.career.trophies.push(`${S.seasonLabel} Şampiyonlar Ligi`);
-            S.p.money += 3000000; S.p.happiness=clamp(S.p.happiness+30); S.p.fame=clamp(S.p.fame+15);
+            S.p.money += 1800000; S.p.happiness=clamp(S.p.happiness+30); S.p.fame=clamp(S.p.fame+15);
           }
         }
       }
@@ -4221,7 +4549,7 @@ function endWeek(){
       addNews(`🏆 Türkiye Kupası'nı ${S.cup.winner} kazandı!`,'kupa');
       if(S.cup.winner===S.p.team){
         S.p.career.trophies.push(`${S.seasonLabel} Türkiye Kupası`);
-        S.p.money += 500000; S.p.happiness=clamp(S.p.happiness+20); S.p.morale=clamp(S.p.morale+15);
+        S.p.money += 320000; S.p.happiness=clamp(S.p.happiness+20); S.p.morale=clamp(S.p.morale+15);
       }
     }
   }
@@ -4232,6 +4560,12 @@ function endWeek(){
   // haftalık toparlanma
   const p=S.p;
   const sb = SB();
+  // sponsorluk + işletme geliri
+  const spIn = sponsorWeekly(), bzIn = businessWeekly();
+  if(spIn+bzIn>0){
+    p.money += spIn + bzIn;
+    addNews(`Haftalık gelir tablosu: sponsorluklardan ${TL(spIn)}, işletmelerinden ${TL(bzIn)} hesabına geçti.`,'magazin');
+  }
   p.fitness = clamp(p.fitness + 40 + sb.heal*3);
   p.morale = clamp(p.morale + (p.morale<55?4:-1));
   p.happiness = clamp(p.happiness - 2);
@@ -4396,9 +4730,9 @@ function showSeasonSummary(tbl, champ, scorer, avg){
     <div class="spread"><span class="sub">Gol / asist</span><b>${p.season.goals} / ${p.season.assists}</b></div>
     <div class="spread"><span class="sub">Ortalama puan</span><b>${p.season.apps?avg.toFixed(2):'—'}</b></div></div>`;
 
-  if(champ.n===p.team){ p.career.trophies.push(`${S.seasonLabel} Süper Lig`); p.money+=1200000; p.happiness=clamp(p.happiness+25);
+  if(champ.n===p.team){ p.career.trophies.push(`${S.seasonLabel} Süper Lig`); p.money+=800000; p.happiness=clamp(p.happiness+25);
     txt += `<p style="color:var(--good)"><b>🏆 Şampiyonsun! Takımınla kupayı kaldırdın.</b></p>`; }
-  if(scorer && scorer[0].split('|')[0]===p.name){ p.career.trophies.push(`${S.seasonLabel} Gol Kralı`); p.money+=600000;
+  if(scorer && scorer[0].split('|')[0]===p.name){ p.career.trophies.push(`${S.seasonLabel} Gol Kralı`); p.money+=400000;
     txt += `<p style="color:var(--good)"><b>👑 Gol kralı sensin!</b></p>`; }
   if(p.season.apps>=20 && avg>=7.4){
     p.career.trophies.push(`${S.seasonLabel} Yılın Oyuncusu`); p.money+=400000; p.fame=clamp(p.fame+10);
@@ -4417,7 +4751,7 @@ function showSeasonSummary(tbl, champ, scorer, avg){
     const better = TEAMS.filter(t=>t.s > (TEAMS.find(x=>x.n===p.team).s - (p.transferRequested?3:-2))).sort((a,b)=>b.s-a.s);
     if(better.length && chance(p.transferRequested?0.85:0.7)) offer = pick(better.slice(0,5));
   }
-  const newWage = Math.round(p.wage * (1 + (avg-6.4)*0.25 + (p.season.goals>10?0.2:0)));
+  const newWage = Math.round(p.wage * (1 + (avg-6.4)*0.16 + (p.season.goals>10?0.12:0)));
   txt += `<div class="statbox"><b>Sözleşme</b><div class="sub">Yeni maç ücreti teklifi: ${TL(Math.max(newWage,p.wage))}</div></div>`;
   if(offer){
     txt += `<div class="statbox" style="border-color:var(--flood)"><b>Transfer teklifi: ${offer.n}</b>
@@ -4616,7 +4950,7 @@ function bindUI(){
     });
   });
   document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click', ()=>setSpeed(+b.dataset.speed)));
-  $('btn-drink').addEventListener('click', drinkEnergy);
+  $('btn-drink').addEventListener('click', ()=>openDrinkPicker(false));
   $('btn-med').addEventListener('click', useMedkitManual);
   $('btn-sub').addEventListener('click', requestSub);
   $('btn-squad').addEventListener('click', showSquad);
