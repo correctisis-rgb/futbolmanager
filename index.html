@@ -132,20 +132,27 @@ td.num,th.num{text-align:center;width:26px;}
 .pitch{position:relative;width:100%;aspect-ratio:16/10;max-height:46vh;border-radius:10px;overflow:hidden;
   background:repeating-linear-gradient(90deg,var(--grass) 0 8%,var(--grass2) 8% 16%);
   border:2px solid rgba(255,255,255,.55);margin-bottom:8px;}
-.pl{position:absolute;width:5.2%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);
-  display:flex;align-items:center;justify-content:center;font-size:.5rem;font-weight:700;color:#fff;
-  border:1.5px solid rgba(255,255,255,.9);transition:left .55s ease-out,top .55s ease-out;}
+.pl{position:absolute;width:clamp(7px,1.05%,11px);aspect-ratio:1;border-radius:22%;transform:translate(-50%,-50%);
+  display:flex;align-items:center;justify-content:center;font-size:.38rem;font-weight:700;color:#fff;
+  border:1px solid rgba(255,255,255,.85);transition:left .55s ease-out,top .55s ease-out;
+  box-shadow:0 0 0 1px rgba(0,0,0,.5);text-shadow:0 0 2px rgba(0,0,0,.9);}
 .pl.us{background:var(--us);} .pl.them{background:var(--them);}
-.pl.gk{background:#f59e0b;color:#241c00;}
-.pl.me{box-shadow:0 0 0 3px var(--flood);z-index:5;}
+.pl.gk{background:#f59e0b !important;color:#241c00;}
+.pl.me{box-shadow:0 0 0 2px var(--flood),0 0 0 1px rgba(0,0,0,.5);z-index:5;}
 .pl.tired{opacity:.55;}
-.ball{position:absolute;width:3.4%;aspect-ratio:1;background:#fff;border:1px solid #111;border-radius:50%;
+.ball{position:absolute;width:2.1%;aspect-ratio:1;background:#fff;border:1px solid #111;border-radius:50%;
   transform:translate(-50%,-50%);box-shadow:0 0 8px rgba(255,255,255,.8);transition:left .4s linear,top .4s linear;z-index:6;}
+.ball.goal-flash{box-shadow:0 0 14px 4px var(--flood);}
 .line{position:absolute;background:rgba(255,255,255,.55);}
 .overlay{position:absolute;inset:0;background:rgba(3,8,10,.88);display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:8px;text-align:center;padding:14px;z-index:20;}
 .overlay .big{font-family:'Barlow Condensed';font-size:1.6rem;color:var(--flood);}
 
+.actionbackdrop{position:fixed;inset:0;background:rgba(3,8,10,.62);z-index:55;display:none;}
+.actionsheet{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom,0px));
+  z-index:56;max-width:760px;margin:0 auto;padding:0 12px;pointer-events:none;}
+.actionsheet.show{pointer-events:auto;}
+.actionsheet .prompt,.actionsheet .acts{pointer-events:auto;box-shadow:0 -6px 24px rgba(0,0,0,.5);}
 .commentary{background:#050b0e;border:1px solid var(--line);border-radius:10px;padding:10px;
   height:150px;overflow-y:auto;font-size:.84rem;line-height:1.5;}
 .commentary div{padding:2px 0;border-bottom:1px solid #101c22;}
@@ -330,8 +337,6 @@ td.num,th.num{text-align:center;width:26px;}
             </div>
             <div class="mini" id="effort-note" style="margin-top:5px"></div>
           </div>
-          <div class="prompt" id="prompt" style="display:none">Top sende!</div>
-          <div class="acts" id="acts" style="display:none"></div>
           <div class="commentary" id="log"></div>
           <div class="row wrap" style="margin-top:10px">
             <button class="btn sm" id="btn-drink">⚡ Enerji içeceği (<span id="drinkN">0</span>)</button>
@@ -390,6 +395,11 @@ td.num,th.num{text-align:center;width:26px;}
   </div>
 </div>
 
+<div class="actionbackdrop" id="actionbackdrop"></div>
+<div class="actionsheet" id="actionsheet">
+  <div class="prompt" id="prompt" style="display:none">Top sende!</div>
+  <div class="acts" id="acts" style="display:none"></div>
+</div>
 <nav id="bottom">
   <button data-view="v-match" class="on"><i>⚽</i>Maç</button>
   <button data-view="v-career"><i>👤</i>Kariyer</button>
@@ -541,17 +551,27 @@ const Sfx = {
 /* =========================================================
    VERİ
    ========================================================= */
+/* 2025/26 Trendyol Süper Lig'in gerçek 18 takımı; c=forma ana rengi, c2=forma ikinci rengi (gerçek kulüp renkleri) */
 const TEAMS = [
-  {n:'Galatasaray',    s:84, c:'#f5c518'}, {n:'Fenerbahçe',   s:83, c:'#154284'},
-  {n:'Beşiktaş',       s:81, c:'#e6e6e6'}, {n:'Trabzonspor',  s:79, c:'#8a1538'},
-  {n:'Başakşehir',     s:75, c:'#f36f21'}, {n:'Samsunspor',   s:73, c:'#c8102e'},
-  {n:'Eyüpspor',       s:71, c:'#5c2d91'}, {n:'Kasımpaşa',    s:70, c:'#1d3f8b'},
-  {n:'Göztepe',        s:72, c:'#d4212a'}, {n:'Antalyaspor',  s:70, c:'#b02026'},
-  {n:'Rizespor',       s:69, c:'#0b6e4f'}, {n:'Kayserispor',  s:69, c:'#d21e2b'},
-  {n:'Konyaspor',      s:70, c:'#1f8a4c'}, {n:'Alanyaspor',   s:68, c:'#f47b20'},
-  {n:'Gaziantep FK',   s:68, c:'#b8112e'}, {n:'Sivasspor',    s:67, c:'#b31b1b'},
-  {n:'Hatayspor',      s:65, c:'#8b1c2b'}, {n:'Bodrum FK',    s:64, c:'#0f7a4d'}
+  {n:'Galatasaray',        s:88, c:'#a30234', c2:'#fdb913'}, {n:'Fenerbahçe',       s:86, c:'#0a3161', c2:'#ffe000'},
+  {n:'Trabzonspor',        s:82, c:'#7b1030', c2:'#7ec8e3'}, {n:'Beşiktaş',         s:80, c:'#141414', c2:'#ffffff'},
+  {n:'Başakşehir',         s:76, c:'#f36f21', c2:'#1c355e'}, {n:'Göztepe',          s:75, c:'#fdd800', c2:'#e2001a'},
+  {n:'Samsunspor',         s:72, c:'#e2001a', c2:'#ffffff'}, {n:'Kocaelispor',      s:70, c:'#0f7a3d', c2:'#141414'},
+  {n:'Alanyaspor',         s:69, c:'#f47b20', c2:'#006233'}, {n:'Rizespor',         s:69, c:'#00693e', c2:'#003a70'},
+  {n:'Konyaspor',          s:68, c:'#0b6e3a', c2:'#ffffff'}, {n:'Antalyaspor',      s:68, c:'#e2001a', c2:'#ffffff'},
+  {n:'Gençlerbirliği',     s:67, c:'#a6192e', c2:'#141414'}, {n:'Kasımpaşa',        s:67, c:'#0b2d6b', c2:'#ffffff'},
+  {n:'Kayserispor',        s:66, c:'#e2001a', c2:'#fdd800'}, {n:'Eyüpspor',         s:66, c:'#5c2d91', c2:'#fdd800'},
+  {n:'Fatih Karagümrük',   s:65, c:'#d2001e', c2:'#141414'}, {n:'Gaziantep FK',     s:65, c:'#c8102e', c2:'#141414'}
 ];
+/* birkaç kulüpte gerçek, tanınabilir futbolcu isimleri (2025/26 kadrosu) — kalan mevkiler otomatik oyuncularla dolduruluyor */
+const STAR_PLAYERS = {
+  'Galatasaray':      [{name:'Mauro Icardi', posKey:'ST'},{name:'Victor Osimhen', posKey:'CF'},{name:'Leroy Sane', posKey:'RW'},{name:'Kerem Aktürkoğlu', posKey:'LW'}],
+  'Fenerbahçe':       [{name:'Edin Dzeko', posKey:'ST'},{name:'İrfan Can Kahveci', posKey:'AM'},{name:'Fred', posKey:'CM'},{name:'Milan Skriniar', posKey:'CB'}],
+  'Trabzonspor':      [{name:'Paul Onuachu', posKey:'ST'},{name:'Anthony Nwakaeme', posKey:'RW'},{name:'Edin Visca', posKey:'LW'}],
+  'Beşiktaş':         [{name:'Orkun Kökçü', posKey:'CM'},{name:'Tammy Abraham', posKey:'ST'},{name:'Rafa Silva', posKey:'AM'}],
+  'Başakşehir':       [{name:'Deniz Türüç', posKey:'AM'},{name:'Aleksandar Katai', posKey:'RW'}],
+  'Samsunspor':       [{name:'Marius Mouandilmadji', posKey:'ST'},{name:'Anthony Musaba', posKey:'RW'}]
+};
 
 const AD = ['Kerem','Arda','Emre','Barış','Cenk','Hakan','Yusuf','Mert','Umut','Berkay','Ozan','Kaan','Serdar','Volkan','Onur','Burak','Taylan','Efe','Deniz','Ahmet','Mehmet','Salih','İsmail','Halil','Uğur','Doğan','Eren','Furkan','Batuhan','Sinan','Levent','Tolga','Alper','Cihan','Mustafa','Oğuz'];
 const SOY = ['Yıldız','Demir','Kaya','Şahin','Çelik','Yılmaz','Arslan','Doğan','Aydın','Korkmaz','Polat','Güler','Aktaş','Tekin','Bulut','Sarı','Koç','Erdem','Ünal','Taş','Kurt','Özdemir','Aksoy','Şen','Bilgin','Turan','Kılıç','Avcı','Sezer','Balcı','Öztürk','Çakır'];
@@ -700,13 +720,19 @@ function newPlayerObj(name, age, posKey, team, foot, num){
 
 function makeSquad(teamName, strength){
   const list = [];
+  const stars = (STAR_PLAYERS[teamName]||[]).slice();
+  const nameFor = key => {
+    const i = stars.findIndex(s=>s.posKey===key);
+    if(i>=0) return stars.splice(i,1)[0].name;
+    return randName();
+  };
   for(let i=0;i<11;i++){
     const key = SLOT_POS[i];
     const a = {...TEMPLATE[key]};
     const diff = strength - 70;
     for(const k in a) a[k] = clamp(Math.round(a[k] + diff*0.75 + ri(-5,5)), 25, 95);
     const grp = posByKey(key).grp;
-    list.push({name:randName(), posKey:key, slot:i, attrs:a, ovr:overallOf(a,grp),
+    list.push({name:nameFor(key), posKey:key, slot:i, attrs:a, ovr:overallOf(a,grp),
                stamina:100, on:true, goals:0, assists:0, yellow:0, sub:false, num:i+1});
   }
   for(let i=0;i<7;i++){
@@ -869,6 +895,24 @@ function load(){
   }catch(e){ return false; }
 }
 function wipe(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+function confirmJubilee(){
+  modal(`<h3 style="color:var(--flood)">Jübile yapılsın mı?</h3>
+    <p class="sub">Kariyerini futbolcu olarak bitirip Teknik Direktör olmak istediğine emin misin?</p>
+    <div class="btngrid" style="margin-top:12px">
+      <button class="btn" onclick="closeModal()">Vazgeç</button>
+      <button class="btn primary" onclick="closeModal();doJubilee();">Evet, jübile yap</button>
+    </div>`);
+}
+function confirmWipe(){
+  // window.confirm() bazı mobil uygulama içi tarayıcılarda çalışmıyor,
+  // bu yüzden kendi onay penceremizi kullanıyoruz.
+  modal(`<h3 style="color:var(--bad)">Kariyer silinsin mi?</h3>
+    <p class="sub">Bu işlem geri alınamaz, tüm ilerlemen silinecek.</p>
+    <div class="btngrid" style="margin-top:12px">
+      <button class="btn" onclick="closeModal()">Vazgeç</button>
+      <button class="btn red" onclick="wipe();location.reload();">Evet, sil</button>
+    </div>`);
+}
 
 /* =========================================================
    NAVİGASYON
@@ -1078,7 +1122,7 @@ function renderProfile(){
     ${p.career.seasons.length?`<hr class="sep"><table><tr><th>Sezon</th><th>Takım</th><th class="num">M</th><th class="num">G</th><th class="num">A</th></tr>
       ${p.career.seasons.map(s=>`<tr><td>${s.label}</td><td>${s.team}</td><td class="num">${s.apps}</td><td class="num">${s.goals}</td><td class="num">${s.assists}</td></tr>`).join('')}</table>`:''}
     <hr class="sep">
-    <button class="btn red sm" onclick="if(confirm('Kariyer silinsin mi? Bu geri alınamaz.')){wipe();location.reload();}">Kariyeri sıfırla</button>
+    <button class="btn red sm" onclick="confirmWipe()">Kariyeri sıfırla</button>
   </div>`;
 }
 
@@ -1358,7 +1402,7 @@ function renderContract(){
   <div class="card">
     <h3>Kariyer kararı</h3>
     <p class="sub">${p.age>=32?'Kramponları asıp teknik direktörlüğe geçebilirsin.':'32 yaşından sonra kramponları asıp teknik direktör olabileceksin.'}</p>
-    <button class="btn red sm" style="margin-top:8px" ${p.age>=32?'':'disabled'} onclick="if(confirm('Kariyerini futbolcu olarak bitirip Teknik Direktör olmak istediğine emin misin?')) doJubilee();">👔 Jübile yap, Teknik Direktör ol</button>
+    <button class="btn red sm" style="margin-top:8px" ${p.age>=32?'':'disabled'} onclick="confirmJubilee()">👔 Jübile yap, Teknik Direktör ol</button>
   </div>`;
 }
 function doJubilee(){
@@ -1765,6 +1809,10 @@ function watchMatch(comp, fx, tie, cupIdx, extra){
   save();
 }
 
+function kitColors(teamName){
+  const t = TEAMS.find(x=>x.n===teamName);
+  return t ? {c1:t.c, c2:t.c2||t.c} : null;
+}
 function buildPitch(){
   const pit = $('pitch');
   pit.querySelectorAll('.pl').forEach(n=>n.remove());
@@ -1773,10 +1821,26 @@ function buildPitch(){
     d.className = `pl ${side}` + (pl.posKey==='GK'?' gk':'') + (pl.isUser?' me':'');
     d.id = `${side}-${i}`;
     d.textContent = pl.isUser ? (S.p.num) : (pl.num||i+1);
+    if(pl.posKey!=='GK'){
+      const kit = kitColors(pl.team || (side==='us'?M.us.name:M.them.name));
+      if(kit) d.style.background = `linear-gradient(180deg, ${kit.c1} 55%, ${kit.c2} 55%)`;
+    }
     pit.appendChild(d);
   };
   M.us.squad.forEach((pl,i)=>{ if(pl.on) mk('us', pl, i); });
   M.them.squad.forEach((pl,i)=>{ if(pl.on) mk('them', pl, i); });
+  movePitch();
+}
+function slotPos(side, slot){
+  const base = SLOTS[Math.min(slot,10)];
+  return { x: side==='us' ? base.x : 100-base.x, y: base.y };
+}
+function ballToPlayer(side, pl, jitter){
+  if(!M || !pl) return;
+  const j = jitter==null?3:jitter;
+  const pos = slotPos(side, pl.slot);
+  M.ballX = clamp(pos.x + rnd(-j,j), 4, 96);
+  M.ballY = clamp(pos.y + rnd(-j,j), 6, 94);
   movePitch();
 }
 function movePitch(){
@@ -1953,6 +2017,9 @@ function phase(){
 function autoPhase(atk, def, usAttack){
   const shooter = pickAttacker(atk);
   const gk = gkOf(def);
+  const atkSide = atk===M.us ? 'us':'them';
+  const defSide = def===M.us ? 'us':'them';
+  ballToPlayer(atkSide, shooter, 5);
   const atkP = effOvr(shooter) + teamPower(atk,'atk')*0.35;
   const defP = teamPower(def,'def')*0.6 + (gk?effOvr(gk)*0.5:20);
   let q = clamp((atkP - defP)/400 + 0.13, 0.03, 0.30);
@@ -1967,11 +2034,27 @@ function autoPhase(atk, def, usAttack){
     scoreGoal(atk===M.us, shooter, assist);
   } else {
     const r = Math.random();
-    if(r<0.34){ Sfx.save(); say(`${shooter.name} vurdu, ${gk?gk.name:'kaleci'} <b>kurtardı!</b>`); if(gk && gk.isUser) addRating(0.25, 'kurtarış'); if(gk&&gk.isUser) S.p.season.saves++; }
-    else if(r<0.46){ Sfx.post(); say(`${shooter.name}'ın şutu <b>direkten</b> döndü!`,'hi'); Sfx.swell(0.14); }
-    else if(r<0.62){ Sfx.ooh(); say(`${shooter.name} auta vurdu, tribünden "ooo" sesi yükseldi.`); }
-    else if(r<0.78){ say(`${atk.name} atağı savunmada kesildi.`); }
-    else { say(`${atk.name} köşe vuruşu kazandı ama sonuç alamadı.`); }
+    const goalX = atkSide==='us' ? 97 : 3;
+    if(r<0.34){
+      if(gk) ballToPlayer(defSide, gk, 2); else { M.ballX=goalX; movePitch(); }
+      Sfx.save(); say(`${shooter.name} vurdu, ${gk?gk.name:'kaleci'} <b>kurtardı!</b>`); if(gk && gk.isUser) addRating(0.25, 'kurtarış'); if(gk&&gk.isUser) S.p.season.saves++;
+    }
+    else if(r<0.46){
+      M.ballX = goalX; M.ballY = clamp(M.ballY,32,68); movePitch();
+      Sfx.post(); say(`${shooter.name}'ın şutu <b>direkten</b> döndü!`,'hi'); Sfx.swell(0.14);
+    }
+    else if(r<0.62){
+      M.ballX = atkSide==='us'?99:1; movePitch();
+      Sfx.ooh(); say(`${shooter.name} auta vurdu, tribünden "ooo" sesi yükseldi.`);
+    }
+    else if(r<0.78){
+      M.ballX = clamp(M.ballX + (atkSide==='us'?-14:14), 6, 94); movePitch();
+      say(`${atk.name} atağı savunmada kesildi.`);
+    }
+    else {
+      M.ballX = atkSide==='us'?97:3; M.ballY = pick([6,94]); movePitch();
+      say(`${atk.name} köşe vuruşu kazandı ama sonuç alamadı.`);
+    }
   }
 }
 
@@ -1999,7 +2082,16 @@ function scoreGoal(isUsTeam, scorer, assist){
     else if(me && me.on && posByKey(S.p.posKey).grp==='DEF') addRating(-0.12,'gol yedi');
   }
   M.momentum = isUsTeam ? -20 : 20;
-  M.ballX = 50; M.ballY = 50; movePitch();
+  // topu gerçekten ağlara gönder, ardından orta yuvarlağa dön
+  M.ballX = isUsTeam ? 98 : 2;
+  M.ballY = clamp(M.ballY, 38, 62);
+  movePitch();
+  $('ball').classList.add('goal-flash');
+  clearTimeout(M._goalResetTimer);
+  M._goalResetTimer = setTimeout(()=>{
+    $('ball').classList.remove('goal-flash');
+    if(M){ M.ballX=50; M.ballY=50; movePitch(); }
+  }, 700);
 }
 
 function foulEvent(){
@@ -2011,6 +2103,7 @@ function foulEvent(){
   const me = M.us.squad.find(x=>x.isUser);
   // yorgun oyuncu daha çok faul yapar; kullanıcı savunmacıysa ihtimali artar
   if(usFouls && M.userOn && chance(posByKey(S.p.posKey).grp==='DEF'?0.35:0.15)) offender = me;
+  ballToPlayer(usFouls?'us':'them', offender, 2);
 
   Sfx.foul();
   const dangerous = (usFouls && M.ballX<25) || (!usFouls && M.ballX>75);
@@ -2079,6 +2172,7 @@ function injuryEvent(){
   let v = pick(all);
   const me = M.us.squad.find(x=>x.isUser);
   if(me && me.on && chance((me.stamina<20?0.3:0.12) * (1 + M.effort*0.2))) v = me;
+  ballToPlayer(M.us.squad.includes(v)?'us':'them', v, 2);
   if(v.isUser && me.stamina>55 && chance(0.6)) { say(`${S.p.name} sert bir müdahalenin ardından yerde kaldı ama devam ediyor.`); return; }
   say(`🚑 Sakatlık: ${v.name} yerde, sağlık ekibi içeri girdi.`);
   if(chance(0.55)){
@@ -2114,14 +2208,21 @@ function askUser(text, options){
   $('prompt').style.display='block'; $('prompt').textContent = text;
   const box = $('acts'); box.style.display='grid';
   box.innerHTML = options.map(o=>`<button class="btn" onclick="userChoice('${o[1]}')">${o[0]}</button>`).join('');
+  $('actionsheet').classList.add('show');
+  $('actionbackdrop').style.display='block';
   Sfx.swell(0.1,0.8);
 }
 function clearAsk(){
   $('prompt').style.display='none';
   $('acts').style.display='none'; $('acts').innerHTML='';
+  $('actionsheet').classList.remove('show');
+  $('actionbackdrop').style.display='none';
 }
 function userTurn(usAttack){
   const grp = posByKey(S.p.posKey).grp;
+  const me = M.us.squad.find(x=>x.isUser);
+  if(usAttack) ballToPlayer('us', me, 2);
+  else ballToPlayer('them', pickAttacker(M.them), 4);
   if(usAttack){
     if(grp==='FWD') askUser('Ceza sahasında topla buluştun!', [['🎯 Şut çek','sut'],['🪁 Aşırtma vuruş','lob'],['🤝 Duvar pası','wall'],['⚡ Çalım at','drib']]);
     else if(grp==='WING') askUser('Kanatta karşında bek var.', [['⚡ Çalımla geç','drib'],['📐 Ortala','cross'],['🎯 İçe kat ve şut','cut'],['↩️ Geri pas','safe']]);
@@ -2227,12 +2328,12 @@ function userChoice(a){
       break;
     }
     case 'longball': {
-      if(chance(0.35+sk('pas')*0.35)){ say(`Uzun top isabetli, takım hücuma çıktı.`); addRating(0.15); M.momentum=15; }
+      if(chance(0.35+sk('pas')*0.35)){ say(`Uzun top isabetli, takım hücuma çıktı.`); addRating(0.15); M.momentum=15; M.ballX=clamp(M.ballX+28,6,94); movePitch(); }
       else { say(`Uzun top rakip savunmada kaldı.`); addRating(-0.08); }
       break;
     }
     case 'carry': {
-      if(chance(0.40+sk('drib')*0.3)){ say(`Topla önüne çıktın, oyunu ileri taşıdın.`); addRating(0.18); M.momentum=12; }
+      if(chance(0.40+sk('drib')*0.3)){ say(`Topla önüne çıktın, oyunu ileri taşıdın.`); addRating(0.18); M.momentum=12; M.ballX=clamp(M.ballX+16,6,94); movePitch(); }
       else { say(`Kendi sahanda topu kaptırdın, tehlikeli an!`); addRating(-0.3); M.momentum=-25;
         if(chance(0.3)) scoreGoal(false, pickAttacker(M.them), null); }
       break;
@@ -2269,6 +2370,7 @@ function userChoice(a){
     }
     /* --- kaleci --- */
     case 'gk-stay': case 'gk-rush': case 'gk-dive': {
+      ballToPlayer('us', me, 2);
       let p0 = a==='gk-stay'?0.34 : a==='gk-rush'?0.30 : 0.36;
       const prob = clamp(p0 + sk('klc')*0.45, 0.2, 0.9);
       if(chance(prob)){ Sfx.save(); say(`🧤 <b>MÜTHİŞ KURTARIŞ!</b> ${S.p.name} takımını ayakta tuttu.`,'hi');
@@ -3055,17 +3157,24 @@ function managerNextSeason(){
 /* =========================================================
    KURULUM & OLAY BAĞLAMA
    ========================================================= */
+let setupPos = 'ST';
+let setupTeam = null;
 function fillSetup(){
-  const ps = $('s-pos'), ts = $('s-team');
-  ps.innerHTML = POSITIONS.map(p=>`<option value="${p.k}" ${p.k==='ST'?'selected':''}>${p.label} (${p.short})</option>`).join('');
-  ts.innerHTML = TEAMS.slice().sort((a,b)=>a.n.localeCompare(b.n,'tr'))
-    .map(t=>`<option value="${t.n}">${t.n} — güç ${t.s}</option>`).join('');
+  setupTeam = TEAMS.slice().sort((a,b)=>a.n.localeCompare(b.n,'tr'))[0].n;
+
+  const posSel = $('s-pos');
+  posSel.innerHTML = POSITIONS.map(p=>`<option value="${p.k}"${p.k===setupPos?' selected':''}>${p.label} (${p.short})</option>`).join('');
+  posSel.addEventListener('change', ()=>{ setupPos = posSel.value; updatePreview(); });
+
+  const teamSel = $('s-team');
+  const sortedTeams = TEAMS.slice().sort((a,b)=>a.n.localeCompare(b.n,'tr'));
+  teamSel.innerHTML = sortedTeams.map(t=>`<option value="${t.n}"${t.n===setupTeam?' selected':''}>${t.n} — güç ${t.s}</option>`).join('');
+  teamSel.addEventListener('change', ()=>{ setupTeam = teamSel.value; updatePreview(); });
+
   updatePreview();
-  ps.addEventListener('change', updatePreview);
-  ts.addEventListener('change', updatePreview);
 }
 function updatePreview(){
-  const k = $('s-pos').value, t = $('s-team').value;
+  const k = setupPos, t = setupTeam;
   const po = posByKey(k);
   const a = TEMPLATE[k];
   const ovr = overallOf(a, po.grp) - 6;
@@ -3101,7 +3210,7 @@ function bindUI(){
   $('s-start').addEventListener('click', ()=>{
     const name = ($('s-name').value||'').trim() || 'İsimsiz Oyuncu';
     newGame({
-      name, age:+$('s-age').value, posKey:$('s-pos').value, team:$('s-team').value,
+      name, age:+$('s-age').value, posKey:setupPos, team:setupTeam,
       foot:$('s-foot').value, num:clamp(+$('s-num').value||10,1,99)
     });
     $('setup').style.display='none'; $('game').style.display='block';
