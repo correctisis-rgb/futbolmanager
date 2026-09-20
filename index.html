@@ -5502,9 +5502,9 @@ const AD_CONFIG = {
   // 'adsense'     : web sitesinde Google AdSense (aşağıdaki client/slot değerleri gerekir)
   // 'native'      : Android/iOS uygulamasında AdMob eklentisi banner'ı kendisi çizer;
   //                 burada sadece yer ayrılır ve window.SahaAds.showBanner() çağrılır
-  provider: 'placeholder',
+  provider: 'adsense',
   adsenseClient: 'ca-pub-9854310952239850',
-  adsenseSlot:   'XXXXXXXXXX',
+  adsenseSlot:   '8800552345',
   height: 50
 };
 
@@ -5605,9 +5605,9 @@ window.addEventListener('resize', ()=>{ if(adState.shown) updateAdBanner(); });
    ========================================================= */
 const REWARD_CONFIG = {
   enabled: true,
-  provider: 'placeholder',
+  provider: 'h5',
   h5Client: 'ca-pub-9854310952239850',   // provider 'h5' iken AdSense yayıncı kimliğin
-  h5Test: true,                           // true iken Google test reklamı gösterir. Yayında false yap.
+  h5Test: false,                          // false: gerçek reklam. Onay gelene kadar reklam boşsa video sadece atlanır.
   cooldownSec: 45,                        // iki video arası bekleme
   dailyCap: 12,                           // günlük en fazla video
   minReward: 50000
