@@ -307,16 +307,22 @@ td.num,th.num{text-align:center;width:26px;}
 .pl.tired .body{opacity:.6;}
 .pl.ballowner .body{animation:pulsepl .7s ease-in-out infinite;}
 @keyframes pulsepl{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
-.ball{position:absolute;width:2.6%;aspect-ratio:1;border-radius:50%;
-  background:
-    radial-gradient(circle at 30% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 26%),
-    conic-gradient(from 0deg,#111 0 12%,#fff 12% 24%,#111 24% 36%,#fff 36% 48%,#111 48% 60%,#fff 60% 72%,#111 72% 84%,#fff 84% 100%),
-    radial-gradient(circle at 45% 45%, #f4f6f7 55%, #c3cbd1 82%, #8f9aa1 100%);
-  background-blend-mode:normal,soft-light,normal;
-  border:1px solid rgba(0,0,0,.55);
-  transform:translate(-50%,-50%);box-shadow:0 3px 5px rgba(0,0,0,.6),0 0 10px rgba(255,255,255,.5);
+.ball{position:absolute;width:2.6%;aspect-ratio:1;transform:translate(-50%,-50%);
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,.55));
   transition:left .4s linear,top .4s linear;z-index:8;}
-.ball.goal-flash{box-shadow:0 0 18px 7px var(--flood);}
+.ball > i{display:block;width:100%;height:100%;border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 20%, #14181a 0 15%, transparent 16%),
+    radial-gradient(circle at 21% 40%, #14181a 0 13%, transparent 14%),
+    radial-gradient(circle at 79% 40%, #14181a 0 13%, transparent 14%),
+    radial-gradient(circle at 33% 72%, #14181a 0 13%, transparent 14%),
+    radial-gradient(circle at 67% 72%, #14181a 0 13%, transparent 14%),
+    radial-gradient(circle at 30% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 30%),
+    radial-gradient(circle at 45% 45%, #fbfcfc 55%, #dfe4e7 82%, #aeb6bc 100%);
+  border:1px solid rgba(0,0,0,.4);
+  animation:ballspin 0.85s linear infinite;}
+@keyframes ballspin{to{transform:rotate(360deg)}}
+.ball.goal-flash{filter:drop-shadow(0 0 10px var(--flood)) drop-shadow(0 3px 4px rgba(0,0,0,.5));}
 .line{position:absolute;background:rgba(255,255,255,.55);}
 .overlay{position:absolute;inset:0;background:rgba(3,8,10,.88);display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:8px;text-align:center;padding:14px;z-index:20;}
@@ -465,6 +471,46 @@ td.num,th.num{text-align:center;width:26px;}
   border-left-color:var(--bad);
 }
 
+/* ---- duraklat butonu + canlı anlatım şeridi: sahanın İÇİNDE ---- */
+.pausefab{position:absolute;left:8px;bottom:8px;z-index:22;display:flex;align-items:center;gap:5px;
+  background:rgba(4,10,14,.82);border:1px solid rgba(255,255,255,.3);border-radius:999px;color:#fff;
+  font-family:inherit;font-weight:700;font-size:.72rem;line-height:1.2;padding:6px 12px;cursor:pointer;
+  white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.5);}
+.pausefab:hover{background:rgba(255,255,255,.22);}
+.pitchticker{position:absolute;left:8px;right:8px;bottom:46px;z-index:19;pointer-events:none;
+  background:rgba(4,10,14,.82);border:1px solid rgba(255,255,255,.2);border-left:3px solid rgba(255,255,255,.35);
+  border-radius:9px;padding:4px 9px;color:#eaf2f4;font-size:.74rem;line-height:1.3;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+  box-shadow:0 3px 10px rgba(0,0,0,.45);}
+.pitchticker:empty{display:none;}
+.pitchticker.gl{border-left-color:var(--good);}
+.pitchticker.bd{border-left-color:var(--bad);}
+.pitchticker.me-event{border-left-color:#facc15;background:rgba(58,46,4,.86);}
+@keyframes tickerBump{0%{opacity:.35;transform:translateY(2px)}100%{opacity:1;transform:translateY(0)}}
+.pitchticker.bump{animation:tickerBump .25s ease-out;}
+
+/* ---- yatay modda tam ekran maç düzeni ---- */
+@media (orientation:landscape){
+  body.match-active nav#bottom{display:none;}
+  body.match-active .topbar{display:none;}
+  body.match-active #app{padding-bottom:0;}
+  body.match-active #v-match{padding:4px 6px;}
+  body.match-active #live > .card{padding:6px 8px;border-radius:0;border:0;}
+  body.match-active #live > .card > h3{display:none;}
+  body.match-active .scoreboard{padding:4px 8px;margin-bottom:4px;}
+  body.match-active .scoreboard .sc{font-size:1.4rem;padding:0 8px;}
+  body.match-active .scoreboard .tn{font-size:.78rem;}
+  body.match-active .stadium{margin-bottom:0;}
+  body.match-active .pitch{max-height:min(72vh,420px);}
+  body.match-active #me-line,
+  body.match-active #stad-line,
+  body.match-active .commentary{display:none;}
+  body.match-active .row.wrap{gap:5px;padding-bottom:2px;}
+  body.match-active .row.wrap .btn.sm{padding:5px 8px;font-size:.72rem;}
+  body.match-active .pausefab{left:8px;bottom:8px;padding:6px 11px;font-size:.75rem;}
+  body.match-active .pitchticker{left:112px;right:238px;bottom:8px;}
+}
+
 .prompt{background:linear-gradient(180deg,#7c2d12,#9a3412);border:1px solid #c2410c;border-radius:10px;
   padding:10px;text-align:center;font-weight:700;margin-bottom:8px;}
 .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
@@ -478,7 +524,7 @@ td.num,th.num{text-align:center;width:26px;}
 .kitdot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;
   border:1px solid rgba(0,0,0,.35);box-shadow:0 0 0 1px rgba(255,255,255,.18) inset;flex:none;}
 
-.toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+.toast{position:fixed;left:50%;bottom:calc(74px + var(--adh,0px) + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
   background:var(--toastbg);border:1px solid var(--line);color:#eaf2f4;padding:10px 16px;border-radius:999px;
   font-size:.85rem;z-index:100;opacity:0;pointer-events:none;transition:opacity .25s;max-width:92vw;text-align:center;}
 .toast.show{opacity:1;}
@@ -604,6 +650,54 @@ td.num,th.num{text-align:center;width:26px;}
 /* ---------- Takım rozeti (forma önizleme) ---------- */
 .kitdot.kd-lg{width:22px;height:22px;border-radius:5px;}
 
+/* ---------- Canlı anlatım: yatay mod seçilmediyse maç ekranının altında son 5 satır ---------- */
+.livefeed-head{display:none;justify-content:space-between;align-items:center;gap:8px;margin:8px 0 0;}
+.livefeed-head b{font-family:'Barlow Condensed','Barlow',sans-serif;font-size:1.02rem;letter-spacing:.3px;color:var(--flood);}
+body.match-feed .livefeed-head{display:flex;}
+body.match-feed .commentary{display:flex!important;flex-direction:column;justify-content:flex-end;height:206px;overflow:hidden;margin:6px 0 8px;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 26px);mask-image:linear-gradient(to bottom,transparent 0,#000 26px);}
+body.match-feed .commentary > div{flex:none;}
+body.match-feed .commentary > div:not(:nth-last-child(-n+5)){display:none;}
+body.match-feed .commentary > div:last-child{animation:feedIn .3s ease-out;}
+body.match-feed .commentary.full{display:block!important;height:280px;overflow-y:auto;-webkit-mask-image:none;mask-image:none;}
+body.match-feed .commentary.full > div:not(:nth-last-child(-n+5)){display:block;}
+body.match-feed .pitchticker{display:none!important;}
+@keyframes feedIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* oyuncunun kendi adı: satırın içinde parlak etiket */
+.me-name{background:#facc15;color:#241c00;font-weight:800;padding:0 5px;border-radius:5px;
+  box-shadow:0 0 0 1px rgba(250,204,21,.55);white-space:nowrap;}
+
+/* ---------- Video izle, para kazan ---------- */
+.packcard.vid{border-color:#2e5a42;background:linear-gradient(135deg,rgba(52,211,153,.14),var(--surf3));}
+.packcard .vidsub{display:block;margin-top:1px;}
+.vidbtn{min-width:78px;}
+
+/* ---------- Banner reklam alanı ---------- */
+:root{--adh:0px;}
+body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
+#adBanner{position:fixed;left:0;right:0;bottom:calc(var(--navh,58px) + 6px);z-index:58;display:none;
+  max-width:760px;margin:0 auto;padding:0 12px;}
+#adBanner.on{display:block;}
+#adBanner .adbox{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  min-height:50px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#adBanner .adtag{position:absolute;top:0;left:0;font-size:.55rem;letter-spacing:.4px;color:var(--dim);
+  background:var(--chipbg);padding:0 6px;border-bottom-right-radius:6px;font-weight:600;}
+#adBanner .adph{color:var(--dim);font-size:.72rem;font-weight:600;text-align:center;padding:6px 10px;}
+
+/* ---------- Oyun parası mağazası ---------- */
+.chip.gold.buy{cursor:pointer;}
+.chip.gold.buy::after{content:' ＋';font-weight:800;}
+.packcard{display:flex;align-items:center;gap:10px;padding:11px 12px;margin-bottom:8px;border-radius:12px;
+  background:var(--surf3);border:1px solid var(--line);}
+.packcard.best{border-color:#caa42e;background:linear-gradient(135deg,rgba(255,210,74,.13),var(--surf3));}
+.packcard.rec{border-color:var(--good);box-shadow:0 0 0 1px rgba(52,211,153,.3);}
+.packcard .pic{font-size:1.5rem;flex:none;}
+.packcard .pinfo{flex:1;min-width:0;}
+.packcard .pinfo b{display:block;font-size:1rem;font-family:'Barlow Condensed','Barlow',sans-serif;letter-spacing:.2px;}
+.packcard .pamt{color:var(--flood);font-weight:700;}
+.testflag{display:inline-block;background:#4c1d1d;border:1px solid #8b2f2f;color:#ffdede;border-radius:999px;
+  padding:2px 10px;font-size:.72rem;font-weight:700;}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
 </style>
 </head>
@@ -645,7 +739,7 @@ td.num,th.num{text-align:center;width:26px;}
   <div id="game" style="display:none">
     <div class="topbar">
       <div class="who"><b id="t-name">—</b><span id="t-sub">—</span></div>
-      <div class="chip gold" id="t-money">0 ₺</div>
+      <div class="chip gold buy" id="t-money" role="button" tabindex="0" title="Para kazan">0 ₺</div>
       <div class="chip ovr" id="t-ovr">0</div>
       <button class="btn sm" id="t-sound" title="Ses" style="padding:4px 8px">🔊</button>
       <button class="btn sm" id="theme-toggle-game" title="Gündüz/Gece modu" style="padding:4px 8px">🌙</button>
@@ -659,6 +753,7 @@ td.num,th.num{text-align:center;width:26px;}
           <div id="hub-next"></div>
           <div id="hub-actions" class="row wrap" style="margin-top:12px"></div>
         </div>
+        <div id="hub-video"></div>
         <div class="card">
           <h3>Form ve kondisyon</h3>
           <div class="statbox">
@@ -731,9 +826,11 @@ td.num,th.num{text-align:center;width:26px;}
               <div class="spot" style="left:50%;top:50%"></div>
               <div style="position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;border:2px solid rgba(255,255,255,.55);border-radius:50%;transform:translate(-50%,-50%)"></div>
               <div class="floodmask" id="floodmask"></div>
-              <div class="ball" id="ball" style="left:50%;top:50%"></div>
+              <div class="ball" id="ball" style="left:50%;top:50%"><i></i></div>
               <div class="overlay" id="ov" style="display:none"><div class="big" id="ov-txt"></div><div class="sub" id="ov-sub"></div></div>
               <div id="varLayer"></div>
+              <div class="pitchticker" id="logTicker">Maç başlamak üzere...</div>
+              <button class="pausefab" id="btn-pause">⏸️ Duraklat</button>
               <div class="atkdef-fab" id="atkdefFab">
                 <button class="atkdef-btn atk" id="btn-atk" onclick="bumpStance('atk')">
                   <span class="atkdef-ic">⚔️</span>
@@ -758,6 +855,7 @@ td.num,th.num{text-align:center;width:26px;}
             </div>
           </div>
           <div class="mini" id="me-line" style="margin:0 0 6px;text-align:center"></div>
+          <div class="livefeed-head"><b>📣 Canlı anlatım</b><button class="btn sm" id="btn-feedall" type="button" onclick="toggleFeedAll()">Tümünü göster</button></div>
           <div class="commentary" id="log"></div>
           <div class="row wrap">
             <button class="btn sm" id="btn-med">🧰 İlk yardım (<span id="medN">0</span>)</button>
@@ -779,6 +877,7 @@ td.num,th.num{text-align:center;width:26px;}
         <button data-pane="c-health">Sağlık<span class="tabdot" id="dot-health"></span></button>
         <button data-pane="c-room">Soyunma Odası</button>
         <button data-pane="c-shop">Mağaza</button>
+        <button data-pane="c-cash">Para Kazan</button>
         <button data-pane="c-stad">Stadyum</button>
         <button data-pane="c-sponsor">Sponsorlar<span class="tabdot" id="dot-sponsor-tab"></span></button>
         <button data-pane="c-contract">Sözleşme<span class="tabdot" id="dot-contract-tab"></span></button>
@@ -789,6 +888,7 @@ td.num,th.num{text-align:center;width:26px;}
       <div class="pane" id="c-health"><div id="healthBox"></div></div>
       <div class="pane" id="c-room"><div id="roomBox"></div></div>
       <div class="pane" id="c-shop"><div id="shopBox"></div></div>
+      <div class="pane" id="c-cash"><div id="cashBox"></div></div>
       <div class="pane" id="c-stad"><div id="stadBox"></div></div>
       <div class="pane" id="c-sponsor"><div id="sponsorBox"></div></div>
       <div class="pane" id="c-contract"><div id="contractBox"></div></div>
@@ -826,6 +926,8 @@ td.num,th.num{text-align:center;width:26px;}
   <div class="prompt" id="prompt" style="display:none">Top sende!</div>
   <div class="acts" id="acts" style="display:none"></div>
 </div>
+<!-- Ana ekran banner reklamı (yalnızca Maç sekmesi, maç oynanmıyorken görünür) -->
+<div id="adBanner" aria-label="Reklam"><div class="adbox"><span class="adtag">Reklam</span><div id="adSlot"></div></div></div>
 <nav id="bottom">
   <button data-view="v-match" class="on"><i>⚽</i>Maç<span class="navdot" id="dot-match"></span></button>
   <button data-view="v-career"><i>👤</i>Kariyer<span class="navdot" id="dot-career"></span></button>
@@ -1344,6 +1446,83 @@ const SLOTS = [
 ];
 const SLOT_POS = ['GK','RB','CB','CB','LB','DM','CM','AM','RW','ST','LW'];
 
+/* =========================================================
+   GERÇEK KADROLAR (2026/27 başı)
+   xi    : SLOT_POS sırasıyla ilk 11 → GK, RB, CB, CB, LB, DM, CM, AM, RW, ST, LW
+           her eleman [isim, forma no]; forma no yoksa slot numarası kullanılır; null → rastgele isim
+   bench : [isim, mevki, forma no] — boş bırakılırsa yedekler rastgele üretilir
+   Bir oyuncu transfer olduysa sadece buradaki ismi değiştirmen yeterli.
+   ========================================================= */
+const REAL_SQUADS_VER = 1;
+const REAL_SQUADS = {
+  'Galatasaray': {
+    xi:[['Uğurcan Çakır',1],['Wilfried Singo',90],['Abdülkerim Bardakcı',42],['Davinson Sánchez',6],['Eren Elmalı',17],
+        ['Lucas Torreira',34],['İlkay Gündoğan',20],['Gabriel Sara',8],['Leroy Sané',10],['Victor Osimhen',45],['Rafael Leão',27]],
+    bench:[['Günay Güvenç','GK',19],['Ismail Jakobs','LB',4],['Kaan Ayhan','CB',23],['Mario Lemina','DM',99],
+           ['Aleksey Batrakov','AM',83],['Yunus Akgün','RW',11],['Deniz Gül','ST',21]]
+  },
+  'Fenerbahçe': {
+    xi:[['Ederson',31],['Nélson Semedo',27],['Milan Škriniar',37],['Nathan Aké',15],['Levent Mercan'],
+        ["N'Golo Kanté",17],['Mattéo Guendouzi',6],['Anderson Talisca',94],['Mason Greenwood',11],['Vedat Muriqi',19],['Marco Asensio',21]],
+    bench:[['Mert Günok','GK'],['Çağlar Söyüncü','CB'],['Archie Brown','LB'],['İsmail Yüksek','DM'],
+           ['Mert Hakan Yandaş','CM'],['Dorgeles Nene','LW',45],['Romelu Lukaku','ST']]
+  },
+  'Trabzonspor': {
+    xi:[['André Onana'],['Mustafa Eskihellaç'],['Stefan Savić'],['Arseniy Batagov'],['Wagner Pina'],
+        ['Okay Yokuşlu'],['Christ Inao Oulaï'],['Ozan Tufan'],['Anthony Nwakaeme'],['Paul Onuachu'],['Ernest Muçi']],
+    bench:[['Onuralp Çevikkan','GK'],['Chibuike Nwaiwu','CB'],['Mathias Løvik','LB'],['Benjamin Bouchouari','CM'],
+           ['Edin Višća','LW'],['Oleksandr Zubkov','RW'],['Umut Nayır','ST']]
+  },
+  'Beşiktaş': {
+    xi:[['Ersin Destanoğlu'],['Amir Murillo'],['Emmanuel Agbadou'],['Felix Uduokhai'],['Rıdvan Yılmaz'],
+        ['Wilfred Ndidi'],['Orkun Kökçü'],['Rafa Silva'],['Cengiz Ünder'],['Tammy Abraham'],['Leandro Trossard']],
+    bench:[[null,'GK'],['Tiago Djaló','CB'],['Jonas Svensson','RB'],['Necip Uysal','DM'],
+           ['Gedson Fernandes','CM'],['Václav Černý','RW'],['El Bilal Touré','ST']]
+  },
+  'Kayserispor': {
+    xi:[['Onurcan Piri',1],['Jadel Katongo',2],['Stefano Denswil',4],['Majid Hosseini',5],['Lionel Carole',23],
+        ['Youssef Aït Bennasser'],['László Bénes',8],['João Mendes',10],['Miguel Cardoso',7],['Fedor Chalov'],['Carlos Mané']],
+    bench:[['Deniz Dönmezer','GK'],['Gideon Jung','CB'],['Joshua Brenet','LB'],['Ali Karimi','DM'],
+           ['Dorukhan Toköz','CM'],['Denis Makarov','AM'],['Indrit Tuci','ST']]
+  },
+  'Samsunspor': {
+    xi:[['Okan Kocuk',1],['Yunus Emre Çift',55],['Rick van Drongelen',4],['Toni Borevković',24],['Logi Tómasson',17],
+        ['Antoine Makoumbou'],['Celil Yüksel',5],['Afonso Sousa'],['Carlo Holse'],['Marius Mouandilmadji'],['Elayis Tavşan']],
+    bench:[['İrfan Can Eğribayat','GK',71],['Josafat Mendes','CB',2],['Melih Altıkulaç','RB'],['Yalçın Kayan','CM'],
+           ['Emre Kılınç','AM'],['Tanguy Coulibaly','LW'],['Cherif Ndiaye','ST']]
+  },
+  'Göztepe': {
+    xi:[['Mateusz Lis'],['Allan Godói'],['Heliton'],['Malcom Bokele'],['İsmail Köybaşı'],
+        ['Juan'],['Novatus Miroshi'],['David Tijanić'],['Rômulo'],['Janderson'],['Ogün Bayrak']],
+    bench:[['Luka Gugeshashvili','GK'],['Arda Okan Kurtulan','CB'],[null,'LB'],['Amin Cherni','DM'],
+           ['Efkan Bekiroğlu','CM'],['Mehmet Öztürk','LW'],['Emrecan Bulut','ST']]
+  },
+  'Başakşehir': {
+    xi:[['Volkan Babacan'],null,['Léo Duarte'],['Ousseynou Ba'],['Christopher Opéri'],
+        ['Olivier Kemen'],['Miguel Crespo'],['Deniz Türüç'],null,['Eldor Shomurodov'],['Ömer Ali Şahiner']],
+    bench:[]
+  },
+  'Kocaelispor':   { xi:[null,null,['Ahmet Oğuz'],null,null,null,null,null,['Darko Churlinov'],['Daniel Agyei'],null], bench:[] },
+  'Alanyaspor':    { xi:[['Ertuğrul Taşkıran'],null,null,null,null,['Nicolas Janvier'],null,null,null,null,['Efecan Karaca']], bench:[] },
+  'Rizespor':      { xi:[null,null,['Umut Erdem'],null,null,null,null,null,null,['Ahmed Kutucu'],null], bench:[] },
+  'Konyaspor':     { xi:[['Deniz Ertaş'],null,null,null,null,null,['Uğurcan Yazgılı'],null,['Kazeem Olaigbe'],['Blaž Kramer'],null], bench:[] },
+  'Gençlerbirliği':{ xi:[null,null,['Metehan Baltacı'],null,null,null,['Cihan Çanak'],null,null,null,null], bench:[] },
+  'Kasımpaşa':     { xi:[['Andreas Gianniotis'],null,null,null,null,null,null,null,null,null,null], bench:[] },
+  'Gaziantep FK':  { xi:[['Zafer Görgen'],null,null,null,null,null,null,null,null,['Halil Dervişoğlu'],null], bench:[] },
+  'Fatih Karagümrük':{ xi:[['Batuhan Şen'],null,null,null,null,null,null,null,null,null,null], bench:[] },
+  'Türkiye A Milli': {
+    xi:[['Uğurcan Çakır'],['Mert Müldür'],['Abdülkerim Bardakcı'],['Merih Demiral'],['Ferdi Kadıoğlu'],
+        ['Hakan Çalhanoğlu'],['Orkun Kökçü'],['Arda Güler'],['Kenan Yıldız'],['Barış Alper Yılmaz'],['Kerem Aktürkoğlu']],
+    bench:[]
+  }
+};
+/* "Sezonun yıldızı" vb. yerlerde kullanılan STAR_PLAYERS, gerçek kadrolardan türetilir */
+Object.keys(REAL_SQUADS).forEach(t=>{
+  const arr = REAL_SQUADS[t].xi.map((r,i)=> r&&r[0] ? {name:r[0], posKey:SLOT_POS[i]} : null)
+    .filter(x=>x && ['ST','AM','RW','LW'].includes(x.posKey));
+  if(arr.length) STAR_PLAYERS[t] = arr; else delete STAR_PLAYERS[t];
+});
+
 const BOOTS = [
   {id:'b0',n:'Antrenman kramponu', cost:0,      bonus:0, desc:'Standart.'},
   {id:'b1',n:'Nike Mercurial',     cost:18000,  bonus:2, desc:'Hız ve şut için hafif.'},
@@ -1621,7 +1800,8 @@ function newPlayerObj(name, age, posKey, team, foot, num){
 
 function makeSquad(teamName, strength){
   const list = [];
-  const stars = (STAR_PLAYERS[teamName]||[]).slice();
+  const real = REAL_SQUADS[teamName];
+  const stars = real ? [] : (STAR_PLAYERS[teamName]||[]).slice();
   const nameFor = key => {
     const i = stars.findIndex(s=>s.posKey===key);
     if(i>=0) return stars.splice(i,1)[0].name;
@@ -1629,21 +1809,29 @@ function makeSquad(teamName, strength){
   };
   for(let i=0;i<11;i++){
     const key = SLOT_POS[i];
+    const r = real && real.xi && real.xi[i];
     const a = {...TEMPLATE[key]};
     const diff = strength - 70;
     for(const k in a) a[k] = clamp(Math.round(a[k] + diff*0.75 + ri(-5,5)), 25, 95);
     const grp = posByKey(key).grp;
-    list.push({name:nameFor(key), posKey:key, slot:i, attrs:a, ovr:overallOf(a,grp),
-               stamina:100, on:true, goals:0, assists:0, yellow:0, sub:false, num:i+1});
+    list.push({name:(r&&r[0])||nameFor(key), posKey:key, slot:i, attrs:a, ovr:overallOf(a,grp),
+               stamina:100, on:true, goals:0, assists:0, yellow:0, sub:false, num:(r&&r[1])||i+1, _ex:!!(r&&r[1])});
   }
   for(let i=0;i<7;i++){
-    const key = pick(['CB','LB','DM','CM','AM','RW','ST','GK']);
+    const rb = real && real.bench && real.bench[i];
+    const key = (rb && rb[1]) || pick(['CB','LB','DM','CM','AM','RW','ST','GK']);
     const a = {...TEMPLATE[key]};
     const diff = strength - 72;
     for(const k in a) a[k] = clamp(Math.round(a[k] + diff*0.7 + ri(-6,5)), 25, 92);
-    list.push({name:randName(), posKey:key, slot:posByKey(key).slot, attrs:a, ovr:overallOf(a,posByKey(key).grp),
-               stamina:100, on:false, goals:0, assists:0, yellow:0, sub:false, num:12+i});
+    list.push({name:(rb&&rb[0])||randName(), posKey:key, slot:posByKey(key).slot, attrs:a, ovr:overallOf(a,posByKey(key).grp),
+               stamina:100, on:false, goals:0, assists:0, yellow:0, sub:false, num:(rb&&rb[2])||12+i, _ex:!!(rb&&rb[2])});
   }
+  // gerçek forma numaralarıyla çakışan yedek/varsayılan numaraları kaydır
+  const taken = new Set(list.filter(p=>p._ex).map(p=>p.num));
+  list.forEach(p=>{
+    if(!p._ex){ let n = p.num; while(taken.has(n)) n++; p.num = n; taken.add(n); }
+    delete p._ex;
+  });
   list.forEach(p=>p.team = teamName);
   return list;
 }
@@ -1709,6 +1897,7 @@ function newGame(cfg){
     stadium: newStadium(cfg.team)
   };
   TEAMS.forEach(t => S.squads[t.n] = makeSquad(t.n, t.s));
+  S.squadsRealV = REAL_SQUADS_VER;
   insertUserIntoSquad();
   S.p.wage = Math.round(20000 + (teamObj.s-60)*3000);
   S.p.goalBonus = Math.round(S.p.wage*0.32);
@@ -1800,6 +1989,11 @@ function load(){
     if(!S.p.dr){ S.p.dr = {e1:(S.p.drinks||0), e2:0, e3:0}; }
     if(S.p.medQ==null) S.p.medQ = 0.55;
     if(!S.p.badgesEligible) S.p.badgesEligible = [];
+    if(S.squads && S.squadsRealV !== REAL_SQUADS_VER){   // eski kayıt: rastgele isimli kadroları gerçek kadrolarla değiştir
+      TEAMS.forEach(t => { S.squads[t.n] = makeSquad(t.n, t.s); });
+      if(S.p && S.squads[S.p.team]) insertUserIntoSquad();
+      S.squadsRealV = REAL_SQUADS_VER;
+    }
     return true;
   }catch(e){ return false; }
 }
@@ -1855,16 +2049,18 @@ function render(){
   $('t-money').textContent = TL(p.money);
   $('t-ovr').textContent = 'GÜÇ ' + userOverall();
   updateNavBadges();
+  updateAdBanner();
 
   if(S.inMatch) return;   // maç ekranı kendi kendini günceller
 
   switch(currentView){
     case 'v-match':  renderHub(); break;
-    case 'v-career': renderProfile(); renderTrain(); renderHealth(); renderShop(); renderStad(); renderContract(); renderRoom(); renderSponsor(); renderBadges(); break;
+    case 'v-career': renderProfile(); renderTrain(); renderHealth(); renderShop(); renderCash(); renderStad(); renderContract(); renderRoom(); renderSponsor(); renderBadges(); break;
     case 'v-league': renderTable(); renderFix(); renderCup(); renderStats(); renderEuro(); renderNat(); break;
     case 'v-paper':  renderPaper(); break;
     case 'v-life':   renderLife(); break;
   }
+  updateVideoButtons();
 }
 function setNavDot(id, count){
   const el = $(id); if(!el) return;
@@ -2007,6 +2203,7 @@ function renderHub(){
     acts.push(`<button class="btn primary" onclick="endSeason()">Sezonu kapat ▸</button>`);
   }
   $('hub-actions').innerHTML = acts.join('');
+  { const hv = $('hub-video'); if(hv) hv.innerHTML = REWARD_CONFIG.enabled ? videoBlockHTML() : ''; }
 
   $('hub-fit').textContent = Math.round(p.fitness)+'%';
   $('hub-fit-bar').style.width = p.fitness+'%';
@@ -2035,7 +2232,7 @@ function renderProfile(){
         <div class="spread"><span class="sub">Kalan süre</span><b>${p.injuryWeeks} hafta</b></div>
         <div class="spread"><span class="sub">Tahmini dönüş</span><b>${backWeek}. hafta</b></div>
       </div>
-      <p class="sub" style="margin-top:6px">Fizyoterapist kullanarak toparlanmayı hızlandırabilirsin.</p>
+      <p class="sub" style="margin-top:6px">Kariyer &gt; Sağlık sekmesinden fizyoterapistle toparlanmayı hızlandırabilirsin.</p>
     </div>`;
   } else if(p.banWeeks>0){
     const backWeek = S.week + p.banWeeks;
@@ -2136,7 +2333,18 @@ function renderHealth(){
   const risks = bodyRiskAll();
   const hist = (p.injuryHistory||[]);
   const worst = BODY_PARTS.slice().sort((a,b)=>risks[b.id]-risks[a.id])[0];
+  const inj = p.injuryWeeks>0;
   $('healthBox').innerHTML = `
+  <div class="card" ${inj?'style="border-color:var(--bad)"':''}>
+    <h3>🧊 Fizyoterapist <span class="chip">${PHYSIO_COST.toLocaleString('tr-TR')} ₺ / seans</span></h3>
+    <div class="statbox">
+      <div class="barline"><span>Kondisyon</span><b>${Math.round(p.fitness)}%</b></div>
+      <div class="bar energy"><i style="width:${clamp(p.fitness)}%"></i></div>
+      ${inj?`<div class="spread" style="margin-top:8px"><span class="sub">${p.injuryName||'Sakatlık'}</span><b style="color:var(--bad)">${p.injuryWeeks} hafta kaldı</b></div>`:''}
+    </div>
+    <p class="sub" style="margin-top:8px">Bir seans kondisyonu <b>+26</b> yükseltir${inj?' ve sakatlığı %40 ihtimalle <b>1 hafta</b> kısaltır':''}. Seans başına <b>1 gün</b> hakkı harcar. Kalan gün: <b>${p.lifePoints}</b></p>
+    <button class="btn primary block" style="margin-top:10px" onclick="physio()" ${p.lifePoints<1?'disabled':''}>🧊 Fizyoterapi seansı al (${TL(PHYSIO_COST)})</button>
+  </div>
   <div class="card">
     <h3>🩺 Vücut risk haritası</h3>
     <p class="sub">Yeteneklerin fizik gücüne göre dengesiz büyürse ilgili bölgenin sakatlık riski artar. Antrenmanda <b>Fizik</b>'i geliştirerek riski dengeleyebilirsin. Bölgeye dokunarak geçmişini görebilirsin.</p>
@@ -2191,7 +2399,6 @@ function renderTrain(){
     <hr class="sep">
     <div class="row wrap">
       <button class="btn sm" onclick="rest()" ${p.lifePoints<1?'disabled':''}>😴 Dinlen (+18 kondisyon)</button>
-      <button class="btn sm" onclick="physio()" ${p.money<25000||p.lifePoints<1?'disabled':''}>🧊 Fizyoterapist (25.000 ₺)</button>
     </div>
     <p class="sub" style="margin-top:8px">Kondisyon: ${Math.round(p.fitness)}% • Kalan gün: ${p.lifePoints}</p>
   </div>`;
@@ -2269,10 +2476,12 @@ function rest(){
   p.lifePoints--; p.fitness=clamp(p.fitness+18); p.happiness=clamp(p.happiness+3);
   toast('Dinlendin. Kondisyon +18'); save(); render();
 }
+const PHYSIO_COST = 25000;
 function physio(){
-  const p=S.p; if(p.money<25000) return toast('Para yetmiyor.');
+  const p=S.p;
   if(p.lifePoints<1) return toast('Bu hafta günün kalmadı.');
-  p.lifePoints--; p.money-=25000; p.fitness=clamp(p.fitness+26);
+  if(p.money<PHYSIO_COST) return needMoney(PHYSIO_COST);
+  p.lifePoints--; p.money-=PHYSIO_COST; p.fitness=clamp(p.fitness+26);
   if(p.injuryWeeks>0 && chance(0.4)){ p.injuryWeeks--; if(p.injuryWeeks===0) p.injuryName=null; toast('Tedavi iyi gitti, sakatlık 1 hafta kısaldı.'); }
   else toast('Fizyoterapi: kondisyon +26');
   save(); render();
@@ -2292,7 +2501,7 @@ function renderShop(){
         <div class="sinfo"><b>${b.n}</b> <span class="chip">+${b.bonus} güç</span><div class="sub">${b.desc}</div></div>
         <div>${eq?'<span class="chip ovr">Giyili</span>':
           owned?`<button class="btn sm" onclick="equip('${b.id}')">Giy</button>`:
-          `<button class="btn sm ${p.money>=b.cost?'primary':''}" ${p.money<b.cost?'disabled':''} onclick="buyBoot('${b.id}')">${TL(b.cost)}</button>`}</div>
+          `<button class="btn sm ${p.money>=b.cost?'primary':''}" onclick="buyBoot('${b.id}')">${TL(b.cost)}</button>`}</div>
       </div>`;
     }).join('')}
   </div>
@@ -2310,7 +2519,7 @@ function renderShop(){
         <div class="row wrap" style="gap:6px">
           ${ENERGY_PACKS.map(pk=>{
             const c = packCost(e,pk);
-            return `<button class="btn sm ${p.money>=c?'primary':''}" ${p.money<c?'disabled':''}
+            return `<button class="btn sm ${p.money>=c?'primary':''}" 
               onclick="buyDrink('${e.id}',${pk.q})">${pk.n} • ${TL(c)}</button>`;
           }).join('')}
         </div>
@@ -2323,7 +2532,7 @@ function renderShop(){
     ${MEDKITS.slice().sort((a,b)=>a.cost-b.cost).map(m=>`<div class="statbox shoprow">
         ${Icon.medkit()}
         <div class="sinfo"><b>${m.n}</b><div class="sub">${m.desc} • Başarı: %${Math.round(m.p*100)}</div></div>
-        <button class="btn sm ${p.money>=m.cost?'primary':''}" ${p.money<m.cost?'disabled':''} onclick="buyMed('${m.id}')">${TL(m.cost)}</button>
+        <button class="btn sm ${p.money>=m.cost?'primary':''}" onclick="buyMed('${m.id}')">${TL(m.cost)}</button>
       </div>`).join('')}
   </div>
   <div class="card">
@@ -2338,14 +2547,14 @@ function renderShop(){
           <span style="font-size:1.45rem;flex:none">${l.ic||'💠'}</span>
           <div class="sinfo"><b>${l.n}</b><div class="sub">Mutluluk +${l.mut} • Ün +${l.un}${l.inc?` • <span style="color:var(--good)">+${TL(l.inc)}/hafta</span>`:''}</div></div>
           ${has?'<span class="chip ovr">Sahipsin</span>':
-            `<button class="btn sm ${p.money>=l.cost?'primary':''}" ${p.money<l.cost?'disabled':''} onclick="buyLux('${l.id}')">${TL(l.cost)}</button>`}
+            `<button class="btn sm ${p.money>=l.cost?'primary':''}" onclick="buyLux('${l.id}')">${TL(l.cost)}</button>`}
         </div>`;
       }).join('')}
     `).join('')}
   </div>`;
 }
 function buyBoot(id){ const b=BOOTS.find(x=>x.id===id),p=S.p;
-  if(p.money<b.cost) return toast('Para yetmiyor.');
+  if(p.money<b.cost) return needMoney(b.cost);
   p.money-=b.cost; p.owned.push(id); p.boot=id; insertUserIntoSquad();
   toast(`${b.n} alındı ve giyildi.`); save(); render(); }
 function equip(id){ S.p.boot=id; insertUserIntoSquad(); toast('Krampon değişti.'); save(); render(); }
@@ -2407,12 +2616,12 @@ function buyDrink(id, qty){
   const p=S.p; const e=ENERGY.find(x=>x.id===id)||ENERGY[0];
   const pk = ENERGY_PACKS.find(x=>x.q===+qty) || ENERGY_PACKS[0];
   const cost = packCost(e,pk);
-  if(p.money<cost) return toast('Para yetmiyor.');
+  if(p.money<cost) return needMoney(cost);
   const d = drInv();
   p.money-=cost; d[e.id]+=pk.q; syncDrinks();
   toast(`${e.n} alındı: +${pk.q} adet.`); save(); render(); }
 function buyMed(id){ const p=S.p; const m=MEDKITS.find(x=>x.id===id);
-  if(p.money<m.cost) return toast('Para yetmiyor.');
+  if(p.money<m.cost) return needMoney(m.cost);
   p.money-=m.cost; p.medkits=(p.medkits||0)+m.qty; p.medQ=Math.max(p.medQ||0.55, m.p);
   toast(`${m.n} alındı: +${m.qty} paket.`); save(); render(); }
 
@@ -2487,7 +2696,7 @@ function renderStad(){
           <div style="text-align:right">
             <div class="chip" style="margin-bottom:4px">${lv}/${u.max}</div><br>
             ${full?'<span class="chip ovr">Tam</span>':
-              `<button class="btn sm ${p.money>=c?'primary':''}" ${p.money<c?'disabled':''} onclick="upgradeStad('${u.id}')">${TL(c)}</button>`}
+              `<button class="btn sm ${p.money>=c?'primary':''}" onclick="upgradeStad('${u.id}')">${TL(c)}</button>`}
           </div>
         </div>
         <div class="bar" style="margin-top:7px"><i style="width:${(lv/u.max)*100}%"></i></div>
@@ -2500,7 +2709,7 @@ function upgradeStad(id){
   const lv = st.lv[id]||0;
   if(lv>=u.max) return toast('Bu bölüm zaten tam.');
   const c = stadCost(u);
-  if(p.money<c) return toast('Para yetmiyor.');
+  if(p.money<c) return needMoney(c);
   p.money-=c; st.lv[id]=lv+1;
   p.love = clamp(p.love+4); p.fame = clamp(p.fame+3);
   addNews(`${p.name}, ${st.name} için ${u.n.toLowerCase()} yatırımını üstlendi. Taraftar teşekkür ediyor.`,'genel');
@@ -2508,7 +2717,7 @@ function upgradeStad(id){
   save(); render();
 }
 function buyLux(id){ const l=LUX.find(x=>x.id===id),p=S.p;
-  if(p.money<l.cost) return toast('Para yetmiyor.');
+  if(p.money<l.cost) return needMoney(l.cost);
   p.money-=l.cost; p.luxury.push(id); p.happiness=clamp(p.happiness+l.mut); p.fame=clamp(p.fame+l.un);
   addNews(`${p.name} kendine ${l.n.toLowerCase()} aldı. Sosyal medya konuşuyor.`,'magazin');
   toast(l.inc?`${l.n} alındı. Haftalık +${TL(l.inc)} gelir.`:`${l.n} alındı.`); save(); render(); }
@@ -2541,7 +2750,7 @@ function renderRoom(){
         <div class="bar mood"><i style="width:${v}%"></i></div>
         <div class="row" style="margin-top:6px;gap:6px">
           <button class="btn sm" onclick="chatMate('${m.name.replace(/'/g,"\\'")}')" ${p.lifePoints<1?'disabled':''}>Sohbet et</button>
-          <button class="btn sm" onclick="giftMate('${m.name.replace(/'/g,"\\'")}')" ${p.lifePoints<1||p.money<10000?'disabled':''}>Hediye al (10.000₺)</button>
+          <button class="btn sm" onclick="giftMate('${m.name.replace(/'/g,"\\'")}')" ${p.lifePoints<1?'disabled':''}>Hediye al (10.000₺)</button>
         </div>
       </div>`;
     }).join('')}
@@ -2565,7 +2774,7 @@ function chatMate(name){
 }
 function giftMate(name){
   const p=S.p; if(p.lifePoints<1) return toast('Bu haftaki günlerin bitti.');
-  if(p.money<10000) return toast('Para yetmiyor.');
+  if(p.money<10000) return needMoney(10000);
   p.lifePoints--; p.money-=10000; p.teammateRel[name] = clamp(p.teammateRel[name] + ri(10,18));
   toast(`${name} hediyeni beğendi.`); save(); render();
 }
@@ -2863,7 +3072,7 @@ function renderLife(){
     <h3>Ne yapmak istersin?</h3>
     ${LIFE_ACTS.map(a=>`<div class="statbox spread">
       <div><b>${a.n}</b><div class="sub">${a.d}${a.cost?` • ${TL(a.cost)}`:''}</div></div>
-      <button class="btn sm" onclick="doLife('${a.id}')" ${p.lifePoints<1||p.money<a.cost?'disabled':''}>Yap</button>
+      <button class="btn sm" onclick="doLife('${a.id}')" ${p.lifePoints<1?'disabled':''}>Yap</button>
     </div>`).join('')}
   </div>
   ${renderSocialCard()}
@@ -2878,7 +3087,7 @@ function doLife(id){
   const p=S.p;
   if(p.lifePoints<1) return toast('Bu haftaki günlerin bitti.');
   const act = LIFE_ACTS.find(a=>a.id===id);
-  if(p.money<act.cost) return toast('Para yetmiyor.');
+  if(p.money<act.cost) return needMoney(act.cost);
   p.lifePoints--; p.money-=act.cost;
   let msg='';
   switch(id){
@@ -3162,6 +3371,44 @@ function startMatch(comp){
     themSquad = getSquadFor(opp);
   }
 
+  pendingMatchCtx = {comp, fx, tie, cupIdx, extra, usHome, opp, usSquad, themSquad};
+  promptMatchFullscreen();
+}
+let pendingMatchCtx = null;
+function promptMatchFullscreen(){
+  const supported = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+  modal(`<h3 style="color:var(--flood)">Maça hazır mısın?</h3>
+    <p class="sub">${supported?'Daha iyi bir deneyim için ekranı tam ekran yapıp yatay modda oynayabilirsin. İstediğin an tam ekrandan çıkabilirsin.':'Cihazın tam ekranı desteklemiyor gibi görünüyor, normal modda devam edebilirsin.'}</p>
+    <div class="btngrid" style="margin-top:12px">
+      <button class="btn" onclick="closeModal(); launchMatch(false);">Böyle devam et</button>
+      ${supported?`<button class="btn primary" onclick="closeModal(); launchMatch(true);">⛶ Tam ekran + yatay</button>`:''}
+    </div>`);
+}
+function requestMatchFullscreen(){
+  const el = document.documentElement;
+  const req = el.requestFullscreen ? ()=>el.requestFullscreen() : el.webkitRequestFullscreen ? ()=>el.webkitRequestFullscreen() : null;
+  if(!req) return;
+  try{
+    const p = req();
+    const lockLandscape = ()=>{ try{ if(screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} };
+    if(p && p.then) p.then(lockLandscape).catch(()=>{});
+    else lockLandscape();
+  }catch(e){}
+}
+function exitMatchFullscreen(){
+  try{
+    if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+    else if(document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+    if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+  }catch(e){}
+}
+function launchMatch(wantFullscreen){
+  if(wantFullscreen) requestMatchFullscreen();
+  if(!pendingMatchCtx) return;
+  const {comp, fx, tie, cupIdx, extra, usHome, opp, usSquad, themSquad} = pendingMatchCtx;
+  pendingMatchCtx = null;
+  const p = S.p;
+
   M = {
     comp, fx, tie, cupIdx, euroRef:extra, usHome, oppName:opp,
     minute:0, half:1, extraTime:ri(1,4), stoppage:0,
@@ -3172,7 +3419,7 @@ function startMatch(comp){
     atkLevel:0, defLevel:0,
     weather: pick(WEATHER),
     rating:6.0, notes:[], timer:null, speed:1, paused:true, ended:false,
-    varBusy:false, patched:false, fast:false, _inj:null,
+    varBusy:false, patched:false, fast:false, _inj:null, userPaused:false,
     stats:{shotsUs:0, shotsThem:0, momSum:0, momN:0}
   };
   const me = M.us.squad.find(x=>x.isUser);
@@ -3182,6 +3429,10 @@ function startMatch(comp){
   M.them.squad.forEach(x=> x.stamina = ri(86,100));
 
   S.inMatch = true; lockNav(true);
+  document.body.classList.add('match-active');
+  // yatay/tam ekran seçilmediyse: anlatım maç ekranının altında, son 5 satır olarak akar
+  document.body.classList.toggle('match-feed', !wantFullscreen);
+  { const _l = $('log'); if(_l) _l.classList.remove('full'); const _fb = $('btn-feedall'); if(_fb) _fb.textContent = 'Tümünü göster'; }
   $('hub').style.display='none'; $('mgrhub').style.display='none'; $('live').style.display='block';
   const compTxt = comp==='kupa'?`${COMP_LABEL[comp]} • ${CUP_NAMES[cupIdx]}`
                 : comp==='euroko'?`${COMP_LABEL[comp]} • ${['Çeyrek Final','Yarı Final','Final'][cupIdx]}`
@@ -3203,8 +3454,10 @@ function startMatch(comp){
   $('sb-score').textContent = '0 - 0';
   $('sb-weather').textContent = `${M.weather.ic} ${M.weather.n}`;
   $('log').innerHTML = '';
+  $('logTicker').textContent = 'Maç başlamak üzere...';
   $('acts').style.display='none'; $('prompt').style.display='none';
   $('btn-finish').style.display='none';
+  const _pb = $('btn-pause'); if(_pb){ _pb.textContent = '⏸️ Duraklat'; _pb.style.display=''; }
   $('btn-sub').disabled = false; $('btn-drink').disabled = false;
   updateDrinkN();
   $('medN').textContent = p.medkits||0;
@@ -3461,15 +3714,37 @@ function confettiBurst(){
   }
 }
 
+/* oyuncunun adı geçen yerleri parlak etiketle işaretle (HTML etiketlerinin içine dokunmaz) */
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hiMyName(html){
+  const nm = S && S.p && S.p.name; if(!nm) return html;
+  const tag = `<span class="me-name">${nm}</span>`;
+  return html.split(/(<[^>]+>)/).map(part => part.charAt(0)==='<' ? part : part.split(nm).join(tag)).join('');
+}
+function toggleFeedAll(){
+  const l = $('log'), b = $('btn-feedall'); if(!l||!b) return;
+  const full = l.classList.toggle('full');
+  b.textContent = full ? 'Son 5 satır' : 'Tümünü göster';
+  l.scrollTop = l.scrollHeight;
+}
 function say(txt, cls=''){
   const l = $('log');
   const d = document.createElement('div');
   const isMe = !!(S && S.p && S.p.name && txt.indexOf(S.p.name)>=0);
   const classes = [cls, isMe?'me-event':''].filter(Boolean).join(' ');
   if(classes) d.className = classes;
-  d.innerHTML = (M && M.minute? `<span style="color:#64748b">${M.minute}'</span> ` : '') + txt;
+  d.innerHTML = (M && M.minute? `<span style="color:#64748b">${M.minute}'</span> ` : '') + hiMyName(txt);
   l.appendChild(d); l.scrollTop = l.scrollHeight;
   while(l.childElementCount>220) l.removeChild(l.firstChild);
+  const t = $('logTicker');
+  if(t){
+    const plain = txt.replace(/<[^>]*>/g,'');
+    t.innerHTML = hiMyName(escHtml((M && M.minute? `${M.minute}' — ` : '') + plain));
+    t.classList.toggle('me-event', isMe);
+    t.classList.toggle('gl', cls==='gl');
+    t.classList.toggle('bd', cls==='bd');
+    t.classList.remove('bump'); void t.offsetWidth; t.classList.add('bump');
+  }
 }
 function overlay(title, sub, ms, cb){
   $('ov-txt').textContent = title; $('ov-sub').textContent = sub||'';
@@ -3584,7 +3859,7 @@ function updateClock(){
   $('me-label').textContent = M.userOn ? `${S.p.name} — kondisyon` : `${S.p.name} — oyundan çıktı`;
 }
 function schedule(){
-  if(!M || M.ended || M.varBusy) return;
+  if(!M || M.ended || M.varBusy || M.userPaused) return;
   clearTimeout(M.timer);
   M.timer = setTimeout(tick, 760/M.speed);
 }
@@ -3594,6 +3869,7 @@ function fastForwardMatch(reason){
   M.fast = true;
   M.speed = 18;
   const fab = $('speedFab'); if(fab) fab.style.display='none';
+  const pb = $('btn-pause'); if(pb) pb.style.display='none';
   updateSpeedButtons();
   say(`⏩ ${S.p.name} sahada olmadığı için maçın kalanı hızlandırıldı.`,'hi');
   toast(reason==='sakatlık' ? '🚑 Sakatlandın — maçın kalanı hızlandırılıyor.' : 'Maç hızlandırılıyor.');
@@ -3607,9 +3883,31 @@ function updateSpeedButtons(){
   });
 }
 
+/* ---------- Manuel duraklatma ---------- */
+function togglePause(){
+  if(!M || M.ended) return;
+  const btn = $('btn-pause');
+  if(M.userPaused){
+    M.userPaused = false;
+    if(btn) btn.textContent = '⏸️ Duraklat';
+    $('ov').style.display = 'none';
+    { const t = $('logTicker'); if(t) t.style.visibility = ''; }
+    if(!M.paused && !M.varBusy) schedule();
+  } else {
+    if(M.paused || M.varBusy) return toast('Şu an duraklatılamaz, bir seçim bekleniyor.');
+    M.userPaused = true;
+    clearTimeout(M.timer);
+    if(btn) btn.textContent = '▶️ Devam et';
+    { const t = $('logTicker'); if(t) t.style.visibility = 'hidden'; }
+    $('ov-txt').textContent = 'MAÇ DURAKLATILDI';
+    $('ov-sub').textContent = 'Devam etmek için "Devam et" butonuna bas.';
+    $('ov').style.display = 'flex';
+  }
+}
+
 /* ---------- ana tik ---------- */
 function tick(){
-  if(!M || M.ended) return;
+  if(!M || M.ended || M.userPaused) return;
   M.minute++;
   // yarı sonları
   const endFirst = 45, endSecond = 90;
@@ -4605,6 +4903,8 @@ function afterMatch(){
 function leaveMatch(){
   if(summaryTimer){ clearTimeout(summaryTimer); summaryTimer=null; }
   closeModal();
+  exitMatchFullscreen();
+  document.body.classList.remove('match-active','match-feed');
   S.inMatch = false; M = null;
   lockNav(false);
   $('live').style.display='none'; $('hub').style.display='block';
@@ -5189,6 +5489,404 @@ function updatePreview(){
   if(kitEl) kitEl.style.background = kitBackground(team.n);
 }
 
+
+/* =========================================================
+   GELİR MODELİ  —  1) Banner reklam   2) Gerçek TL ile oyun parası
+   ---------------------------------------------------------
+   Bu bölüm reklam/ödeme SAĞLAYICISINDAN bağımsızdır. Gerçek ağa bağlamak için
+   yalnızca aşağıdaki iki ayar nesnesini doldurman yeterli.
+   ========================================================= */
+const AD_CONFIG = {
+  enabled: true,
+  // 'placeholder' : yerine geçici kutu gösterir (tasarımı görmek için)
+  // 'adsense'     : web sitesinde Google AdSense (aşağıdaki client/slot değerleri gerekir)
+  // 'native'      : Android/iOS uygulamasında AdMob eklentisi banner'ı kendisi çizer;
+  //                 burada sadece yer ayrılır ve window.SahaAds.showBanner() çağrılır
+  provider: 'placeholder',
+  adsenseClient: 'ca-pub-9854310952239850',
+  adsenseSlot:   'XXXXXXXXXX',
+  height: 50
+};
+
+/* Oyun parası paketleri.
+   Akış:  paket butonu → Shopier ürün sayfası (yeni sekme) → ödeme → oyuncuya kod ulaşır → oyunda "Kodum var" → oyun parası yatar.
+   shopierUrl : o paketin Shopier ürün linki (buraya yapıştır).
+   sku        : kod üreticideki paket kimliğiyle aynı olmalı. */
+const IAP_CONFIG = {
+  // ⚠️ Yalnızca deneme için. true iken link olmayan paketler ödeme alınmadan para verir. Yayında false kalmalı.
+  testMode: false,
+  // Otomatik doğrulama sunucusu (isteğe bağlı). Doluysa kodlar buraya sorulur: POST {code, player} → {ok:true, sku, orderId}
+  // Boşsa kodlar aşağıdaki CODE_HASHES listesine göre oyunun içinde doğrulanır.
+  redeemEndpoint: '',
+  packs: [
+    {sku:'para_500k', ic:'💵', n:'Harçlık',          amount:500000,   priceTL:24.99,  shopierUrl:''},
+    {sku:'para_2m5',  ic:'💰', n:'Menajer Çantası',  amount:2500000,  priceTL:99.99,  shopierUrl:''},
+    {sku:'para_10m',  ic:'🧳', n:'Transfer Kasası',  amount:10000000, priceTL:299.99, shopierUrl:''},
+    {sku:'para_30m',  ic:'🏦', n:'Kulüp Hazinesi',   amount:30000000, priceTL:699.99, shopierUrl:''}
+  ]
+};
+/* Kod özetleri (SHA-256'nın ilk 16 hanesi). Gerçek kodlar burada YOKTUR, yalnızca özetleri var; kodları
+   buradan geri üretmek mümkün değil. kod-uretici.html'in verdiği listeyi ilgili paketin dizisine yapıştır. */
+const CODE_HASHES = { para_500k:[], para_2m5:[], para_10m:[], para_30m:[] };
+
+/* küçük, bağımlılıksız SHA-256 (http/https/file fark etmeden çalışsın diye) */
+function sha256hex(str){
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const b = new TextEncoder().encode(str), l = b.length, n = (((l+9+63)>>6)<<6);
+  const m = new Uint8Array(n); m.set(b); m[l]=0x80;
+  const dv = new DataView(m.buffer); dv.setUint32(n-4, (l*8)>>>0); dv.setUint32(n-8, Math.floor(l*8/4294967296));
+  let h=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const w = new Uint32Array(64), ror=(x,c)=>(x>>>c)|(x<<(32-c));
+  for(let o=0;o<n;o+=64){
+    for(let i=0;i<16;i++) w[i]=dv.getUint32(o+i*4);
+    for(let i=16;i<64;i++){ const s0=ror(w[i-15],7)^ror(w[i-15],18)^(w[i-15]>>>3), s1=ror(w[i-2],17)^ror(w[i-2],19)^(w[i-2]>>>10); w[i]=(w[i-16]+s0+w[i-7]+s1)|0; }
+    let [a,b2,c,d,e,f,g,hh]=h;
+    for(let i=0;i<64;i++){
+      const S1=ror(e,6)^ror(e,11)^ror(e,25), ch=(e&f)^(~e&g), t1=(hh+S1+ch+K[i]+w[i])|0;
+      const S0=ror(a,2)^ror(a,13)^ror(a,22), mj=(a&b2)^(a&c)^(b2&c), t2=(S0+mj)|0;
+      hh=g; g=f; f=e; e=(d+t1)|0; d=c; c=b2; b2=a; a=(t1+t2)|0;
+    }
+    h=[(h[0]+a)|0,(h[1]+b2)|0,(h[2]+c)|0,(h[3]+d)|0,(h[4]+e)|0,(h[5]+f)|0,(h[6]+g)|0,(h[7]+hh)|0];
+  }
+  return h.map(x=>(x>>>0).toString(16).padStart(8,'0')).join('');
+}
+const fmtReal = n => n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' TL';
+
+/* ---------- Banner ---------- */
+let adState = {shown:false, built:false};
+function adShouldShow(){
+  return AD_CONFIG.enabled && !!S && !S.inMatch && currentView==='v-match' && $('game').style.display!=='none';
+}
+function buildAd(){
+  if(adState.built) return;
+  adState.built = true;
+  const slot = $('adSlot');
+  if(AD_CONFIG.provider==='adsense'){
+    slot.innerHTML = `<ins class="adsbygoogle" style="display:inline-block;width:320px;height:${AD_CONFIG.height}px"
+      data-ad-client="${AD_CONFIG.adsenseClient}" data-ad-slot="${AD_CONFIG.adsenseSlot}"></ins>`;
+    const s = document.createElement('script');
+    s.async = true; s.crossOrigin = 'anonymous';
+    s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+AD_CONFIG.adsenseClient;
+    s.onload = ()=>{ try{ (window.adsbygoogle = window.adsbygoogle||[]).push({}); }catch(e){} };
+    document.head.appendChild(s);
+  } else if(AD_CONFIG.provider==='native'){
+    slot.innerHTML = `<div style="height:${AD_CONFIG.height}px"></div>`;   // banner'ı native eklenti çizer
+  } else {
+    slot.innerHTML = `<div class="adph" style="height:${AD_CONFIG.height}px;display:flex;align-items:center">REKLAM ALANI • 320×${AD_CONFIG.height}</div>`;
+  }
+}
+function updateAdBanner(){
+  const want = adShouldShow();
+  const bar = $('adBanner');
+  if(want){
+    buildAd();
+    const nav = document.getElementById('bottom');
+    document.documentElement.style.setProperty('--navh', (nav?nav.offsetHeight:58)+'px');
+    document.documentElement.style.setProperty('--adh', (AD_CONFIG.height + 16)+'px');
+    bar.classList.add('on'); document.body.classList.add('has-ad');
+    if(!adState.shown && AD_CONFIG.provider==='native' && window.SahaAds && SahaAds.showBanner) try{ SahaAds.showBanner(); }catch(e){}
+  } else {
+    bar.classList.remove('on'); document.body.classList.remove('has-ad');
+    document.documentElement.style.setProperty('--adh','0px');
+    if(adState.shown && AD_CONFIG.provider==='native' && window.SahaAds && SahaAds.hideBanner) try{ SahaAds.hideBanner(); }catch(e){}
+  }
+  adState.shown = want;
+}
+window.addEventListener('resize', ()=>{ if(adState.shown) updateAdBanner(); });
+
+
+/* =========================================================
+   ÖDÜLLÜ VİDEO  —  "Video izle, oyun parası kazan"
+   ---------------------------------------------------------
+   provider:
+     'placeholder' : sahte 5 sn'lik TEST reklamı (akışı görmek için; gerçek gelir YOK)
+     'h5'          : web sitesinde Google H5 Games Ads (AdSense'te onaylı hesap gerekir)
+     'native'      : Android/iOS uygulamasında AdMob ödüllü video (eklenti window.SahaAds.showRewarded() sağlar)
+   ========================================================= */
+const REWARD_CONFIG = {
+  enabled: true,
+  provider: 'placeholder',
+  h5Client: 'ca-pub-9854310952239850',   // provider 'h5' iken AdSense yayıncı kimliğin
+  h5Test: true,                           // true iken Google test reklamı gösterir. Yayında false yap.
+  cooldownSec: 45,                        // iki video arası bekleme
+  dailyCap: 12,                           // günlük en fazla video
+  minReward: 50000
+};
+function rewardAmount(){
+  const w = (S && S.p && S.p.wage) || 40000;
+  return Math.max(REWARD_CONFIG.minReward, Math.round(w*1.5/5000)*5000);   // kazanç, maaşa göre büyür
+}
+function todayKey(){ const d = new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function videoState(){
+  let st = null; try{ st = JSON.parse(localStorage.getItem('sahaVideo')||'null'); }catch(e){}
+  if(!st || st.day!==todayKey()) st = {day:todayKey(), n:0, last:(st&&st.last)||0};
+  return st;
+}
+function saveVideoState(st){ try{ localStorage.setItem('sahaVideo', JSON.stringify(st)); }catch(e){} }
+function videoInfo(){
+  const st = videoState();
+  return {n:st.n, left:Math.max(0, REWARD_CONFIG.dailyCap-st.n),
+          wait:Math.max(0, Math.ceil((st.last + REWARD_CONFIG.cooldownSec*1000 - Date.now())/1000)), reward:rewardAmount()};
+}
+function videoBlockHTML(){
+  const v = videoInfo();
+  return `<div class="packcard vid">
+    <span class="pic">📺</span>
+    <div class="pinfo"><b>Video izle ${REWARD_CONFIG.provider==='placeholder'?'<span class="testflag" style="margin-left:4px">TEST</span>':''}</b>
+      <span class="pamt">+${TL(v.reward)}</span>
+      <span class="vidsub sub"></span></div>
+    <button class="btn sm primary vidbtn" onclick="watchVideo()">İzle</button>
+  </div>`;
+}
+let vidBusy = false;
+function updateVideoButtons(){
+  const btns = document.querySelectorAll('.vidbtn'); if(!btns.length || !S) return;
+  const v = videoInfo();
+  btns.forEach(b=>{
+    b.disabled = vidBusy || v.left<=0 || v.wait>0;
+    b.textContent = vidBusy ? '…' : v.left<=0 ? 'Yarın' : v.wait>0 ? `⏳ ${v.wait} sn` : 'İzle';
+  });
+  document.querySelectorAll('.vidsub').forEach(e=>{
+    e.textContent = v.left>0 ? `Bugün ${v.left}/${REWARD_CONFIG.dailyCap} hak kaldı` : 'Bugünkü haklarını kullandın';
+  });
+}
+setInterval(updateVideoButtons, 1000);
+
+/* --- sağlayıcılar: hepsi {rewarded:boolean, reason?} döner --- */
+function placeholderRewarded(){
+  return new Promise(res=>{
+    let t = 0; const total = 5;
+    modal(`<h3 style="color:var(--flood)">🎬 Test reklamı</h3>
+      <p class="sub">Bu gerçek bir reklam değil. Gerçek reklam ağı bağlanınca burada video oynar.</p>
+      <div class="bar" style="margin:14px 0 6px"><i id="vid-bar" style="width:0%"></i></div>
+      <p class="sub" id="vid-left" style="text-align:center">${total} sn</p>
+      <button class="btn block" id="vid-x" style="margin-top:8px">Vazgeç (ödül yok)</button>`);
+    const iv = setInterval(()=>{
+      t++;
+      const bar = $('vid-bar'), left = $('vid-left');
+      if(bar) bar.style.width = (t/total*100)+'%';
+      if(left) left.textContent = Math.max(0,total-t)+' sn';
+      if(t>=total){ clearInterval(iv); res({rewarded:true}); }
+    }, 1000);
+    const x = $('vid-x');
+    if(x) x.onclick = ()=>{ clearInterval(iv); closeModal(); res({rewarded:false, reason:'closed'}); };
+  });
+}
+function h5Rewarded(){
+  return new Promise(res=>{
+    if(typeof window.adBreak!=='function') return res({rewarded:false, reason:'unavailable'});
+    let viewed = false, settled = false;
+    const done = r => { if(!settled){ settled = true; res(r); } };
+    const wait = setTimeout(()=>done({rewarded:false, reason:'unavailable'}), 8000);   // reklam hiç gelmezse takılma
+    window.adBreak({type:'reward', name:'para-kazan',
+      beforeReward: show => { clearTimeout(wait); show(); },   // oyuncu zaten "İzle"ye bastı
+      adViewed:    () => { viewed = true; },
+      adDismissed: () => {},
+      adBreakDone: info => done(viewed ? {rewarded:true}
+                       : {rewarded:false, reason:(info && info.breakStatus==='dismissed') ? 'dismissed' : 'unavailable'})
+    });
+  });
+}
+async function nativeRewarded(){
+  if(!(window.SahaAds && typeof SahaAds.showRewarded==='function')) return {rewarded:false, reason:'unavailable'};
+  try{ const r = await SahaAds.showRewarded(); return {rewarded:!!(r && r.rewarded), reason:r && r.reason}; }
+  catch(e){ return {rewarded:false, reason:'unavailable'}; }
+}
+function initRewardedProvider(){
+  if(REWARD_CONFIG.provider!=='h5' || window.adBreak) return;
+  window.adsbygoogle = window.adsbygoogle || [];
+  window.adBreak = window.adConfig = function(o){ window.adsbygoogle.push(o); };
+  const s = document.createElement('script');
+  s.async = true; s.crossOrigin = 'anonymous';
+  s.setAttribute('data-ad-client', REWARD_CONFIG.h5Client);
+  if(REWARD_CONFIG.h5Test) s.setAttribute('data-adbreak-test', 'on');
+  s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+  document.head.appendChild(s);
+  window.adConfig({preloadAdBreaks:'on', sound:'on'});
+}
+
+async function watchVideo(){
+  if(!S || vidBusy || !REWARD_CONFIG.enabled) return;
+  if(S.inMatch) return toast('Maç sürerken video izlenemez.');
+  const v = videoInfo();
+  if(v.left<=0) return toast('Bugünkü video hakkın bitti, yarın tekrar gel.');
+  if(v.wait>0)  return toast(`Sonraki video ${v.wait} sn sonra.`);
+  vidBusy = true; updateVideoButtons();
+  let r;
+  try{
+    r = REWARD_CONFIG.provider==='h5' ? await h5Rewarded()
+      : REWARD_CONFIG.provider==='native' ? await nativeRewarded()
+      : await placeholderRewarded();
+  }catch(e){ r = {rewarded:false, reason:'unavailable'}; }
+  vidBusy = false;
+  if(r && r.rewarded){ grantVideoReward(); }
+  else{
+    updateVideoButtons();
+    toast(r && r.reason==='unavailable' ? 'Şu an gösterilecek video yok, biraz sonra tekrar dene.' : 'Video tamamlanmadı, ödül verilmedi.');
+  }
+}
+function grantVideoReward(){
+  const amt = rewardAmount(), st = videoState();
+  S.p.money += amt; S.p.videosWatched = (S.p.videosWatched||0) + 1;
+  st.n++; st.last = Date.now(); saveVideoState(st);
+  closeModal();
+  toast(`📺 +${TL(amt)} kazandın!`);
+  save(); render();
+}
+
+/* ---------- Oyun parası mağazası ---------- */
+function paidEnabled(){
+  return IAP_CONFIG.testMode || !!IAP_CONFIG.redeemEndpoint || !!(window.SahaPay && SahaPay.purchase) || IAP_CONFIG.packs.some(p=>p.shopierUrl);
+}
+function packBonus(pk){
+  const base = IAP_CONFIG.packs[0]; const r0 = base.amount/base.priceTL, r = pk.amount/pk.priceTL;
+  return Math.round((r/r0-1)*100/5)*5;
+}
+function packsHTML(recId){
+  const packs = IAP_CONFIG.packs, last = packs[packs.length-1].sku;
+  return packs.map(pk=>{
+    const bonus = packBonus(pk);
+    return `<div class="packcard ${pk.sku===last?'best':''} ${pk.sku===recId?'rec':''}">
+      <span class="pic">${pk.ic}</span>
+      <div class="pinfo"><b>${pk.n}</b>
+        <span class="pamt">${TL(pk.amount)}</span>
+        ${bonus>0?`<span class="chip" style="margin-left:6px">%${bonus} bonus</span>`:''}
+        ${pk.sku===recId?'<span class="chip ovr" style="margin-left:6px">Sana uygun</span>':''}
+      </div>
+      <button class="btn sm primary" onclick="iapBuy('${pk.sku}')">${fmtReal(pk.priceTL)}</button>
+    </div>`;
+  }).join('');
+}
+function cashNote(){
+  const viaShopier = IAP_CONFIG.packs.some(p=>p.shopierUrl);
+  return `${IAP_CONFIG.testMode?'<p style="margin:0 0 8px"><span class="testflag">🧪 TEST MODU — link olmayan paketlerde ödeme alınmaz</span></p>':''}
+    <p class="sub">Fiyatlar <b>gerçek para (TL)</b> ile ödenir.${viaShopier?' Paketi seçince <b>Shopier</b> güvenli ödeme sayfası açılır. Ödemeden sonra sana iletilen kodu <b>“Kodum var”</b> ile girince oyun parası hesabına yatar.':''} Oyun parası yalnızca bu oyunda geçerlidir.</p>`;
+}
+function claimBtnHTML(){ return `<button class="btn block" style="margin-top:6px" onclick="openClaimModal()">🎟️ Kodum var</button>`; }
+function renderCash(){
+  const box = $('cashBox'); if(!box) return;
+  box.innerHTML = `<div class="card">
+    <h3>📺 Video izle, para kazan <span class="chip gold">${TL(S.p.money)}</span></h3>
+    <p class="sub" style="margin-bottom:8px">Kısa bir video izle, oyun parası kazan. Ödül maaşınla birlikte büyür.</p>
+    ${REWARD_CONFIG.enabled ? videoBlockHTML() : '<p class="sub">Video ödülü şu an kapalı.</p>'}
+  </div>
+  ${paidEnabled() ? `<div class="card">
+    <h3>💳 Oyun parası satın al</h3>
+    ${cashNote()}
+    <div style="margin-top:10px">${packsHTML(null)}</div>
+    ${claimBtnHTML()}
+  </div>` : ''}`;
+}
+function openCashStore(gap){
+  const need = gap||0;
+  const rec = need>0 ? (IAP_CONFIG.packs.find(pk=>pk.amount>=need) || IAP_CONFIG.packs[IAP_CONFIG.packs.length-1]).sku : null;
+  modal(`<h3 style="color:var(--flood)">${need>0?'Paran yetmiyor':'Para kazan'}</h3>
+    ${need>0?`<p class="sub" style="margin-bottom:8px">Bunun için <b>${TL(need)}</b> daha gerekiyor. Video izleyerek para kazanabilir ya da haftalık kazancını bekleyebilirsin.</p>`:''}
+    ${REWARD_CONFIG.enabled ? videoBlockHTML() : ''}
+    ${paidEnabled() ? `${cashNote()}<div style="margin-top:10px">${packsHTML(rec)}</div>${claimBtnHTML()}` : ''}
+    <button class="btn block" style="margin-top:6px" onclick="closeModal()">Vazgeç</button>`);
+  updateVideoButtons();
+}
+function needMoney(cost){
+  if(!S) return;
+  if(S.inMatch || $('modal').classList.contains('on')) return toast('Para yetmiyor.');
+  openCashStore(Math.max(0, cost - S.p.money));
+}
+let iapBusy = false;
+async function iapBuy(sku){
+  if(iapBusy) return;
+  const pk = IAP_CONFIG.packs.find(x=>x.sku===sku); if(!pk||!S) return;
+  iapBusy = true;
+  try{
+    let res;
+    if(window.SahaPay && typeof SahaPay.purchase==='function'){
+      res = await SahaPay.purchase(pk.sku);             // Play Billing / App Store / ödeme sağlayıcı köprüsü
+    } else if(pk.shopierUrl){
+      openShopier(pk); return;                           // Shopier ödeme sayfası → ödeme sonrası kod ile teslim
+    } else if(IAP_CONFIG.testMode){
+      res = {ok:true, orderId:'TEST-'+Date.now(), test:true};
+    } else {
+      toast('Bu paketin Shopier linki henüz eklenmedi.'); return;
+    }
+    if(!res || !res.ok){ toast(res && res.cancelled ? 'Satın alma iptal edildi.' : 'Ödeme tamamlanamadı, ücret alınmadı.'); return; }
+    grantPack(pk, res);
+  }catch(e){
+    toast('Ödeme sırasında bir hata oluştu.');
+  }finally{ iapBusy = false; }
+}
+function openShopier(pk){
+  try{ window.open(pk.shopierUrl, '_blank', 'noopener'); }catch(e){}
+  openClaimModal(pk);
+}
+function normCode(s){ return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+function usedHashes(){ try{ return JSON.parse(localStorage.getItem('sahaUsedCodes')||'[]'); }catch(e){ return []; } }
+function markUsed(h){ try{ const a = usedHashes(); a.push(h); localStorage.setItem('sahaUsedCodes', JSON.stringify(a)); }catch(e){} }
+function openClaimModal(pk){
+  modal(`<h3 style="color:var(--flood)">Oyun parası kodun</h3>
+    ${pk?`<p class="sub">Shopier'de <b>${pk.n}</b> (${TL(pk.amount)}) için ödemeni tamamla. Ödemeden sonra sana iletilen kodu aşağıya yaz.</p>
+      <a class="btn block" style="margin-top:8px;text-align:center;text-decoration:none;display:block" href="${pk.shopierUrl}" target="_blank" rel="noopener">🛒 Shopier sayfasını tekrar aç</a>`
+      :`<p class="sub">Shopier ödemenden sonra sana iletilen kodu aşağıya yaz.</p>`}
+    <input id="claim-code" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" placeholder="XXXX-XXXX-XXXX"
+      style="width:100%;margin-top:10px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--inputbg);color:var(--ink);font-size:1.05rem;letter-spacing:2px;text-transform:uppercase;text-align:center"
+      onkeydown="if(event.key==='Enter')claimSubmit()">
+    <p id="claim-msg" class="sub" style="min-height:1.3em;margin:6px 0 0"></p>
+    <div class="btngrid" style="margin-top:8px">
+      <button class="btn" onclick="closeModal()">Kapat</button>
+      <button class="btn primary" onclick="claimSubmit()">Oyun parasını al</button>
+    </div>`);
+  setTimeout(()=>{ const i=$('claim-code'); if(i) i.focus(); }, 60);
+}
+async function claimSubmit(){
+  const inp = $('claim-code'); if(!inp) return;
+  const r = await redeemCode(inp.value);
+  const msg = $('claim-msg');
+  if(msg && !r.ok){ msg.style.color = 'var(--bad)'; msg.textContent = r.err; }
+}
+async function redeemCode(raw){
+  if(!S) return {ok:false, err:'Önce bir kariyer başlat.'};
+  const code = normCode(raw);
+  if(code.length!==12) return {ok:false, err:'Kod 12 karakter olmalı (XXXX-XXXX-XXXX).'};
+  const h = sha256hex(code).slice(0,16);
+  if(usedHashes().includes(h)) return {ok:false, err:'Bu kod daha önce kullanılmış.'};
+  if(IAP_CONFIG.redeemEndpoint){                                   // sunucu doğrulaması
+    try{
+      const r = await fetch(IAP_CONFIG.redeemEndpoint, {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({code, player:S.p.name})});
+      const j = await r.json();
+      if(!j || !j.ok) return {ok:false, err:(j && j.error) || 'Kod geçersiz.'};
+      const pk = IAP_CONFIG.packs.find(x=>x.sku===j.sku);
+      if(!pk) return {ok:false, err:'Bilinmeyen paket.'};
+      markUsed(h); grantPack(pk, {ok:true, orderId: j.orderId || ('CODE-'+h)});
+      return {ok:true};
+    }catch(e){ return {ok:false, err:'Sunucuya ulaşılamadı, biraz sonra tekrar dene.'}; }
+  }
+  for(const pk of IAP_CONFIG.packs){                               // sunucusuz: gömülü özet listesi
+    if((CODE_HASHES[pk.sku]||[]).includes(h)){
+      markUsed(h); grantPack(pk, {ok:true, orderId:'CODE-'+h});
+      return {ok:true};
+    }
+  }
+  return {ok:false, err:'Kod geçersiz. Kodu Shopier siparişinde sana iletildiği gibi yaz.'};
+}
+function grantPack(pk, res){
+  const p = S.p;
+  if(!S.iapOrders) S.iapOrders = [];
+  if(res.orderId && S.iapOrders.includes(res.orderId)) return toast('Bu sipariş zaten işlendi.');   // çift teslimat engeli
+  if(res.orderId) S.iapOrders.push(res.orderId);
+  p.money += pk.amount;
+  if(!p.iapLog) p.iapLog = [];
+  p.iapLog.push({sku:pk.sku, amount:pk.amount, priceTL:pk.priceTL, order:res.orderId||null, test:!!res.test, t:Date.now()});
+  closeModal();
+  toast(`+${TL(pk.amount)} hesabına yattı${res.test?' (test)':''}.`);
+  save(); render();
+}
+document.addEventListener('click', e=>{
+  const chip = e.target.closest && e.target.closest('#t-money'); if(!chip || !S) return;
+  if(S.inMatch) return toast('Maç sürerken satın alma kapalı.');
+  if($('modal').classList.contains('on')) return;
+  openCashStore(0);
+});
+
 function bindUI(){
   document.querySelectorAll('#bottom button').forEach(b=>{
     b.addEventListener('click', ()=>go(b.dataset.view));
@@ -5207,6 +5905,7 @@ function bindUI(){
   $('btn-sub').addEventListener('click', requestSub);
   $('btn-squad').addEventListener('click', showSquad);
   $('btn-stats').addEventListener('click', showStats);
+  $('btn-pause').addEventListener('click', togglePause);
   $('btn-finish').addEventListener('click', leaveMatch);
   $('t-sound').addEventListener('click', ()=>{
     const on = Sfx.toggle();
@@ -5236,6 +5935,7 @@ function bindUI(){
 
 (function boot(){
   initTheme();
+  initRewardedProvider();
   fillSetup(); bindUI();
   let has=false;
   try{ has = !!localStorage.getItem(SAVE_KEY); }catch(e){}
