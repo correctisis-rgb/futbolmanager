@@ -537,7 +537,7 @@ body.force-landscape #modal{
   z-index:40;
 }
 body.force-landscape #live{
-  overflow-y:auto; overflow-x:hidden; background:var(--night);
+  overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; background:var(--night);
 }
 body.force-landscape .actionbackdrop{ z-index:55; }
 body.force-landscape .actionsheet{
@@ -564,8 +564,14 @@ body.match-active.force-landscape #live > .card > h3{display:none;}
 body.match-active.force-landscape .scoreboard{padding:4px 8px;margin-bottom:4px;}
 body.match-active.force-landscape .scoreboard .sc{font-size:1.4rem;padding:0 8px;}
 body.match-active.force-landscape .scoreboard .tn{font-size:.78rem;}
-body.match-active.force-landscape .stadium{margin-bottom:0;}
-body.match-active.force-landscape .pitch{max-height:min(72vh,420px);max-height:min(72dvh,420px);}
+body.match-active.force-landscape .stadium{
+  margin-bottom:0; position:sticky; top:0; z-index:2; background:var(--night);
+}
+/* NOT: bu sahte-yatay modda vh her zaman GERÇEK (dikey) ekran yüksekliğini gösterir,
+   döndürülmüş görünümdeki kısa kenarı değil — o yüzden sahanın boyutu vw'ye göre
+   hesaplanmalı, yoksa saha kutuya sığmayıp kaydırma gerektiriyor ve oyuncular kayboluyor. */
+body.match-active.force-landscape .pitch{max-height:min(60vw,280px);max-height:min(60dvw,280px);}
+body.match-active.force-landscape .livefeed-head{display:none;}
 body.match-active.force-landscape #me-line,
 body.match-active.force-landscape #stad-line,
 body.match-active.force-landscape .commentary{display:none;}
@@ -4859,6 +4865,7 @@ function showSquad(){
 /* ---------- maç sonu ---------- */
 function finishMatch(){
   M.ended = true; clearTimeout(M.timer);
+  exitMatchFullscreen(); // maç bitti: yatay zorlamayı kaldır, özet ekranı dikey modda açılsın
   Sfx.fullTime(); Sfx.ambienceStop();
   const hs = M.usHome ? M.us.score : M.them.score;
   const as = M.usHome ? M.them.score : M.us.score;
