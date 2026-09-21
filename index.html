@@ -96,7 +96,9 @@ input,select{font-family:inherit;}
 /* ---------- App shell ---------- */
 #app{max-width:760px;margin:0 auto;padding:0 12px 96px;
   height:100vh;height:100dvh;overflow-y:auto;overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;}
+  -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
+  scrollbar-width:none;-ms-overflow-style:none;}
+#app::-webkit-scrollbar{display:none;width:0;height:0;}
 .topbar{
   position:sticky;top:0;z-index:40;margin:0 -12px 12px;padding:10px 12px;
   padding-top:calc(10px + env(safe-area-inset-top,0px));
@@ -321,17 +323,9 @@ td.num,th.num{text-align:center;width:26px;}
 @keyframes pulsepl{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
 .ball{position:absolute;width:2.6%;aspect-ratio:1;transform:translate(-50%,-50%);
   filter:drop-shadow(0 3px 4px rgba(0,0,0,.55));
-  transition:left .4s linear,top .4s linear;z-index:8;}
-.ball > i{display:block;width:100%;height:100%;border-radius:50%;
-  background:
-    radial-gradient(circle at 50% 20%, #14181a 0 15%, transparent 16%),
-    radial-gradient(circle at 21% 40%, #14181a 0 13%, transparent 14%),
-    radial-gradient(circle at 79% 40%, #14181a 0 13%, transparent 14%),
-    radial-gradient(circle at 33% 72%, #14181a 0 13%, transparent 14%),
-    radial-gradient(circle at 67% 72%, #14181a 0 13%, transparent 14%),
-    radial-gradient(circle at 30% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 30%),
-    radial-gradient(circle at 45% 45%, #fbfcfc 55%, #dfe4e7 82%, #aeb6bc 100%);
-  border:1px solid rgba(0,0,0,.4);
+  transition:left .4s linear,top .4s linear;z-index:8;container-type:size;}
+.ball > i{display:flex;align-items:center;justify-content:center;width:100%;height:100%;
+  font-style:normal;line-height:1;font-size:4vw;font-size:92cqw;
   animation:ballspin 0.85s linear infinite;}
 @keyframes ballspin{to{transform:rotate(360deg)}}
 .ball.goal-flash{filter:drop-shadow(0 0 10px var(--flood)) drop-shadow(0 3px 4px rgba(0,0,0,.5));}
@@ -612,8 +606,9 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
 .squadrow .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .squadrow .bar{width:64px;flex:none;}
 .pos-tag{background:var(--chipbg);border:1px solid var(--line);border-radius:6px;padding:1px 5px;font-size:.66rem;color:var(--dim);flex:none;width:36px;text-align:center;}
-.kitdot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;
-  border:1px solid rgba(0,0,0,.35);box-shadow:0 0 0 1px rgba(255,255,255,.18) inset;flex:none;}
+.kitdot{display:inline-block;width:13px;height:14px;margin-right:6px;vertical-align:-2px;
+  border:1px solid rgba(0,0,0,.35);box-shadow:0 0 0 1px rgba(255,255,255,.18) inset;flex:none;
+  clip-path:polygon(0% 20%,22% 2%,37% 11%,63% 11%,78% 2%,100% 20%,87% 37%,79% 28%,79% 100%,21% 100%,21% 28%,13% 37%);}
 
 .toast{position:fixed;left:50%;bottom:calc(74px + var(--adh,0px) + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
   background:var(--toastbg);border:1px solid var(--line);color:#eaf2f4;padding:10px 16px;border-radius:999px;
@@ -739,7 +734,7 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
 .badge-card:not(.got) .breward{background:var(--chipbg);color:var(--dim);border-color:var(--line);}
 
 /* ---------- Takım rozeti (forma önizleme) ---------- */
-.kitdot.kd-lg{width:22px;height:22px;border-radius:5px;}
+.kitdot.kd-lg{width:24px;height:26px;}
 
 /* ---------- Canlı anlatım: yatay mod seçilmediyse maç ekranının altında son 5 satır ---------- */
 .livefeed-head{display:none;justify-content:space-between;align-items:center;gap:8px;margin:8px 0 0;}
@@ -917,7 +912,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
               <div class="spot" style="left:50%;top:50%"></div>
               <div style="position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;border:2px solid rgba(255,255,255,.55);border-radius:50%;transform:translate(-50%,-50%)"></div>
               <div class="floodmask" id="floodmask"></div>
-              <div class="ball" id="ball" style="left:50%;top:50%"><i></i></div>
+              <div class="ball" id="ball" style="left:50%;top:50%"><i>⚽</i></div>
               <div class="overlay" id="ov" style="display:none"><div class="big" id="ov-txt"></div><div class="sub" id="ov-sub"></div></div>
               <div id="varLayer"></div>
               <div class="pitchticker" id="logTicker">Maç başlamak üzere...</div>
@@ -5296,6 +5291,7 @@ function showHeadline(){
 function makePaper(wk){
   const res = S.results.filter(r=>r.week===wk);
   const top = sortTable().slice(0,5);
+  const bottom = sortTable().slice(-3);
   const my = res.find(r=>r.h===S.p.team||r.a===S.p.team);
   const wkNews = S.news.filter(n=>n.w===wk);
   const p=S.p;
@@ -5303,38 +5299,130 @@ function makePaper(wk){
 
   const myGoals = p.season.goals;
   const mine = my ? (my.h===S.p.team ? {us:my.hs, them:my.as, opp:my.a, home:true} : {us:my.as, them:my.hs, opp:my.h, home:false}) : null;
+  const myWeekGoals = (S.weekGoals||[]).filter(g=>g.week===wk && g.name===p.name).length;
+  const gotMotm = !!(p._weeklyMotm && p._weeklyMotmWeek===wk);
+  const hatTrick = myWeekGoals>=3;
 
-  if(mine && mine.us>mine.them){
-    kicker='HAFTANIN MAÇI';
-    headline = `${S.p.team} kazandı: ${mine.us}-${mine.them}`;
-    lead = `${S.p.team}, ${mine.opp} karşısında ${mine.home?'sahasında':'deplasmanda'} ${mine.us}-${mine.them} kazandı. ${p.name} ${p.season.goals} gollük sezon istatistiğini büyütmeye devam ediyor ve teknik heyetin güvenini koruyor.`;
-  } else if(mine && mine.us<mine.them){
-    kicker='KÖTÜ HAFTA';
-    headline = `${S.p.team} sendeledi: ${mine.us}-${mine.them}`;
-    lead = `${mine.opp} karşısında alınan ${mine.us}-${mine.them}'lik sonuç soyunma odasında moralleri bozdu. Teknik direktörün kadro tercihleri tribünde tartışıldı.`;
-  } else if(mine){
-    kicker='PUAN PAYLAŞIMI';
-    headline = `${S.p.team} ile ${mine.opp} yenişemedi`;
-    lead = `Karşılıklı ataklarla geçen mücadelede iki takım da net üstünlük kuramadı ve sahadan ${mine.us}-${mine.them}'lik eşitlikle ayrıldı.`;
+  if(mine){
+    const sc = `${mine.us}-${mine.them}`;
+    const venue = mine.home ? 'kendi sahasında' : 'deplasmanda';
+    const venueCap = venue.charAt(0).toUpperCase()+venue.slice(1);
+    const margin = mine.us - mine.them;
+
+    if(margin>0){
+      kicker = pick(margin>=3
+        ? ['FARKLI GALİBİYET','GÜNÜN EZİCİSİ','TEK YÖNLÜ MAÇ','RÖVANŞ YOK']
+        : margin===1
+          ? ['SON DAKİKA GERİLİMİ','DAR FARKLA 3 PUAN','NEFES KESTİREN MAÇ','İNCE ÇİZGİ']
+          : ['HAFTANIN MAÇI','GÜÇLÜ PERFORMANS','KEYİFLİ 90 DAKİKA','SAHADAKİ ÜSTÜNLÜK']);
+
+      const headlines = [
+        `${p.team} kazandı: ${sc}`,
+        `${p.team}'den ${mine.opp} karşısında ${sc}'lik galibiyet`,
+        `${mine.opp} engelini ${sc} geçen ${p.team} 3 puana uzandı`,
+        `${p.team}, ${mine.opp} karşısında ${sc} galip geldi`
+      ];
+      if(margin>=3) headlines.push(`${p.team} sahada resital verdi: ${sc}`, `${mine.opp} karşısında farklı galibiyet: ${sc}`);
+      if(hatTrick) headlines.push(`${p.name} hat-trick yaptı, ${p.team} ${sc} kazandı`, `Gecenin adamı ${p.name}: 3 gol, ${sc} galibiyet`);
+      else if(myWeekGoals>=1) headlines.push(`${p.name}'in golüyle ${p.team} sahadan ${sc} galip ayrıldı`, `${p.name} yine sahnede: ${p.team} ${sc} kazandı`);
+      if(gotMotm) headlines.push(`Maçın adamı ${p.name}: ${p.team} ${sc} kazandı`);
+      headline = pick(headlines);
+
+      const leads = [
+        `${p.team}, ${mine.opp} karşısında ${venue} ${sc} kazandı. Teknik heyet, sahaya yansıyan disiplinden son derece memnun.`,
+        `${p.team}, ${venue} oynadığı maçta ${mine.opp} karşısında ${sc}'lik skorla sahadan avantajlı ayrıldı. Taraftar, takımın oyun disiplininden övgüyle söz ediyor.`,
+        `${p.team}, ${mine.opp} karşısında ${sc} galip geldi. Soyunma odasında hafta boyunca konuşulan konu bu galibiyetin devamlılığı oldu.`,
+        `${venueCap} oynanan mücadelede ${p.team}, ${mine.opp} karşısında ${sc}'lik skorla üstünlük kurdu.`
+      ];
+      if(hatTrick) leads.push(`${p.name}'in attığı 3 golle ${p.team}, ${mine.opp} karşısında ${sc} kazandı. Tribünler maç boyunca ${p.name} tezahüratı yaptı.`);
+      else if(myWeekGoals>=1) leads.push(`${p.name}'in golüyle ${p.team}, ${mine.opp} karşısında ${sc} kazandı. Genç oyuncu sezonun en önemli anlarından birine imza attı.`);
+      else if(gotMotm) leads.push(`${p.team}, ${mine.opp} karşısında ${sc} kazandı. Sahadaki performansıyla öne çıkan ${p.name}, maçın adamı seçildi.`);
+      lead = pick(leads);
+
+    } else if(margin<0){
+      kicker = pick(margin<=-3
+        ? ['AĞIR MAĞLUBİYET','KÖTÜ GECE','TARİFSİZ BOZGUN']
+        : ['KÖTÜ HAFTA','ZOR AKŞAM','ELEŞTİRİ YAĞMURU','SANCILI MAÇ']);
+
+      const headlines = [
+        `${p.team} sendeledi: ${sc}`,
+        `${p.team}, ${mine.opp} karşısında ${sc} kaybetti`,
+        `${mine.opp} karşısında ${sc}'lik yenilgi: ${p.team} zorlanıyor`,
+        `${p.team}'de moraller bozuk: ${mine.opp} karşısında ${sc}`
+      ];
+      if(margin<=-3) headlines.push(`${p.team}'de kabus gecesi: ${sc}`, `${mine.opp} karşısında farklı yenilgi: ${sc}`);
+      headline = pick(headlines);
+
+      const leads = [
+        `${mine.opp} karşısında alınan ${sc}'lik sonuç soyunma odasında moralleri bozdu. Teknik direktörün kadro tercihleri tribünde tartışıldı.`,
+        `${p.team}, ${venue} oynadığı maçta ${mine.opp} karşısında ${sc} mağlup oldu. Taraftar grupları maç sonrası tepkisini dile getirdi.`,
+        `${venueCap} oynanan mücadelede ${p.team}, ${mine.opp} karşısında ${sc}'lik skorla sahadan mağlup ayrıldı. Yönetimden açıklama bekleniyor.`,
+        `${p.team}'in ${mine.opp} karşısındaki ${sc}'lik yenilgisi basında geniş yankı buldu; savunma hattındaki boşluklar eleştiri konusu oldu.`
+      ];
+      lead = pick(leads);
+
+    } else {
+      kicker = pick(['PUAN PAYLAŞIMI','BERABERLİK','KIL PAYI','DENGELİ MÜCADELE']);
+      headline = pick([
+        `${p.team} ile ${mine.opp} yenişemedi`,
+        `${p.team}-${mine.opp}: ${sc} berabere`,
+        `Puanlar paylaşıldı: ${p.team} ${sc} ${mine.opp}`
+      ]);
+      lead = pick([
+        `Karşılıklı ataklarla geçen mücadelede iki takım da net üstünlük kuramadı ve sahadan ${sc}'lik eşitlikle ayrıldı.`,
+        `${p.team} ile ${mine.opp} arasındaki mücadele ${sc}'lik skorla noktalandı. İki takım da kazanan golü bulamadı.`,
+        `Temkinli başlayan maçta ${p.team} ve ${mine.opp}, ${sc}'lik skorla puanları paylaştı.`
+      ]);
+    }
   } else {
-    kicker='LİG GÜNDEMİ';
-    headline = `Zirve yarışı kızışıyor`;
-    lead = `${top[0].n} liderliğini ${top[0].p} puanla sürdürüyor. Takip grubu puan kaybına tahammülü olmadığını biliyor.`;
+    kicker = pick(['LİG GÜNDEMİ','ZİRVE YARIŞI','KULİS','TRANSFER GÜNDEMİ']);
+    headline = pick([
+      `Zirve yarışı kızışıyor`,
+      `${top[0].n} liderliğini sürdürüyor`,
+      `Lig masasında hareketli hafta`
+    ]);
+    lead = pick([
+      `${top[0].n} liderliğini ${top[0].p} puanla sürdürüyor. Takip grubu puan kaybına tahammülü olmadığını biliyor.`,
+      `Zirvede ${top[0].n} önde götürüyor, ancak ${top[1]?top[1].n:'takip grubu'} farkı kapatmak için baskıyı artırıyor.`,
+      `Ligde bu haftaki gelişmelerin ardından masa başında hesaplar sürüyor; ${top[0].n} ${top[0].p} puanla ilk sırada.`
+    ]);
   }
 
   const arts = [];
   const stars = weeklyStars(wk);
-  if(stars.length) arts.push({t:'Haftanın Yıldızları', b: stars.map(s=>s.motm?`${s.name} (${s.team}) maçın adamı seçildi.`:`${s.name} (${s.team}) ${s.n} gol attı.`).join(' ')});
-  arts.push({t:'Zirvenin hali', b:`${top[0].n} ${top[0].p} puanla lider. ${top[1]?`${top[1].n} ${top[1].p} puanla takipte.`:''} Averaj farkı şimdiden belirleyici olmaya başladı.`});
-  if(myGoals>0) arts.push({t:`${p.name} formda`, b:`Sezonda ${p.season.apps} maçta ${myGoals} gol, ${p.season.assists} asist. Ortalama maç puanı ${(p.season.ratingSum/Math.max(1,p.season.apps)).toFixed(2)}.`});
+  if(stars.length) arts.push({t: pick(['Haftanın Yıldızları','Formda İsimler','Öne Çıkanlar']),
+    b: stars.map(s=>s.motm?`${s.name} (${s.team}) maçın adamı seçildi.`:`${s.name} (${s.team}) ${s.n} gol attı.`).join(' ')});
+
+  arts.push({t: pick(['Zirvenin hali','Şampiyonluk Yarışı','Puan Durumu']), b: pick([
+    `${top[0].n} ${top[0].p} puanla lider. ${top[1]?`${top[1].n} ${top[1].p} puanla takipte.`:''} Averaj farkı şimdiden belirleyici olmaya başladı.`,
+    `Zirvede ${top[0].n} rahat görünüyor: ${top[0].p} puan. ${top[1]?`${top[1].n} ise ${top[1].p} puanla takibi sürdürüyor.`:''}`,
+    `${top[0].n}'nin ${top[0].p} puanlık liderliği devam ediyor. Alt sıralardaki takımlar puan kaybına tahammülü olmadığını biliyor.`
+  ])});
+
+  if(myGoals>0) arts.push({t: pick([`${p.name} formda`,`${p.name} sezonu`,'Yıldızın performansı']),
+    b: `Sezonda ${p.season.apps} maçta ${myGoals} gol, ${p.season.assists} asist. Ortalama maç puanı ${(p.season.ratingSum/Math.max(1,p.season.apps)).toFixed(2)}.`});
+
   wkNews.filter(n=>n.tag==='magazin').slice(0,2).forEach(n=>arts.push({t:'Magazin', b:n.text}));
   wkNews.filter(n=>n.tag==='kupa').slice(0,1).forEach(n=>arts.push({t:'Kupa', b:n.text}));
   wkNews.filter(n=>n.tag==='milli').slice(0,1).forEach(n=>arts.push({t:'Milli Takım', b:n.text}));
-  const bottom = sortTable().slice(-3);
-  arts.push({t:'Düşme hattı', b:`${bottom.map(t=>`${t.n} (${t.p})`).join(', ')} küme düşme hattında. Alt sıralarda her hafta hesap değişiyor.`});
+
+  arts.push({t: pick(['Düşme hattı','Küme Düşme Savaşı','Alt Sıralar']), b: pick([
+    `${bottom.map(t=>`${t.n} (${t.p})`).join(', ')} küme düşme hattında. Alt sıralarda her hafta hesap değişiyor.`,
+    `Küme düşme hattında ${bottom.map(t=>t.n).join(', ')} mücadele ediyor. Puan farkları bu bölgede oldukça az.`,
+    `Alt sıralarda nefesler tutuldu: ${bottom.map(t=>`${t.n} (${t.p})`).join(', ')}.`
+  ])});
+
   if(p.injuryWeeks>0) arts.push({t:'Revir raporu', b:`${p.name} için ${p.injuryWeeks} haftalık rapor verildi. Kulüp doktoru sürecin sorunsuz ilerlediğini söyledi.`});
   if(p.rel>=3) arts.push({t:'Objektif', b:`${p.name} ve ${p.partner} ilişkisi magazin sayfalarının gözdesi olmayı sürdürüyor.`});
-  arts.push({t:'Yorum', b:`"Bu ligde kondisyon yönetimi her şeydir. 70. dakikadan sonra ayakta kalan kazanıyor." — Saha Postası yazarı`});
+
+  arts.push({t:'Yorum', b: pick([
+    `"Bu ligde kondisyon yönetimi her şeydir. 70. dakikadan sonra ayakta kalan kazanıyor." — Saha Postası yazarı`,
+    `"Genç oyunculara güvenmeyen kulüpler bu sezon geride kalacak." — Saha Postası yazarı`,
+    `"Savunmada disiplin yoksa forvet ne kadar iyi olursa olsun bu ligde yetmez." — Saha Postası yazarı`,
+    `"Taraftarın sabrı bitmeden yönetimin bir karar alması gerekiyor." — Saha Postası yazarı`,
+    `"Bu sezon şampiyonluk, deplasman performansında saklı." — Saha Postası yazarı`,
+    `"Rakamlar yalan söylemez; formda olan isimler sahada fark yaratıyor." — Saha Postası yazarı`
+  ])});
 
   S.papers.unshift({season:S.seasonLabel, week:wk, kicker, headline, lead, arts,
     results:res.map(r=>({h:r.h,a:r.a,hs:r.hs,as:r.as})), top:top.map(t=>({n:t.n,p:t.p}))});
