@@ -743,13 +743,13 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
 .livefeed-head{display:none;justify-content:space-between;align-items:center;gap:8px;margin:8px 0 0;}
 .livefeed-head b{font-family:'Barlow Condensed','Barlow',sans-serif;font-size:1.02rem;letter-spacing:.3px;color:var(--flood);}
 body.match-feed .livefeed-head{display:flex;}
-body.match-feed .commentary{display:flex!important;flex-direction:column;justify-content:flex-end;height:206px;overflow:hidden;margin:6px 0 8px;
-  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 26px);mask-image:linear-gradient(to bottom,transparent 0,#000 26px);}
+body.match-feed .commentary{display:flex!important;flex-direction:column;justify-content:flex-start;height:206px;overflow:hidden;margin:6px 0 8px;
+  -webkit-mask-image:linear-gradient(to top,transparent 0,#000 26px);mask-image:linear-gradient(to top,transparent 0,#000 26px);}
 body.match-feed .commentary > div{flex:none;}
-body.match-feed .commentary > div:not(:nth-last-child(-n+5)){display:none;}
-body.match-feed .commentary > div:last-child{animation:feedIn .3s ease-out;}
+body.match-feed .commentary > div:not(:nth-child(-n+5)){display:none;}
+body.match-feed .commentary > div:first-child{animation:feedIn .3s ease-out;}
 body.match-feed .commentary.full{display:block!important;height:280px;overflow-y:auto;-webkit-mask-image:none;mask-image:none;}
-body.match-feed .commentary.full > div:not(:nth-last-child(-n+5)){display:block;}
+body.match-feed .commentary.full > div:not(:nth-child(-n+5)){display:block;}
 body.match-feed .pitchticker{display:none!important;}
 @keyframes feedIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 /* oyuncunun kendi adı: satırın içinde parlak etiket */
@@ -3864,7 +3864,7 @@ function toggleFeedAll(){
   const l = $('log'), b = $('btn-feedall'); if(!l||!b) return;
   const full = l.classList.toggle('full');
   b.textContent = full ? 'Son 5 satır' : 'Tümünü göster';
-  l.scrollTop = l.scrollHeight;
+  l.scrollTop = 0;
 }
 function say(txt, cls=''){
   const l = $('log');
@@ -3873,8 +3873,11 @@ function say(txt, cls=''){
   const classes = [cls, isMe?'me-event':''].filter(Boolean).join(' ');
   if(classes) d.className = classes;
   d.innerHTML = (M && M.minute? `<span style="color:#64748b">${M.minute}'</span> ` : '') + hiMyName(txt);
-  l.appendChild(d); l.scrollTop = l.scrollHeight;
-  while(l.childElementCount>220) l.removeChild(l.firstChild);
+  // en yeni mesaj en üste eklensin (yukarıdan aşağı akış); böylece maçın başında
+  // az satır varken kutunun ALTINDA boşluk kalır (üstte değil) ve en güncel olay
+  // her zaman ilk bakışta görünür.
+  l.insertBefore(d, l.firstChild); l.scrollTop = 0;
+  while(l.childElementCount>220) l.removeChild(l.lastChild);
   const t = $('logTicker');
   if(t){
     const plain = txt.replace(/<[^>]*>/g,'');
