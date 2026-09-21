@@ -5572,7 +5572,19 @@ function nextSeason(newTeam, newWage){
     addNews(`${newTeam} yönetimi, ${p.name}'ın tesis yatırımı tecrübesini yeni stada taşıyor.`,'genel');
   }
   p.wage = newWage; p.goalBonus = Math.round(newWage*0.4);
-  p.age++; p.contractYears = Math.max(1, p.contractYears-1+ (newTeam?3:1));
+  p.age++;
+  if(newTeam){
+    p.contractYears = 3;
+  } else {
+    p.contractYears = Math.max(0, p.contractYears - 1);
+    if(p.contractYears === 0){
+      const renewYears = ri(2,4);
+      p.contractYears = renewYears;
+      const bumpWage = Math.round(p.wage * 1.08);
+      p.wage = bumpWage; p.goalBonus = Math.round(bumpWage*0.4);
+      addNews(`SÖZLEŞME: ${p.name}, ${p.team} ile ${renewYears} yıllık yeni sözleşmeye imza attı.`,'genel');
+    }
+  }
   // yaşa göre doğal gelişim / düşüş
   const keys = Object.keys(p.attrs);
   keys.forEach(k=>{
