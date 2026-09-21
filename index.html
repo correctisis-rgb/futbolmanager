@@ -553,7 +553,7 @@ body.force-landscape #live{
 body.force-landscape .actionbackdrop{ z-index:55; }
 body.force-landscape .actionsheet{
   z-index:56; right:auto; bottom:auto; margin:0;
-  display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
   padding:0 12px calc(14px + env(safe-area-inset-left,0px));
 }
 body.force-landscape .actionsheet > *{width:100%; max-width:760px; flex:none;}
@@ -657,7 +657,8 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
 .lineup-full .btn{flex:none;margin-top:0;}
 
 /* ---------- Newspaper ---------- */
-.paper{background-color:#f3ece0;background-image:linear-gradient(rgba(243,236,224,0.88),rgba(243,236,224,0.88)),url('gazete/futbolcu.jpg');background-size:cover;background-position:center;background-repeat:no-repeat;color:#181410;border-radius:10px;padding:16px 14px;border:1px solid #cdbfa8;font-family:Georgia,'Times New Roman',serif;}
+.paper{background:#f3ece0;color:#181410;border-radius:10px;padding:16px 14px;border:1px solid #cdbfa8;
+  font-family:Georgia,'Times New Roman',serif;}
 .paper .masthead{text-align:center;border-bottom:3px double #2a2118;padding-bottom:8px;margin-bottom:10px;}
 .paper .masthead h2{font-family:Georgia,serif;font-weight:700;font-size:2rem;letter-spacing:4px;color:#171310;}
 .paper .dateline{display:flex;justify-content:space-between;font-size:.7rem;letter-spacing:1px;color:#5b4f42;margin-top:6px;}
