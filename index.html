@@ -2401,8 +2401,11 @@ function renderTrain(){
     <h3>Antrenman <span class="chip">${p.trainPoints} seans</span></h3>
     <p class="sub">Her seans kondisyondan 14 götürür. Yaşın arttıkça gelişim yavaşlar, potansiyel tavanına yaklaştıkça artış küçülür.</p>
     <div class="btngrid" style="margin-top:10px">
-      ${keys.map(k=>`<button class="btn" onclick="openTrainGame('${k}')" ${p.trainPoints<1||p.fitness<20?'disabled':''}>
-        ${ATTR_LABEL[k]} <span class="sub">${p.attrs[k]}</span></button>`).join('')}
+      ${keys.map(k=>{
+        const maxed = p.attrs[k]>=99;
+        return `<button class="btn" onclick="openTrainGame('${k}')" ${maxed||p.trainPoints<1||p.fitness<20?'disabled':''}>
+        ${ATTR_LABEL[k]} <span class="sub">${p.attrs[k]}${maxed?' • MAKS':''}</span></button>`;
+      }).join('')}
     </div>
     <hr class="sep">
     <div class="row wrap">
@@ -2414,6 +2417,7 @@ function renderTrain(){
 let trainGame = null;
 function openTrainGame(k){
   const p=S.p;
+  if(p.attrs[k]>=99) return toast(`${ATTR_LABEL[k]} zaten maksimum seviyede (99), daha fazla geliştirilemez.`);
   if(p.trainPoints<1) return toast('Bu hafta antrenman hakkın kalmadı.');
   if(p.fitness<20) return toast('Çok yorgunsun, önce dinlen.');
   const gwBase = clamp(30 - Math.round((p.attrs[k]||40)/9), 12, 28); // yetenek seviyesine göre taban değer
@@ -3384,24 +3388,23 @@ function startMatch(comp){
 }
 let pendingMatchCtx = null;
 function promptMatchFullscreen(){
-  const supported = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
   modal(`<h3 style="color:var(--flood)">Maça hazır mısın?</h3>
-    <p class="sub">${supported?'Daha iyi bir deneyim için ekranı tam ekran yapıp yatay modda oynayabilirsin. İstediğin an tam ekrandan çıkabilirsin.':'Cihazın tam ekranı desteklemiyor gibi görünüyor, normal modda devam edebilirsin.'}</p>
+    <p class="sub">Hangi modda oynamak istersin?</p>
     <div class="btngrid" style="margin-top:12px">
-      <button class="btn" onclick="closeModal(); launchMatch(false);">Böyle devam et</button>
-      ${supported?`<button class="btn primary" onclick="closeModal(); launchMatch(true);">⛶ Tam ekran + yatay</button>`:''}
+      <button class="btn primary" onclick="closeModal(); launchMatch(false);">📱 Dikey</button>
+      <button class="btn primary" onclick="closeModal(); launchMatch(true);">🔄 Yatay (tam ekran)</button>
     </div>`);
 }
 function requestMatchFullscreen(){
   const el = document.documentElement;
   const req = el.requestFullscreen ? ()=>el.requestFullscreen() : el.webkitRequestFullscreen ? ()=>el.webkitRequestFullscreen() : null;
-  if(!req) return;
+  const lockLandscape = ()=>{ try{ if(screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} };
+  if(!req){ lockLandscape(); return; }
   try{
     const p = req();
-    const lockLandscape = ()=>{ try{ if(screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} };
-    if(p && p.then) p.then(lockLandscape).catch(()=>{});
+    if(p && p.then) p.then(lockLandscape).catch(()=>{ lockLandscape(); });
     else lockLandscape();
-  }catch(e){}
+  }catch(e){ lockLandscape(); }
 }
 function exitMatchFullscreen(){
   try{
