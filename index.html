@@ -3941,8 +3941,12 @@ function disallowGoal(isUsTeam, scorer, assist, why){
   updateScore(); updateLiveStats();
   say(`❌ <b>GOL İPTAL!</b> ${scorer.name}'ın golü ${why} nedeniyle geçersiz sayıldı. Skor: ${M.us.score}-${M.them.score}.`, isUsTeam?'bd':'gl');
 }
-function maybeVarGoal(isUsTeam, scorer, assist){
+function maybeVarGoal(isUsTeam, scorer, assist, isPenalty=false){
   if(!M || M.ended) return;
+  // penaltıdan gelen goller VAR'da "ofsayt / elle oynama / hücum faulü / taca çıkma"
+  // gibi sebeplerle iptal EDİLEMEZ — bu sebeplerin hiçbiri 11 metreden atılan
+  // bir vuruşta oluşamaz. Bu yüzden penaltı gollerinde bu kontrolü atlıyoruz.
+  if(isPenalty) return;
   const base = 0.14 + (M.usHome ? SB().varP*0.05 : 0);
   if(!chance(Math.min(base,0.32))) return;
   const why = pick(['ofsayt','hücum faulü','elle oynama','topun taca çıkması']);
@@ -4220,7 +4224,7 @@ function autoPhase(atk, def, usAttack){
   }
 }
 
-function scoreGoal(isUsTeam, scorer, assist){
+function scoreGoal(isUsTeam, scorer, assist, isPenalty=false){
   const T = isUsTeam ? M.us : M.them;
   T.score++;
   scorer.mGoals++; if(assist) assist.mAssists++;
@@ -4257,7 +4261,7 @@ function scoreGoal(isUsTeam, scorer, assist){
     $('ball').classList.remove('goal-flash');
     if(M){ M.ballX=50; M.ballY=50; movePitch(); }
   }, 700);
-  maybeVarGoal(isUsTeam, scorer, assist);
+  maybeVarGoal(isUsTeam, scorer, assist, isPenalty);
 }
 function celebrateGoal(isUsTeam, scorer){
   const side = isUsTeam ? 'us' : 'them';
@@ -4377,7 +4381,7 @@ function penalty(forUs){
   const taker = pickAttacker(atk);
   const gk = gkOf(def);
   const p = clamp(0.78 + (effOvr(taker)-(gk?effOvr(gk):60))/300, 0.5, 0.92);
-  if(chance(p)) scoreGoal(atk===M.us, taker, null);
+  if(chance(p)) scoreGoal(atk===M.us, taker, null, true);
   else { Sfx.save(); say(`${gk?gk.name:'Kaleci'} penaltıyı <b>kurtardı!</b>`,'hi'); if(gk&&gk.isUser){addRating(1.2,'penaltı kurtardı'); S.p.season.saves++;} }
   M.paused=false; schedule();
 }
@@ -4689,14 +4693,14 @@ function userChoice(a){
       let p0 = a==='pen-corner'?0.80 : a==='pen-mid'?0.72 : 0.62;
       const prob = clamp(p0 + sk('sut')*0.15, 0.45, 0.95);
       M.stats.shotsUs++;
-      if(chance(prob)){ scoreGoal(true, me, null); addRating(0.1); }
+      if(chance(prob)){ scoreGoal(true, me, null, true); addRating(0.1); }
       else { Sfx.save(); say(`Penaltı kaçtı! Kaleci doğru köşeye uzandı.`,'bd'); addRating(-0.8,'penaltı kaçırdı'); }
       break;
     }
     case 'gk-left': case 'gk-right': case 'gk-mid': {
       const prob = clamp(0.24 + sk('klc')*0.35, 0.15, 0.7);
       if(chance(prob)){ Sfx.save(); say(`🧤 <b>PENALTIYI KURTARDIN!</b> Stat yıkılıyor.`,'hi'); addRating(1.3,'penaltı kurtardı'); S.p.season.saves++; }
-      else { say(`Penaltıda ters köşeye gitti, gol.`); scoreGoal(false, pickAttacker(M.them), null); }
+      else { say(`Penaltıda ters köşeye gitti, gol.`); scoreGoal(false, pickAttacker(M.them), null, true); }
       break;
     }
     /* --- serbest vuruş --- */
