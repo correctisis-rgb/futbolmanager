@@ -4339,7 +4339,7 @@ function foulEvent(){
     M.paused = true; clearTimeout(M.timer);
     return maybeVarPenalty(usFouls, offender, ok=>{ M.paused=false; if(ok) penalty(!usFouls); else schedule(); });
   }
-  say(`🟨 Faul: ${offender.name} rakibini düşürdü, oyun durdu.`);
+  say(`🚩 Faul: ${offender.name} rakibini düşürdü, oyun durdu.`);
   if(chance(0.26)){
     offender.mYellow++;
     Sfx.card();
