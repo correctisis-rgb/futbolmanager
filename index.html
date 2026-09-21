@@ -188,7 +188,11 @@ table{width:100%;border-collapse:collapse;font-size:.82rem;}
 th{color:var(--dim);font-weight:600;text-align:left;padding:6px 4px;border-bottom:1px solid var(--line);font-size:.74rem;}
 td{padding:7px 4px;border-bottom:1px solid var(--line2);}
 tr.me td{background:var(--highlight-bg);color:var(--highlight-ink);}
-td.num,th.num{text-align:center;width:26px;}
+td.num,th.num{text-align:center;width:26px;white-space:nowrap;}
+/* fikstür/sonuç tablolarındaki skor hücresi (ör. "2-0") 26px'e sığmayıp
+   alt satıra kayıyordu; skoru taşıyan hücrelere biraz daha pay ve
+   satır kaymasını engelleyen nowrap veriyoruz. */
+.fixscore{white-space:nowrap;min-width:40px;padding-left:6px;padding-right:6px;}
 .scroll{max-height:60vh;overflow:auto;-webkit-overflow-scrolling:touch;}
 
 /* ---------- Match ---------- */
@@ -3059,7 +3063,7 @@ function renderFix(){
     <table>${cur.map(m=>`<tr class="${m.h===S.p.team||m.a===S.p.team?'me':''}"><td>${kitDot(m.h)}${m.h}</td><td class="num">-</td><td style="text-align:right">${m.a}${kitDot(m.a)}</td></tr>`).join('')}</table>
   </div>
   ${lastResults.length?`<div class="card"><h3>${wk-1}. hafta sonuçları</h3>
-    <table>${lastResults.map(r=>`<tr class="${r.h===S.p.team||r.a===S.p.team?'me':''}"><td>${kitDot(r.h)}${r.h}</td><td class="num"><b>${r.hs}-${r.as}</b></td><td style="text-align:right">${r.a}${kitDot(r.a)}</td></tr>`).join('')}</table></div>`:''}
+    <table>${lastResults.map(r=>`<tr class="${r.h===S.p.team||r.a===S.p.team?'me':''}"><td>${kitDot(r.h)}${r.h}</td><td class="num fixscore"><b>${r.hs}-${r.as}</b></td><td style="text-align:right">${r.a}${kitDot(r.a)}</td></tr>`).join('')}</table></div>`:''}
   <div class="card"><h3>Kalan maçlarım</h3>
     <table>${S.fixtures.slice(wk-1).map((w,i)=>{
       const m = w.find(x=>x.h===S.p.team||x.a===S.p.team);
@@ -3128,7 +3132,7 @@ function renderPaper(){
     </div>
     <div class="box">
       <b style="display:block;margin-bottom:4px">HAFTANIN SONUÇLARI</b>
-      <table>${pp.results.map(r=>`<tr><td>${r.h}</td><td style="text-align:center"><b>${r.hs}-${r.as}</b></td><td style="text-align:right">${r.a}</td></tr>`).join('')}</table>
+      <table>${pp.results.map(r=>`<tr><td>${r.h}</td><td class="fixscore" style="text-align:center"><b>${r.hs}-${r.as}</b></td><td style="text-align:right">${r.a}</td></tr>`).join('')}</table>
     </div>
     <div class="box">
       <b style="display:block;margin-bottom:4px">PUAN DURUMU — İLK 5</b>
@@ -3499,7 +3503,14 @@ function updateForceLandscape(){
   updateRotateVars();
   const portrait = window.innerWidth < window.innerHeight;
   const auto = !!landscapeWanted && portrait && !!(S && S.inMatch);
-  const on = landscapeManual===null ? auto : (landscapeManual && !!(S && S.inMatch));
+  // NOT: manuel modda da 'portrait' şartı aranmalı. Aksi halde kullanıcı
+  // 🔄 ile CSS-döndürmeyi elle açtıktan sonra telefonu FİZİKSEL olarak yatay
+  // tutarsa, gerçek ekran zaten yatayken üstüne bir de transform:rotate(90deg)
+  // biniyor ("çifte döndürme") ve tüm #live/.actionsheet içeriği (skor, saha,
+  // aksiyon butonları) sola kaymış/taşmış görünüyordu. portrait kontrolü
+  // eklenince, telefon fiziksel olarak yataya dönünce force-landscape otomatik
+  // kapanıyor ve normal @media(orientation:landscape) kuralları devreye giriyor.
+  const on = (landscapeManual===null ? landscapeWanted : landscapeManual) && portrait && !!(S && S.inMatch);
   document.body.classList.toggle('force-landscape', on);
 }
 function releaseOrientationLock(){
