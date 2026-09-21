@@ -86,13 +86,16 @@ body{
   font-family:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
   font-size:15px;line-height:1.45;overscroll-behavior-y:none;
   transition:background .25s,color .25s;
+  overflow:hidden; /* sayfanın kendisi artık kaymıyor — kayan tek yer #app; bu, alt menünün kaydırma sırasında zıplamasını önler */
 }
 h1,h2,h3,h4,.cond{font-family:'Barlow Condensed','Barlow',system-ui,sans-serif;font-weight:700;letter-spacing:.2px;margin:0;}
 button{font-family:inherit;}
 input,select{font-family:inherit;}
 
 /* ---------- App shell ---------- */
-#app{max-width:760px;margin:0 auto;padding:0 12px 96px;}
+#app{max-width:760px;margin:0 auto;padding:0 12px 96px;
+  height:100vh;height:100dvh;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;}
 .topbar{
   position:sticky;top:0;z-index:40;margin:0 -12px 12px;padding:10px 12px;
   padding-top:calc(10px + env(safe-area-inset-top,0px));
@@ -518,7 +521,19 @@ td.num,th.num{text-align:center;width:26px;}
   body.match-active .row.wrap .btn.sm{padding:5px 8px;font-size:.72rem;}
   body.match-active .matchfab-row{left:8px;bottom:8px;}
   body.match-active .pausefab{padding:6px 11px;font-size:.75rem;}
-  body.match-active .pitchticker{left:112px;right:238px;bottom:8px;}
+  body.match-active .pitchticker{left:112px;right:190px;bottom:8px;}
+}
+/* ---- dikey (portre) modda maç ekranı: butonlar biraz daha küçük olsun ---- */
+@media (orientation:portrait){
+  body.match-active:not(.force-landscape) .matchfab-row{gap:5px;}
+  body.match-active:not(.force-landscape) .pausefab{padding:5px 10px;font-size:.68rem;gap:4px;}
+  body.match-active:not(.force-landscape) .rotatefab{width:26px;height:26px;font-size:.8rem;}
+  body.match-active:not(.force-landscape) .atkdef-fab{gap:4px;padding:3px;}
+  body.match-active:not(.force-landscape) .atkdef-btn{padding:4px 7px;font-size:.58rem;gap:3px;}
+  body.match-active:not(.force-landscape) .atkdef-ic{font-size:.82rem;}
+  body.match-active:not(.force-landscape) .speedfab{padding:2px;gap:2px;}
+  body.match-active:not(.force-landscape) .speedfab .spd{padding:2px 7px;font-size:.74rem;}
+  body.match-active:not(.force-landscape) .row.wrap .btn.sm{padding:5px 8px;font-size:.74rem;}
 }
 /* ---- fiziksel döndürme çalışmayan cihazlarda: yazılımsal (CSS) zorla-yatay ---- */
 body.force-landscape{overflow:hidden;}
@@ -532,6 +547,7 @@ body.force-landscape #modal{
   position:fixed; top:0; left:100%;
   width:100vh; height:100vw;
   width:100dvh; height:100dvw;
+  width:var(--rvh, 100dvh); height:var(--rvw, 100dvw);
   transform-origin:0 0;
   transform:rotate(90deg);
   z-index:40;
@@ -579,7 +595,7 @@ body.match-active.force-landscape .row.wrap{gap:5px;padding-bottom:2px;}
 body.match-active.force-landscape .row.wrap .btn.sm{padding:5px 8px;font-size:.72rem;}
 body.match-active.force-landscape .matchfab-row{left:8px;bottom:8px;}
 body.match-active.force-landscape .pausefab{padding:6px 11px;font-size:.75rem;}
-body.match-active.force-landscape .pitchticker{left:112px;right:238px;bottom:8px;}
+body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px;}
 .rotatefab{width:30px;height:30px;border-radius:50%;flex:none;
   background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:.9rem;
   display:flex;align-items:center;justify-content:center;cursor:pointer;}
@@ -2106,6 +2122,7 @@ function go(view){
   currentView = view;
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on', v.id===view));
   document.querySelectorAll('#bottom button').forEach(b=>b.classList.toggle('on', b.dataset.view===view));
+  const _appEl = $('app'); if(_appEl) _appEl.scrollTop = 0;
   window.scrollTo({top:0});
   render();
 }
@@ -3473,7 +3490,18 @@ function requestMatchFullscreen(){
 }
 let landscapeWanted = false;
 let landscapeManual = null; // null: otomatik karar versin; true/false: kullanıcı elle zorladı
+function updateRotateVars(){
+  // görünür alanı (adres çubuğu/klavye/güvenli alan dahil gerçek piksel) doğrudan ölçüp
+  // CSS değişkenine yazıyoruz — böylece yatay-döndürme kutusu vh/dvh birimlerindeki
+  // küçük sapmalar yüzünden ekranı tam doldurmayıp sağda/altta boşluk bırakmıyor.
+  const vv = window.visualViewport;
+  const w = Math.round(vv ? vv.width  : window.innerWidth);
+  const h = Math.round(vv ? vv.height : window.innerHeight);
+  document.documentElement.style.setProperty('--rvw', w+'px');
+  document.documentElement.style.setProperty('--rvh', h+'px');
+}
 function updateForceLandscape(){
+  updateRotateVars();
   const portrait = window.innerWidth < window.innerHeight;
   const auto = !!landscapeWanted && portrait && !!(S && S.inMatch);
   const on = landscapeManual===null ? auto : (landscapeManual && !!(S && S.inMatch));
@@ -3496,6 +3524,8 @@ function toggleForceLandscape(){
 }
 window.addEventListener('resize', updateForceLandscape);
 window.addEventListener('orientationchange', ()=>setTimeout(updateForceLandscape, 250));
+if(window.visualViewport) window.visualViewport.addEventListener('resize', updateRotateVars);
+updateRotateVars();
 function exitMatchFullscreen(){
   releaseOrientationLock();
   landscapeWanted = false;
