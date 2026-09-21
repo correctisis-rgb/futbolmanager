@@ -518,6 +518,33 @@ td.num,th.num{text-align:center;width:26px;}
   body.match-active .pausefab{left:8px;bottom:8px;padding:6px 11px;font-size:.75rem;}
   body.match-active .pitchticker{left:112px;right:238px;bottom:8px;}
 }
+/* ---- fiziksel döndürme çalışmayan cihazlarda: yazılımsal (CSS) zorla-yatay ---- */
+body.force-landscape{overflow:hidden;}
+body.force-landscape #live{
+  position:fixed; top:0; left:100%;
+  width:100vh; height:100vw;
+  transform-origin:0 0;
+  transform:rotate(90deg);
+  overflow-y:auto; overflow-x:hidden; z-index:40; background:var(--bg);
+}
+body.match-active.force-landscape nav#bottom{display:none;}
+body.match-active.force-landscape .topbar{display:none;}
+body.match-active.force-landscape #app{padding-bottom:0;}
+body.match-active.force-landscape #v-match{padding:4px 6px;}
+body.match-active.force-landscape #live > .card{padding:6px 8px;border-radius:0;border:0;}
+body.match-active.force-landscape #live > .card > h3{display:none;}
+body.match-active.force-landscape .scoreboard{padding:4px 8px;margin-bottom:4px;}
+body.match-active.force-landscape .scoreboard .sc{font-size:1.4rem;padding:0 8px;}
+body.match-active.force-landscape .scoreboard .tn{font-size:.78rem;}
+body.match-active.force-landscape .stadium{margin-bottom:0;}
+body.match-active.force-landscape .pitch{max-height:min(72vh,420px);}
+body.match-active.force-landscape #me-line,
+body.match-active.force-landscape #stad-line,
+body.match-active.force-landscape .commentary{display:none;}
+body.match-active.force-landscape .row.wrap{gap:5px;padding-bottom:2px;}
+body.match-active.force-landscape .row.wrap .btn.sm{padding:5px 8px;font-size:.72rem;}
+body.match-active.force-landscape .pausefab{left:8px;bottom:8px;padding:6px 11px;font-size:.75rem;}
+body.match-active.force-landscape .pitchticker{left:112px;right:238px;bottom:8px;}
 
 .prompt{background:linear-gradient(180deg,#7c2d12,#9a3412);border:1px solid #c2410c;border-radius:10px;
   padding:10px;text-align:center;font-weight:700;margin-bottom:8px;}
@@ -3406,14 +3433,24 @@ function requestMatchFullscreen(){
     else lockLandscape();
   }catch(e){ lockLandscape(); }
 }
+let landscapeWanted = false;
+function updateForceLandscape(){
+  const portrait = window.innerWidth < window.innerHeight;
+  document.body.classList.toggle('force-landscape', !!landscapeWanted && portrait && !!(S && S.inMatch));
+}
+window.addEventListener('resize', updateForceLandscape);
+window.addEventListener('orientationchange', ()=>setTimeout(updateForceLandscape, 250));
 function exitMatchFullscreen(){
   try{
     if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
     else if(document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
     if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
   }catch(e){}
+  landscapeWanted = false;
+  updateForceLandscape();
 }
 function launchMatch(wantFullscreen){
+  landscapeWanted = !!wantFullscreen;
   if(wantFullscreen) requestMatchFullscreen();
   if(!pendingMatchCtx) return;
   const {comp, fx, tie, cupIdx, extra, usHome, opp, usSquad, themSquad} = pendingMatchCtx;
@@ -3440,6 +3477,8 @@ function launchMatch(wantFullscreen){
   M.them.squad.forEach(x=> x.stamina = ri(86,100));
 
   S.inMatch = true; lockNav(true);
+  updateForceLandscape();
+  setTimeout(updateForceLandscape, 400); // fullscreen/orientation API'lerinin oturması için ikinci deneme
   document.body.classList.add('match-active');
   // yatay/tam ekran seçilmediyse: anlatım maç ekranının altında, son 5 satır olarak akar
   document.body.classList.toggle('match-feed', !wantFullscreen);
