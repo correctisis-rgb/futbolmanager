@@ -522,12 +522,38 @@ td.num,th.num{text-align:center;width:26px;}
 }
 /* ---- fiziksel döndürme çalışmayan cihazlarda: yazılımsal (CSS) zorla-yatay ---- */
 body.force-landscape{overflow:hidden;}
-body.force-landscape #live{
+/* #live, #actionbackdrop, #actionsheet ve #modal AYNI döndürme dönüşümünü paylaşır:
+   böylece saha döndüğünde üstüne binen "şut/pas/kanat" karar menüsü ve genel modal
+   da aynı yönde, telefonun gerçek görünür alanına (dvh/dvw) göre döner. */
+body.force-landscape #live,
+body.force-landscape .actionbackdrop,
+body.force-landscape .actionsheet,
+body.force-landscape #modal{
   position:fixed; top:0; left:100%;
   width:100vh; height:100vw;
+  width:100dvh; height:100dvw;
   transform-origin:0 0;
   transform:rotate(90deg);
-  overflow-y:auto; overflow-x:hidden; z-index:40; background:var(--night);
+  z-index:40;
+}
+body.force-landscape #live{
+  overflow-y:auto; overflow-x:hidden; background:var(--night);
+}
+body.force-landscape .actionbackdrop{ z-index:55; }
+body.force-landscape .actionsheet{
+  z-index:56; right:auto; bottom:auto; margin:0;
+  display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+  padding:0 12px calc(14px + env(safe-area-inset-left,0px));
+}
+body.force-landscape .actionsheet > *{width:100%; max-width:760px; flex:none;}
+body.force-landscape #modal{ z-index:90; right:auto; bottom:auto; }
+/* küçük hap şeklindeki toast: tam ekran değil, kendi ekseninde döner,
+   "alt orta" yerine döndürülmüş çerçevede "sol orta"ya oturur */
+body.force-landscape #toast{
+  left:calc(14px + env(safe-area-inset-left,0px));
+  bottom:auto; top:50%;
+  transform:translateY(-50%) rotate(90deg);
+  max-width:80vh; max-width:80dvh;
 }
 body.match-active.force-landscape nav#bottom{display:none;}
 body.match-active.force-landscape .topbar{display:none;}
@@ -539,7 +565,7 @@ body.match-active.force-landscape .scoreboard{padding:4px 8px;margin-bottom:4px;
 body.match-active.force-landscape .scoreboard .sc{font-size:1.4rem;padding:0 8px;}
 body.match-active.force-landscape .scoreboard .tn{font-size:.78rem;}
 body.match-active.force-landscape .stadium{margin-bottom:0;}
-body.match-active.force-landscape .pitch{max-height:min(72vh,420px);}
+body.match-active.force-landscape .pitch{max-height:min(72vh,420px);max-height:min(72dvh,420px);}
 body.match-active.force-landscape #me-line,
 body.match-active.force-landscape #stad-line,
 body.match-active.force-landscape .commentary{display:none;}
