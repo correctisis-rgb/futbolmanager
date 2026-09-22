@@ -2037,7 +2037,7 @@ function newPlayerObj(name, age, posKey, team, foot, num){
     lifePoints: 3, trainPoints: 2,
     injuryWeeks: 0, injuryName: null, injuryHistory: [], banWeeks: 0, yellowStreak: 0,
     caps: 0, natGoals: 0, natCalled: false, captain: false, love: 55,
-    sponsors: [], badges: [], badgesEligible: [], teammateRel: {}, tacticPref: 'dengeli', transferRequested: false, transferTarget: null,
+    sponsors: [], badges: [], badgesEligible: [], teammateRel: {}, tacticPref: 'dengeli', transferRequested: false, transferTarget: null, clubNegotiations: {},
     season:{apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,ratingSum:0,cleanSheet:0,saves:0},
     career:{apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,trophies:[],seasons:[]}
   };
@@ -2217,7 +2217,7 @@ function addNews(text, tag='genel'){
    KAYIT
    ========================================================= */
 const SAVE_KEY = 'saha-kariyer-v3';
-const APP_VERSION = 'v3.1';
+const APP_VERSION = 'v3.2';
 function save(){
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){}
 }
@@ -3144,6 +3144,41 @@ function requestTransfer(teamName){
   addNews(teamName ? `${S.p.name}, ${teamName}'a transfer olmak için kulüp yönetiminden izin istedi.` : `${S.p.name} kulüp yönetiminden transfer izni istedi.`,'transfer');
   toast(teamName ? `${teamName}'a talebin iletildi.` : 'Talebin iletildi.'); save(); render();
 }
+function openClubNegotiate(teamName){
+  const neg = ensureClubNeg(teamName);
+  if(S.p.transferRequested || neg.rights<=0) return;
+  const c = interestedClubs().find(x=>x.t.n===teamName);
+  if(!c) return;
+  modal(`<h3 style="color:var(--flood)">${teamName} ile pazarlık</h3>
+    <p class="sub">Şu anki tahmini teklif: <b>${TL(c.wage)}</b> maç başı. Kalan pazarlık hakkın: <b>${neg.rights}</b></p>
+    <input id="cneg-amount" type="number" inputmode="numeric" min="0" step="500" value="${c.wage}"
+      style="width:100%;margin-top:10px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--inputbg);color:var(--ink);font-size:1.05rem"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();submitClubNegotiate('${teamName.replace(/'/g,"\\'")}');}">
+    <p id="cneg-msg" class="sub" style="min-height:1.3em;margin:6px 0 0"></p>
+    <div class="btngrid" style="margin-top:8px">
+      <button class="btn" onclick="closeModal()">Vazgeç</button>
+      <button class="btn primary" onclick="submitClubNegotiate('${teamName.replace(/'/g,"\\'")}')">Teklifi ilet</button>
+    </div>`);
+  setTimeout(()=>{ const i=$('cneg-amount'); if(i){ i.focus(); i.select(); } }, 60);
+}
+function submitClubNegotiate(teamName){
+  const neg = ensureClubNeg(teamName);
+  const c = interestedClubs().find(x=>x.t.n===teamName);
+  if(!c || neg.rights<=0) return;
+  const inp = $('cneg-amount'); const msg = $('cneg-msg');
+  const wanted = Math.round(+((inp && inp.value)||0));
+  if(!wanted || wanted<=0){ if(msg){ msg.style.color='var(--bad)'; msg.textContent='Geçerli bir tutar yaz.'; } return; }
+  const ratio = wanted / c.baseWage;
+  neg.rights--;
+  if(chance(negChance(ratio))){
+    neg.wage = wanted;
+    neg.note = {c:'var(--good)', t:`Kulüp yeni teklifi kabul etti: ${TL(wanted)}.`};
+  } else {
+    const warn = negWarnMsg(ratio);
+    neg.note = neg.rights>0 ? warn : {c:warn.c, t: warn.t + ' Pazarlık hakkın kalmadı.'};
+  }
+  closeModal(); save(); render();
+}
 
 /* ---------- TRANSFER PAZARI ---------- */
 function marketValue(){
@@ -3176,6 +3211,12 @@ function offerYearsFor(t, interest, age){
   else if(seed<0.25) years = Math.max(1, years-1);
   return clamp(years, 1, 5);
 }
+// Bir kulüple daha önce başlatılmış pazarlığın durumunu getirir/oluşturur (kayda geçer, sezon başına sıfırlanır)
+function ensureClubNeg(teamName){
+  if(!S.p.clubNegotiations) S.p.clubNegotiations = {};
+  if(!S.p.clubNegotiations[teamName]) S.p.clubNegotiations[teamName] = {rights:3, wage:null, note:null};
+  return S.p.clubNegotiations[teamName];
+}
 function interestedClubs(){
   const p = S.p;
   const myS = teamStrength(p.team);
@@ -3187,9 +3228,11 @@ function interestedClubs(){
     const budgetFactor = teamBudgetFactor(t);
     const seed = clubOfferSeed(t);
     const variance = 0.88 + seed*0.34; // kulübe özgü ~%12 sapma — sabit kalır, her render'da değişmez
-    const wage = Math.round(p.wage * (1 + Math.max(gap,0)/40) * budgetFactor * variance / 500) * 500;
+    const baseWage = Math.round(p.wage * (1 + Math.max(gap,0)/40) * budgetFactor * variance / 500) * 500;
+    const neg = ensureClubNeg(t.n);
+    const wage = neg.wage!=null ? neg.wage : baseWage;
     const totalValue = Math.round(wage*40*years/5000)*5000;
-    return {t, gap, interest, years, wage, totalValue};
+    return {t, gap, interest, years, baseWage, wage, totalValue, neg};
   }).sort((a,b)=>b.interest-a.interest).slice(0,6);
 }
 function interestLabel(v){
@@ -3212,6 +3255,11 @@ function renderTransfers(){
   const mv = marketValue();
   const clubs = interestedClubs();
   box.innerHTML = `
+  ${SEASON_CTX ? `<div class="card" style="border-color:var(--flood)">
+    <h3>⏸️ Sezon özeti seni bekliyor</h3>
+    <p class="sub">Transferleri incelemeyi bitirdiğinde sezonu kapatıp yeni sezona geçmek için devam et.</p>
+    <button class="btn primary block" onclick="renderSeasonSummaryModal()">Sezon özetine dön</button>
+  </div>` : ''}
   <div class="card">
     <h3>Senin durumun</h3>
     <div class="statbox">
@@ -3232,13 +3280,20 @@ function renderTransfers(){
     ${clubs.map(c=>{
       const lb = interestLabel(c.interest);
       const isTarget = p.transferRequested && p.transferTarget===c.t.n;
+      const neg = c.neg;
+      const negDisabled = p.transferRequested || neg.rights<=0;
+      const negLabel = neg.rights>0 ? `🤝 Pazarlık yap (${neg.rights} hak)` : '🤝 Pazarlık bitti';
       return `<div class="statbox"${isTarget?' style="border-color:var(--flood)"':''}>
         <div class="spread"><b>${kitDot(c.t.n)}${c.t.n}</b><span class="sub">Güç ${c.t.s}</span></div>
         <div class="spread" style="margin-top:4px"><span class="sub">Tahmini maç başı teklif</span><b>${TL(c.wage)}</b></div>
         <div class="spread" style="margin-top:2px"><span class="sub">Teklif edilen sözleşme</span><b>${c.years} yıl</b></div>
         <div class="spread" style="margin-top:2px"><span class="sub">Tahmini toplam sözleşme değeri</span><b>${TL(c.totalValue)}</b></div>
+        ${neg.note?`<div class="sub" style="margin-top:4px;color:${neg.note.c};font-weight:600">${neg.note.t}</div>`:''}
         <div class="sub" style="margin-top:4px;color:${lb.c};font-weight:600">${lb.t}</div>
-        <button class="btn sm block" style="margin-top:8px" ${p.transferRequested?'disabled':''} onclick="requestTransfer('${c.t.n.replace(/'/g,"\\'")}')">${isTarget?'✅ Talep gönderildi':'Bu kulübe talep gönder'}</button>
+        <div class="btngrid" style="margin-top:8px">
+          <button class="btn sm" ${negDisabled?'disabled':''} onclick="openClubNegotiate('${c.t.n.replace(/'/g,"\\'")}')">${negLabel}</button>
+          <button class="btn sm primary" ${p.transferRequested?'disabled':''} onclick="requestTransfer('${c.t.n.replace(/'/g,"\\'")}')">${isTarget?'✅ Talep gönderildi':'Bu kulübe talep gönder'}</button>
+        </div>
       </div>`;
     }).join('')}
   </div>`;
@@ -5889,6 +5944,8 @@ function endSeason(){
   });
   awardsCeremony(stages, ()=>showSeasonSummary(tbl, champ, scorer, avg));
 }
+let SEASON_CTX = null; // sezon sonu sözleşme pazarlığı için geçici oturum durumu (kaydedilmez, sadece bu özet penceresi süresince yaşar)
+
 function showSeasonSummary(tbl, champ, scorer, avg){
   const p = S.p;
   let txt = `<h3 style="color:var(--flood)">${S.seasonLabel} sezonu kapandı</h3>
@@ -5914,8 +5971,8 @@ function showSeasonSummary(tbl, champ, scorer, avg){
   }
   checkBadges();
 
-  // transfer teklifi
-  const ovr = userOverall();
+  // transfer teklifi — bu rastgele hesap sadece BİR KERE yapılır ve önbelleğe alınır;
+  // pazarlık sırasında pencere tekrar çizilse bile teklif değişmez
   let offer = null;
   if((avg>=7.0 && p.season.apps>=12) || p.transferRequested){
     if(p.transferRequested && p.transferTarget){
@@ -5928,24 +5985,129 @@ function showSeasonSummary(tbl, champ, scorer, avg){
     }
   }
   const newWage = Math.round(p.wage * (1 + (avg-6.4)*0.16 + (p.season.goals>10?0.12:0)));
-  txt += `<div class="statbox"><b>Sözleşme</b><div class="sub">Yeni maç ücreti teklifi: ${TL(Math.max(newWage,p.wage))}</div></div>`;
+  const stayWage = Math.max(newWage, p.wage);
+  let transfer = null;
   if(offer){
-    // teklif veren kulübün gerçek bütçesine göre ücret, ilgisine ve yaşına göre sözleşme süresi
-    const offerWage = Math.round(newWage * teamBudgetFactor(offer) / 500) * 500;
+    // teklif veren kulübün gerçek bütçesine göre ücret, ilgisine ve yaşına göre sözleşme süresi;
+    // Transfer sekmesinde bu kulüple daha önce pazarlık edip anlaşmışsan, o tutar tabana taşınır
+    const priorNeg = (S.p.clubNegotiations && S.p.clubNegotiations[offer.n] && S.p.clubNegotiations[offer.n].wage) || null;
+    const calcWage = Math.round(newWage * teamBudgetFactor(offer) / 500) * 500;
+    const offerWage = priorNeg!=null ? Math.max(priorNeg, Math.round(calcWage*0.85)) : calcWage;
     const offerYears = offerYearsFor(offer, 0.8, p.age);
-    txt += `<div class="statbox" style="border-color:var(--flood)"><b>Transfer teklifi: ${offer.n}</b>
-      <div class="sub">Daha güçlü bir kadro, daha yüksek ücret (${TL(offerWage)}) — ${offerYears} yıllık sözleşme. Ama forma rekabeti sert.</div>
-      <div class="row" style="margin-top:8px">
-        <button class="btn primary sm" onclick="nextSeason('${offer.n}',${offerWage},${offerYears})">Kabul et</button>
-        <button class="btn sm" onclick="nextSeason(null,${Math.max(newWage,p.wage)})">Kulübümde kalayım</button>
-      </div></div>`;
+    transfer = {team: offer.n, base: offerWage, current: offerWage, years: offerYears, rights: 3, note: priorNeg!=null ? {c:'var(--good)', t:`Daha önce ${TL(priorNeg)} üzerinde anlaştığınız pazarlık teklife yansıtıldı.`} : null};
+  }
+  const noOfferHtml = (!offer && p.transferRequested)
+    ? `<div class="statbox"><div class="sub">${p.transferTarget?`<b>${p.transferTarget}</b>'e gönderdiğin talep`:'Gönderdiğin transfer talebi'} bu sezon sonuçsuz kaldı, kulüpten somut bir teklif gelmedi.</div></div>`
+    : '';
+
+  SEASON_CTX = {
+    headerHtml: txt,
+    offer,
+    stay: {team: p.team, base: stayWage, current: stayWage, years: null, rights: 3, note:null},
+    transfer,
+    noOfferHtml
+  };
+  renderSeasonSummaryModal();
+}
+
+// pazarlık notu rengi: sözleşme kartında en son pazarlık sonucunu gösterir
+function negNoteHtml(st){
+  return st.note ? `<div class="sub" style="margin-top:4px;color:${st.note.c};font-weight:600">${st.note.t}</div>` : '';
+}
+function renderSeasonSummaryModal(){
+  const ctx = SEASON_CTX; if(!ctx) return;
+  let txt = ctx.headerHtml;
+  const st = ctx.stay;
+  txt += `<div class="statbox"><b>Sözleşme — ${st.team}</b>
+    <div class="spread" style="margin-top:4px"><span class="sub">Maç başı ücret</span><b>${TL(st.current)}</b></div>
+    ${negNoteHtml(st)}
+    ${st.rights>0?`<button class="btn sm" style="margin-top:8px" onclick="openNegotiate('stay')">🤝 Pazarlık yap (${st.rights} hak)</button>`:''}
+  </div>`;
+
+  if(ctx.transfer){
+    const tr = ctx.transfer;
+    txt += `<div class="statbox" style="border-color:var(--flood)"><b>Transfer teklifi: ${ctx.offer.n}</b>
+      <div class="sub">Daha güçlü bir kadro — ${tr.years} yıllık sözleşme. Ama forma rekabeti sert.</div>
+      <div class="spread" style="margin-top:4px"><span class="sub">Maç başı ücret</span><b>${TL(tr.current)}</b></div>
+      ${negNoteHtml(tr)}
+      ${tr.rights>0?`<button class="btn sm" style="margin-top:8px" onclick="openNegotiate('transfer')">🤝 Pazarlık yap (${tr.rights} hak)</button>`:''}
+      <button class="btn sm block" style="margin-top:8px" onclick="reviewTransfersFromSummary()">🔁 Transferleri Gözden Geçir</button>
+      <div class="btngrid" style="margin-top:8px">
+        <button class="btn primary sm" onclick="acceptSeasonOffer('transfer')">Kabul et</button>
+        <button class="btn sm" onclick="acceptSeasonOffer('stay')">Kulübümde kalayım</button>
+      </div>
+    </div>`;
   } else {
-    if(p.transferRequested){
-      txt += `<div class="statbox"><div class="sub">${p.transferTarget?`<b>${p.transferTarget}</b>'e gönderdiğin talep`:'Gönderdiğin transfer talebi'} bu sezon sonuçsuz kaldı, kulüpten somut bir teklif gelmedi.</div></div>`;
-    }
-    txt += `<button class="btn primary block" style="margin-top:12px" onclick="nextSeason(null,${Math.max(newWage,p.wage)})">Yeni sezona başla</button>`;
+    txt += ctx.noOfferHtml;
+    txt += `<button class="btn block" style="margin-top:12px" onclick="reviewTransfersFromSummary()">🔁 Transferleri Gözden Geçir</button>`;
+    txt += `<button class="btn primary block" style="margin-top:8px" onclick="acceptSeasonOffer('stay')">Yeni sezona başla</button>`;
   }
   modal(txt);
+}
+// Sezon özetini açık bırakıp Transfer sekmesine geçmeyi sağlar: modal kapanır, sekmeye geçilir,
+// oradaki "Sezon özetine dön" kartıyla kaldığın yerden devam edebilirsin.
+function reviewTransfersFromSummary(){
+  if(!SEASON_CTX) return;
+  closeModal();
+  go('v-transfers');
+  toast('Transferleri incele — bitirince en üstteki "Sezon özetine dön" ile devam et.');
+}
+// pazarlık kabul şansı: istenen tutar, teklif edilenin ne kadar üstündeyse şans o kadar düşer
+function negChance(ratio){
+  if(ratio<=1.0) return 1;
+  if(ratio<=1.10) return 0.8;
+  if(ratio<=1.25) return 0.5;
+  if(ratio<=1.45) return 0.2;
+  return 0;
+}
+function negWarnMsg(ratio){
+  if(ratio<=1.0) return {c:'var(--good)', t:'Teklifin altında/eşit bir rakam istedin, kulüp hemen kabul etti.'};
+  if(ratio<=1.10) return {c:'var(--good)', t:'Makul bir istek, kulüp değerlendirdi.'};
+  if(ratio<=1.25) return {c:'var(--warn)', t:'Teklifin epey üstünde bir rakam — kulüp zorlandı ama denendi.'};
+  if(ratio<=1.45) return {c:'var(--bad)', t:'Bu, mevcut teklifin çok üstünde — kabul şansı düşüktü.'};
+  return {c:'var(--bad)', t:'İstediğin miktar teklif edilenin çok üstünde, kulüp bunu ciddiye almadı.'};
+}
+function openNegotiate(key){
+  const ctx = SEASON_CTX; if(!ctx) return;
+  const st = ctx[key]; if(!st || st.rights<=0) return;
+  const label = key==='stay' ? st.team : ctx.offer.n;
+  modal(`<h3 style="color:var(--flood)">${label} ile sözleşme pazarlığı</h3>
+    <p class="sub">Şu anki teklif: <b>${TL(st.current)}</b> maç başı. Kalan pazarlık hakkın: <b>${st.rights}</b></p>
+    <input id="neg-amount" type="number" inputmode="numeric" min="0" step="500" placeholder="İstediğin maç başı ücret (₺)" value="${st.current}"
+      style="width:100%;margin-top:10px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--inputbg);color:var(--ink);font-size:1.05rem"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();submitNegotiate('${key}');}">
+    <p id="neg-msg" class="sub" style="min-height:1.3em;margin:6px 0 0"></p>
+    <div class="btngrid" style="margin-top:8px">
+      <button class="btn" onclick="renderSeasonSummaryModal()">Vazgeç</button>
+      <button class="btn primary" onclick="submitNegotiate('${key}')">Teklifi ilet</button>
+    </div>`);
+  setTimeout(()=>{ const i=$('neg-amount'); if(i){ i.focus(); i.select(); } }, 60);
+}
+function submitNegotiate(key){
+  const ctx = SEASON_CTX; if(!ctx) return;
+  const st = ctx[key]; if(!st) return;
+  const inp = $('neg-amount'); const msg = $('neg-msg');
+  const wanted = Math.round(+((inp && inp.value) || 0));
+  if(!wanted || wanted<=0){ if(msg){ msg.style.color='var(--bad)'; msg.textContent='Geçerli bir tutar yaz.'; } return; }
+  const ratio = wanted / st.base;
+  st.rights--;
+  const warn = negWarnMsg(ratio);
+  if(chance(negChance(ratio))){
+    st.current = wanted;
+    st.note = {c:'var(--good)', t:`Kulüp kabul etti: ${TL(wanted)}.`};
+  } else {
+    st.note = st.rights>0 ? warn : {c:warn.c, t: warn.t + ' Pazarlık hakkın kalmadı — mevcut teklifi kabul etmen ya da öbür seçeneği değerlendirmen gerekiyor.'};
+  }
+  renderSeasonSummaryModal();
+}
+function acceptSeasonOffer(key){
+  const ctx = SEASON_CTX; if(!ctx) return;
+  if(key==='transfer' && ctx.offer && ctx.transfer){
+    nextSeason(ctx.offer.n, ctx.transfer.current, ctx.transfer.years);
+  } else {
+    nextSeason(null, ctx.stay.current);
+  }
+  SEASON_CTX = null;
 }
 function nextSeason(newTeam, newWage, newYears){
   closeModal();
@@ -5987,7 +6149,7 @@ function nextSeason(newTeam, newWage, newYears){
   });
   p.season = {apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,ratingSum:0,cleanSheet:0,saves:0};
   p.fitness=100; p.injuryWeeks=0; p.injuryName=null; p.banWeeks=0; p.yellowStreak=0; p.lifePoints=3; p.trainPoints=2;
-  p.transferRequested=false; p.transferTarget=null; p.captain=false; p._hattrick = p._hattrick||false;
+  p.transferRequested=false; p.transferTarget=null; p.clubNegotiations={}; p.captain=false; p._hattrick = p._hattrick||false;
   p._weeklyMotm=false;
 
   // yeni sezon
