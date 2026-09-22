@@ -13,7 +13,7 @@
    SW_VERSION değerini artırın (v1 -> v2 -> v3 ...). Sadece SW_VERSION
    satırını değiştirmek bile dosyanın byte'larını değiştirdiği için
    yeterlidir. */
-const SW_VERSION = 'v2';                 // <-- HER YAYINDA (DEPLOY) ARTIRIN
+const SW_VERSION = 'v3';                 // <-- HER YAYINDA (DEPLOY) ARTIRIN
 const CACHE = 'saha-kariyer-' + SW_VERSION;
 
 const CORE = [
@@ -63,9 +63,14 @@ self.addEventListener('fetch', e => {
 
   if(isHTML){
     // NETWORK-FIRST: index.html için önce ağdan taze sürümü almayı dene.
+    // cache:'no-store' -> tarayıcının kendi HTTP önbelleğini (Cache-Control
+    // header'larını) tamamen atla; yoksa GitHub Pages'in cache süresi
+    // dolmadan bu fetch() aslında ağa hiç gitmeyip tarayıcı disk
+    // önbelleğinden eski index.html'i döndürebiliyordu — "sayfa yenilense
+    // bile eski sürüm geliyor" sorununun asıl sebebi buydu.
     // Ağ yoksa (çevrimdışı) cache'teki son bilinen sürüme düş.
     e.respondWith(
-      fetch(req).then(res => {
+      fetch(req, {cache: 'no-store'}).then(res => {
         if(res && res.ok){
           const copy = res.clone();
           caches.open(CACHE).then(c => c.put(req, copy));
