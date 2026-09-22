@@ -2246,7 +2246,7 @@ function addNews(text, tag='genel'){
    KAYIT
    ========================================================= */
 const SAVE_KEY = 'saha-kariyer-v3';
-const APP_VERSION = 'v3.9';
+const APP_VERSION = 'v4';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2320,6 +2320,8 @@ function load(){
     if(!S.p.dr){ S.p.dr = {e1:(S.p.drinks||0), e2:0, e3:0}; }
     if(S.p.medQ==null) S.p.medQ = 0.55;
     if(!S.p.badgesEligible) S.p.badgesEligible = [];
+    if(S.p.transferRequested && !S.p.transferTarget){ S.p.transferRequested = false; S.p.transferTarget = null; } // eski bozuk kayıt onarımı
+
     if(S.squads && S.squadsRealV !== REAL_SQUADS_VER){   // eski kayıt: rastgele isimli kadroları gerçek kadrolarla değiştir
       TEAMS.forEach(t => { S.squads[t.n] = makeSquad(t.n, t.s); });
       if(S.p && S.squads[S.p.team]) insertUserIntoSquad();
@@ -2328,7 +2330,7 @@ function load(){
     return true;
   }catch(e){ return false; }
 }
-function wipe(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+function wipe(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} S = null; }
 function confirmJubilee(){
   modal(`<h3 style="color:var(--flood)">Jübile yapılsın mı?</h3>
     <p class="sub">Kariyerini futbolcu olarak bitirip Teknik Direktör olmak istediğine emin misin?</p>
