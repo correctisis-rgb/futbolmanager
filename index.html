@@ -2246,7 +2246,7 @@ function addNews(text, tag='genel'){
    KAYIT
    ========================================================= */
 const SAVE_KEY = 'saha-kariyer-v3';
-const APP_VERSION = 'v3.8';
+const APP_VERSION = 'v3.9';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -3225,7 +3225,17 @@ function talkCoach(){
   }
   save(); render();
 }
+function confirmRequestTransfer(teamName){
+  const safeName = (teamName||'').replace(/'/g,"\\'");
+  modal(`<h3 style="color:var(--flood)">Transfer talebi gönder</h3>
+    <p class="sub" style="margin-top:8px"><b>${teamName}</b>'e transfer talebi göndermek üzeresin. Bu işlem geri alınamaz, kulüp yönetimiyle güvenini biraz azaltır ve sezon sonuna kadar başka bir kulübe talep gönderemezsin.</p>
+    <div class="btngrid" style="margin-top:14px">
+      <button class="btn" onclick="closeModal()">Vazgeç</button>
+      <button class="btn primary" onclick="requestTransfer('${safeName}')">Evet, talep gönder</button>
+    </div>`);
+}
 function requestTransfer(teamName){
+  closeModal();
   S.p.transferRequested = true; S.p.transferTarget = teamName || null; S.p.trust = clamp(S.p.trust-5);
   addNews(teamName ? `${S.p.name}, ${teamName}'a transfer olmak için kulüp yönetiminden izin istedi.` : `${S.p.name} kulüp yönetiminden transfer izni istedi.`,'transfer');
   toast(teamName ? `${teamName}'a talebin iletildi.` : 'Talebin iletildi.'); save(); render();
@@ -3391,7 +3401,7 @@ function renderTransfers(){
         <div class="sub" style="margin-top:4px;color:${lb.c};font-weight:600">${lb.t}</div>
         <div class="btngrid" style="margin-top:8px">
           <button class="btn sm" ${negDisabled?'disabled':''} onclick="openClubNegotiate('${c.t.n.replace(/'/g,"\\'")}')">${negLabel}</button>
-          <button class="btn sm primary" ${p.transferRequested?'disabled':''} onclick="requestTransfer('${c.t.n.replace(/'/g,"\\'")}')">${isTarget?'✅ Talep gönderildi':'Bu kulübe talep gönder'}</button>
+          <button class="btn sm primary" ${p.transferRequested?'disabled':''} onclick="confirmRequestTransfer('${c.t.n.replace(/'/g,"\\'")}')">${isTarget?'✅ Talep gönderildi':'Bu kulübe talep gönder'}</button>
         </div>
       </div>`;
     }).join('')}
