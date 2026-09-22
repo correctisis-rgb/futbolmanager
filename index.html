@@ -620,6 +620,13 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
   font-size:.85rem;z-index:100;opacity:0;pointer-events:none;transition:opacity .25s;max-width:92vw;text-align:center;}
 .toast.show{opacity:1;}
 
+.offline-banner{position:fixed;left:0;right:0;top:0;z-index:220;
+  padding:8px 14px;padding-top:calc(8px + env(safe-area-inset-top,0px));
+  background:#7a4a06;color:#ffe9c2;font-size:.78rem;line-height:1.35;text-align:center;
+  border-bottom:1px solid #a56a0e;
+  transform:translateY(-100%);transition:transform .3s ease;pointer-events:none;}
+.offline-banner.show{transform:translateY(0);}
+
 .modal{position:fixed;inset:0;background:var(--modalbackdrop);z-index:90;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal.on{display:flex;}
 .modal .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;max-width:460px;width:100%;
@@ -850,6 +857,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
 </style>
 </head>
 <body>
+<div id="offline-banner" class="offline-banner">📡 Çevrimdışısın — kariyerin cihazında kayıtlı, oynamaya devam edebilirsin. Reklam/ödül videoları bağlantı gelince tekrar çalışır.</div>
 
 <div id="app">
 
@@ -1356,6 +1364,21 @@ function coinPopup(text){
   document.body.appendChild(c);
   setTimeout(()=>c.remove(), 1150);
 }
+
+/* ---------- Çevrimdışı durumu ---------- */
+let offlineBannerTimer = null;
+function updateOfflineBanner(){
+  const b = $('offline-banner'); if(!b) return;
+  clearTimeout(offlineBannerTimer);
+  if(!navigator.onLine){
+    b.classList.add('show');
+    offlineBannerTimer = setTimeout(()=>{ b.classList.remove('show'); }, 10000);
+  } else {
+    b.classList.remove('show');
+  }
+}
+window.addEventListener('online', ()=>{ updateOfflineBanner(); toast('✅ Bağlantı geri geldi.'); });
+window.addEventListener('offline', ()=>{ updateOfflineBanner(); toast('📡 Çevrimdışısın, oynamaya devam edebilirsin.'); });
 
 /* ---------- Gündüz / Gece modu ---------- */
 const THEME_KEY = 'sahaKariyerTema';
@@ -6066,6 +6089,7 @@ function initRewardedProvider(){
 async function watchVideo(){
   if(!S || vidBusy || !REWARD_CONFIG.enabled) return;
   if(S.inMatch) return toast('Maç sürerken video izlenemez.');
+  if(!navigator.onLine) return toast('📡 Çevrimdışıyken video oynatılamaz. Bağlantı gelince tekrar dene.');
   const v = videoInfo();
   if(v.left<=0) return toast('Bugünkü video hakkın bitti, yarın tekrar gel.');
   if(v.wait>0)  return toast(`Sonraki video ${v.wait} sn sonra.`);
@@ -6295,6 +6319,7 @@ function bindUI(){
 
 (function boot(){
   initTheme();
+  updateOfflineBanner();
   fillSetup(); bindUI();
   let has=false;
   try{ has = !!localStorage.getItem(SAVE_KEY); }catch(e){}
