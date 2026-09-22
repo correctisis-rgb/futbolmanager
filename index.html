@@ -624,8 +624,17 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
   padding:8px 14px;padding-top:calc(8px + env(safe-area-inset-top,0px));
   background:#7a4a06;color:#ffe9c2;font-size:.78rem;line-height:1.35;text-align:center;
   border-bottom:1px solid #a56a0e;
-  transform:translateY(-100%);transition:transform .3s ease;pointer-events:none;}
-.offline-banner.show{transform:translateY(0);}
+  transform:translateY(-100%);transition:transform .3s ease,top .3s ease;pointer-events:none;}
+.offline-banner.show{transform:translateY(0);pointer-events:auto;}
+
+.update-banner{position:fixed;left:0;right:0;top:0;z-index:221;
+  padding:8px 14px;padding-top:calc(8px + env(safe-area-inset-top,0px));
+  background:#0e4429;color:#d9ffe9;font-size:.78rem;line-height:1.35;text-align:center;
+  border-bottom:1px solid #1d7a43;
+  display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+  transform:translateY(-100%);transition:transform .3s ease,top .3s ease;pointer-events:none;}
+.update-banner.show{transform:translateY(0);pointer-events:auto;}
+.update-banner .btn{padding:5px 12px;font-size:.78rem;flex:none;}
 
 .modal{position:fixed;inset:0;background:var(--modalbackdrop);z-index:90;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal.on{display:flex;}
@@ -857,6 +866,10 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
 </style>
 </head>
 <body>
+<div id="update-banner" class="update-banner">
+  <span id="update-banner-text">🚀 Oyunun yeni sürümü var!</span>
+  <button type="button" class="btn primary sm" onclick="applyUpdate()">Güncelle</button>
+</div>
 <div id="offline-banner" class="offline-banner">📡 Çevrimdışısın — kariyerin cihazında kayıtlı, oynamaya devam edebilirsin. Reklam/ödül videoları bağlantı gelince tekrar çalışır.</div>
 
 <div id="app">
@@ -1417,6 +1430,17 @@ function coinPopup(text){
   setTimeout(()=>c.remove(), 1150);
 }
 
+/* ---------- Üst uyarı çubukları (offline / güncelleme) — üst üste binmesinler diye konumlarını hesaplıyoruz ---------- */
+function repositionBanners(){
+  const ob = $('offline-banner');
+  const ub = $('update-banner');
+  if(!ub) return;
+  let offset = 0;
+  if(ob && ob.classList.contains('show')) offset = ob.getBoundingClientRect().height;
+  ub.style.top = offset + 'px';
+}
+window.addEventListener('resize', repositionBanners);
+
 /* ---------- Çevrimdışı durumu ---------- */
 let offlineBannerTimer = null;
 function updateOfflineBanner(){
@@ -1424,10 +1448,11 @@ function updateOfflineBanner(){
   clearTimeout(offlineBannerTimer);
   if(!navigator.onLine){
     b.classList.add('show');
-    offlineBannerTimer = setTimeout(()=>{ b.classList.remove('show'); }, 10000);
+    offlineBannerTimer = setTimeout(()=>{ b.classList.remove('show'); repositionBanners(); }, 10000);
   } else {
     b.classList.remove('show');
   }
+  repositionBanners();
 }
 window.addEventListener('online', ()=>{ updateOfflineBanner(); toast('✅ Bağlantı geri geldi.'); });
 window.addEventListener('offline', ()=>{ updateOfflineBanner(); toast('📡 Çevrimdışısın, oynamaya devam edebilirsin.'); });
@@ -2220,8 +2245,37 @@ function addNews(text, tag='genel'){
 /* =========================================================
    KAYIT
    ========================================================= */
-const SAVE_KEY = 'saha-kariyer-v3';
-const APP_VERSION = 'v3.3';
+const SAVE_KEY = 'saha-kariyer-v3.4';
+const APP_VERSION = 'v3.4';
+const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
+
+/* ---------- Yeni sürüm uyarısı ----------
+   Her açılışta, bu cihazda en son görülen sürümü (localStorage) şu an
+   çalışan APP_VERSION ile kıyaslıyoruz. Farklıysa (ve daha önce bir
+   sürüm görülmüşse, yani ilk kurulum değilse) üstte "Yeni sürüm var"
+   çubuğunu gösteriyoruz. */
+function checkVersionUpdate(){
+  let last = null;
+  try{ last = localStorage.getItem(LAST_VERSION_KEY); }catch(e){}
+  if(last && last !== APP_VERSION) showUpdateBanner(last, APP_VERSION);
+  try{ localStorage.setItem(LAST_VERSION_KEY, APP_VERSION); }catch(e){}
+}
+function showUpdateBanner(oldV, newV){
+  const ub = $('update-banner'); if(!ub) return;
+  const txt = $('update-banner-text');
+  if(txt) txt.textContent = `🚀 Oyunun yeni sürümü var! ${oldV} → ${newV}`;
+  ub.classList.add('show');
+  repositionBanners();
+}
+function hideUpdateBanner(){
+  const ub = $('update-banner'); if(!ub) return;
+  ub.classList.remove('show');
+  repositionBanners();
+}
+function applyUpdate(){
+  hideUpdateBanner();
+  hardRefreshApp(); // önbelleği/service worker'ı temizleyip sayfayı yeniden yükler
+}
 function save(){
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){}
 }
@@ -6790,6 +6844,7 @@ function bindUI(){
 (function boot(){
   initTheme();
   updateOfflineBanner();
+  checkVersionUpdate();
   fillSetup(); bindUI();
   let has=false;
   try{ has = !!localStorage.getItem(SAVE_KEY); }catch(e){}
