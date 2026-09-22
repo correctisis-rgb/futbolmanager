@@ -2246,7 +2246,7 @@ function addNews(text, tag='genel'){
    KAYIT
    ========================================================= */
 const SAVE_KEY = 'saha-kariyer-v3';
-const APP_VERSION = 'v3.7';
+const APP_VERSION = 'v3.8';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -6897,7 +6897,13 @@ function bindUI(){
    basınca applyUpdate() yeni worker'a SKIP_WAITING mesajı yolluyor; worker
    devraldığında (controllerchange) sayfa otomatik yenileniyor. */
 function registerSW(){
-  navigator.serviceWorker.register('sw.js').then(reg => {
+  // updateViaCache: 'none' -> tarayıcı sw.js'i kontrol ederken HTTP
+  // önbelleğini ASLA kullanmasın, her seferinde gerçekten ağa gidip
+  // sorsun. Bu olmadan, GitHub'a yeni dosya yüklesen bile tarayıcı
+  // reg.update() çağrılarında eski (önbellekteki) sw.js'i "değişmemiş"
+  // sanabiliyor ve banner ancak sert/hard reload'da (cache atlanınca)
+  // çıkıyor gibi görünüyordu.
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
     swRegistration = reg;
 
     // Sayfa açılırken zaten bekleyen bir sürüm varsa (ör. sekme arka
