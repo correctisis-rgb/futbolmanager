@@ -2246,7 +2246,7 @@ function addNews(text, tag='genel'){
    KAYIT
    ========================================================= */
 const SAVE_KEY = 'saha-kariyer-v3';
-const APP_VERSION = 'v3.5';
+const APP_VERSION = 'v3.6';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2287,6 +2287,10 @@ let swUpdateReloading = false;
 function applyUpdate(){
   hideUpdateBanner();
   if(swRegistration && swRegistration.waiting){
+    // Güncellemeden önce ihtiyaten otomatik yedek indir (kariyer varsa).
+    // Böylece güncelleme sırasında bir şeyler ters giderse kullanıcının
+    // elinde en son durumun bir kopyası olur.
+    if(S){ try{ save(); downloadBackupFile(); }catch(e){} }
     // Yeni sürüm zaten indirilip "waiting" durumunda bekliyor.
     // Ona "artık devral" mesajı gönderiyoruz; devraldığında
     // controllerchange olayı sayfayı otomatik yeniden yükleyecek.
@@ -2295,6 +2299,7 @@ function applyUpdate(){
   } else {
     // Service worker desteklenmiyor ya da bekleyen bir sürüm yoksa
     // eski yöntemle sert yenileme yap (önbelleği tamamen temizler).
+    // Yedek indirme hardRefreshApp() içinde zaten yapılıyor.
     hardRefreshApp();
   }
 }
@@ -2425,6 +2430,7 @@ function renderSettings(){
   const vb = $('set-version'); if(vb) vb.textContent = APP_VERSION;
 }
 function hardRefreshApp(){
+  if(S){ try{ save(); downloadBackupFile(); }catch(e){} }
   (async ()=>{
     try{
       if('serviceWorker' in navigator){
