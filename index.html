@@ -672,6 +672,55 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
 }
 .paper-toss{animation:paperToss .9s cubic-bezier(.22,.8,.25,1) both;transform-origin:center center;will-change:transform,opacity;}
 @media (prefers-reduced-motion: reduce){ .paper-toss{ animation:none; } }
+
+/* ---- gazete sayfa geçişi ---- */
+#paperBox .paper.flip-in{animation:paperFlipIn .32s ease both;}
+@keyframes paperFlipIn{0%{opacity:0;transform:perspective(700px) rotateY(-14deg) scale(.97);}100%{opacity:1;transform:perspective(700px) rotateY(0) scale(1);}}
+
+/* ---- kupa/ödül konfetisi (ekran geneli) ---- */
+.confetti-fixed{position:fixed;inset:0;z-index:200;pointer-events:none;overflow:hidden;}
+.confetti-fixed .confetti{position:absolute;}
+
+/* ---- sakatlık ekran vinyeti ---- */
+.injury-vignette{position:fixed;inset:0;z-index:150;pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(239,68,68,0) 45%,rgba(239,68,68,.35) 100%);
+  animation:injVig 1.1s ease-out forwards;}
+@keyframes injVig{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+
+/* ---- ödül parası popup ---- */
+.coin-pop{position:fixed;left:50%;top:38%;transform:translate(-50%,0);z-index:210;pointer-events:none;
+  font-family:'Barlow Condensed';font-weight:700;font-size:1.5rem;color:#ffd24a;
+  text-shadow:0 0 10px rgba(0,0,0,.6),0 0 16px rgba(255,210,74,.6);
+  animation:coinPop 1.1s cubic-bezier(.2,.8,.3,1) forwards;white-space:nowrap;}
+@keyframes coinPop{
+  0%{opacity:0;transform:translate(-50%,10px) scale(.7);}
+  18%{opacity:1;transform:translate(-50%,-6px) scale(1.12);}
+  30%{transform:translate(-50%,0) scale(1);}
+  78%{opacity:1;transform:translate(-50%,-28px) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-46px) scale(.94);}
+}
+
+/* ---- vücut risk haritası: yüksek risk noktalarında nabız ---- */
+.riskzone.risk-high{animation:riskPulse 1.6s ease-in-out infinite;transform-origin:center;transform-box:fill-box;}
+@keyframes riskPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.14);}}
+
+/* ---- ekran/sekme geçişi ---- */
+.view.on{animation:viewIn .26s ease both;}
+@keyframes viewIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ---- genel dokunma geri bildirimi ---- */
+.btn{transition:transform .12s ease,background-color .3s ease,color .3s ease,border-color .3s ease;}
+.btn:active{transform:translateY(1px) scale(.96);}
+nav#bottom button{transition:transform .12s ease,background-color .3s ease,color .3s ease;}
+nav#bottom button:active{transform:scale(.9);}
+
+/* ---- tema geçişi yumuşat ---- */
+body,.card,.modal .box,nav#bottom,.paper,.statbox{transition:background-color .3s ease,color .3s ease,border-color .3s ease;}
+
+@media (prefers-reduced-motion: reduce){
+  .view.on, .riskzone.risk-high, #paperBox .paper.flip-in{ animation:none; }
+  body,.btn,.card,.modal .box,nav#bottom,.paper,.statbox{ transition:none; }
+}
 .paper .masthead{text-align:center;border-bottom:3px double #2a2118;padding-bottom:8px;margin-bottom:10px;}
 .paper .masthead h2{font-family:Georgia,serif;font-weight:700;font-size:2rem;letter-spacing:4px;color:#171310;}
 .paper .dateline{display:flex;justify-content:space-between;font-size:.7rem;letter-spacing:1px;color:#5b4f42;margin-top:6px;}
@@ -1293,6 +1342,21 @@ function toast(msg){
 function modal(html){ $('modalBox').innerHTML = html; $('modal').classList.add('on'); }
 function closeModal(){ $('modal').classList.remove('on','fullscreen'); $('modalBox').innerHTML=''; }
 
+// Kısa kırmızı ekran vinyeti — sakatlık anında hissedilir bir vurgu. Tek eleman, ~1.1sn sonra kendini kaldırır.
+function injuryFlash(){
+  const v = document.createElement('div');
+  v.className = 'injury-vignette';
+  document.body.appendChild(v);
+  setTimeout(()=>v.remove(), 1150);
+}
+// Ekranda kısa süreli yüzen para/ödül yazısı (ör. "+250 ₺ 🪙"). Tek eleman, saf transform/opacity animasyonu.
+function coinPopup(text){
+  const c = document.createElement('div');
+  c.className = 'coin-pop'; c.textContent = text;
+  document.body.appendChild(c);
+  setTimeout(()=>c.remove(), 1150);
+}
+
 /* ---------- Gündüz / Gece modu ---------- */
 const THEME_KEY = 'sahaKariyerTema';
 function applyTheme(mode){
@@ -1413,6 +1477,13 @@ const Sfx = {
       this.tone(base*(i===1?1.18:1), 0.38, 0.10, 'sawtooth', base*0.92, t+0.02);
     });
     this.crowd(1.9, 0.10, 600);
+  },
+  // kağıt hışırtısı/fırlama sesi — gazete "toss" animasyonuyla birlikte
+  paper(){
+    this.init(); if(!this.ctx) return;
+    for(let i=0;i<5;i++) this.noise(0.10, 3200+i*400, 3, 0.10, 'bandpass', i*0.045);
+    this.noise(0.28, 2200, 1.4, 0.07, 'bandpass', 0.05);
+    this.tone(520, 0.08, 0.05, 'square', 340, 0.02);
   },
   ambienceStart(){
     this.init(); if(!this.ctx || this.ambSrc) return;
@@ -2404,7 +2475,8 @@ function bodySilhouetteSVG(risks){
   const z = id => risks[id]||0;
   const dot = (id,x,y,r)=>{
     const c = riskColor(z(id));
-    return `<g class="riskzone" onclick="openBodyHistory('${id}')">
+    const high = z(id)>=60 ? ' risk-high' : '';
+    return `<g class="riskzone${high}" onclick="openBodyHistory('${id}')">
       <circle cx="${x}" cy="${y}" r="${r}" fill="${c}" fill-opacity=".88" stroke="#0b1418" stroke-width="1.6"/>
       <text x="${x}" y="${y+3.4}" text-anchor="middle" font-size="9" font-weight="800" fill="#0b1418" font-family="'Barlow Condensed',sans-serif">${z(id)}</text>
     </g>`;
@@ -3117,7 +3189,7 @@ function renderPaper(){
       <button class="btn sm" onclick="paperNav(-1)" ${paperIndex<=0?'disabled':''}>Sonraki ▸</button>
     </div>
   </div>
-  <div class="paper">
+  <div class="paper flip-in">
     <div class="masthead">
       <h2>SAHA POSTASI</h2>
       <div class="dateline"><span>${pp.season} SEZONU</span><span>${pp.week}. HAFTA</span><span>FİYATI 15 ₺</span></div>
@@ -4410,6 +4482,7 @@ function injuryEvent(){
 
 /* ---------- kullanıcı sakatlığı + özel ilk yardım paketi ---------- */
 function userInjury(T, v){
+  injuryFlash();
   const t = pickInjuryWeighted();
   const weeks = ri(t.w[0], t.w[1]);
   M.paused = true; clearTimeout(M.timer);
@@ -5247,6 +5320,8 @@ function endWeek(){
       if(S.cup.winner===S.p.team){
         S.p.career.trophies.push(`${S.seasonLabel} Türkiye Kupası`);
         S.p.money += 320000; S.p.happiness=clamp(S.p.happiness+20); S.p.morale=clamp(S.p.morale+15);
+        screenConfetti(28);
+        Sfx.init(); Sfx.chant('ole');
       }
     }
   }
@@ -5287,6 +5362,7 @@ function endWeek(){
 function showHeadline(){
   const pp = S.papers[0];
   if(!pp) return;
+  Sfx.init(); Sfx.paper();
   modal(`
     <div class="paper paper-toss" style="padding:14px 12px">
       <div class="masthead"><h2>SAHA POSTASI</h2>
@@ -5496,6 +5572,23 @@ function confettiCeremony(){
     pit.appendChild(c);
     setTimeout(()=>c.remove(), 2200);
   }
+}
+// Ekran geneli kısa konfeti patlaması (kupa kazanma vb. an içi kutlamalar için).
+// Hafif: sabit sayıda eleman, saf CSS transform/opacity animasyonu, ~1.8sn sonra kendini temizler.
+function screenConfetti(count=18){
+  const pit = document.createElement('div');
+  pit.className = 'confetti-fixed';
+  const cols = ['#ffd24a','#34d399','#60a5fa','#f87171','#ffffff'];
+  for(let i=0;i<count;i++){
+    const c = document.createElement('i');
+    c.className='confetti';
+    c.style.left = rnd(4,96)+'%'; c.style.top='-6%';
+    c.style.background = pick(cols);
+    c.style.animationDelay = (Math.random()*0.35)+'s';
+    pit.appendChild(c);
+  }
+  document.body.appendChild(pit);
+  setTimeout(()=>pit.remove(), 2000);
 }
 function buildAwardStages(tbl, champ, scorer, p, extra){
   const stages = [];
@@ -5995,6 +6088,7 @@ function grantVideoReward(){
   S.p.money += amt; S.p.videosWatched = (S.p.videosWatched||0) + 1;
   st.n++; st.last = Date.now(); saveVideoState(st);
   closeModal();
+  coinPopup(`+${TL(amt)} 🪙`);
   toast(`📺 +${TL(amt)} kazandın!`);
   save(); render();
 }
