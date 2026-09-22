@@ -2246,7 +2246,7 @@ function addNews(text, tag='genel'){
    KAYIT
    ========================================================= */
 const SAVE_KEY = 'saha-kariyer-v3';
-const APP_VERSION = 'v4.1';
+const APP_VERSION = 'v4.2';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2384,12 +2384,25 @@ function backupNow(){
   save(); // en güncel hali yedekle
   downloadBackupFile();
 }
+function backupFileName(){
+  try{
+    const raw = (S && S.p && S.p.name) ? S.p.name : '';
+    const trMap = {'ç':'c','Ç':'c','ğ':'g','Ğ':'g','ı':'i','İ':'i','ö':'o','Ö':'o','ş':'s','Ş':'s','ü':'u','Ü':'u'};
+    const slug = raw
+      .replace(/[çÇğĞıİöÖşŞüÜ]/g, ch=>trMap[ch]||ch)
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9]+/g,'-')
+      .replace(/^-+|-+$/g,'');
+    return (slug ? slug+'-' : '') + 'saha-kariyer-yedek.json';
+  }catch(e){ return 'saha-kariyer-yedek.json'; }
+}
 function downloadBackupFile(){
   try{
     const blob = new Blob([JSON.stringify(backupPayload())], {type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = 'saha-kariyer-yedek.json';
+    a.href = url; a.download = backupFileName();
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url), 2000);
     toast('⬇️ Yedek dosyası indirildi.');
