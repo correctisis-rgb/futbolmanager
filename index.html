@@ -2245,8 +2245,8 @@ function addNews(text, tag='genel'){
 /* =========================================================
    KAYIT
    ========================================================= */
-const SAVE_KEY = 'saha-kariyer-v3.4';
-const APP_VERSION = 'v3.4';
+const SAVE_KEY = 'saha-kariyer-v3';
+const APP_VERSION = 'v3.5';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2267,14 +2267,36 @@ function showUpdateBanner(oldV, newV){
   ub.classList.add('show');
   repositionBanners();
 }
+function showRealUpdateBanner(){
+  // Gerçek service worker güncellemesi tespit edildiğinde (sürüm
+  // metnini bilmeden) gösterilen sabit metinli çubuk.
+  const ub = $('update-banner'); if(!ub) return;
+  const txt = $('update-banner-text');
+  if(txt) txt.textContent = '🚀 Oyunun yeni sürümü var! Uygulamayı güncelle.';
+  ub.classList.add('show');
+  repositionBanners();
+}
 function hideUpdateBanner(){
   const ub = $('update-banner'); if(!ub) return;
   ub.classList.remove('show');
   repositionBanners();
 }
+let swRegistration = null;   // aktif service worker kaydı
+let swUpdateReloading = false;
+
 function applyUpdate(){
   hideUpdateBanner();
-  hardRefreshApp(); // önbelleği/service worker'ı temizleyip sayfayı yeniden yükler
+  if(swRegistration && swRegistration.waiting){
+    // Yeni sürüm zaten indirilip "waiting" durumunda bekliyor.
+    // Ona "artık devral" mesajı gönderiyoruz; devraldığında
+    // controllerchange olayı sayfayı otomatik yeniden yükleyecek.
+    swUpdateReloading = true;
+    swRegistration.waiting.postMessage('SKIP_WAITING');
+  } else {
+    // Service worker desteklenmiyor ya da bekleyen bir sürüm yoksa
+    // eski yöntemle sert yenileme yap (önbelleği tamamen temizler).
+    hardRefreshApp();
+  }
 }
 function save(){
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){}
@@ -6857,11 +6879,48 @@ function bindUI(){
     initRewardedProvider(); // reklam altyapısı ancak gerçek oyun ekranına geçildiğinde yüklensin
   }
   if('serviceWorker' in navigator){
-    window.addEventListener('load', ()=>{
-      navigator.serviceWorker.register('sw.js').catch(()=>{});
-    });
+    window.addEventListener('load', registerSW);
   }
 })();
+
+/* ---------- Gerçek service worker güncelleme akışı ----------
+   Tarayıcı arka planda yeni bir sw.js bulup indirdiğinde (updatefound),
+   o yeni worker "installed" durumuna geçtiğinde ve sayfada zaten aktif
+   bir controller varsa (yani bu ilk kurulum değil, gerçek bir güncelleme),
+   üstteki "Yeni sürüm var" çubuğunu gösteriyoruz. Kullanıcı "Güncelle"ye
+   basınca applyUpdate() yeni worker'a SKIP_WAITING mesajı yolluyor; worker
+   devraldığında (controllerchange) sayfa otomatik yenileniyor. */
+function registerSW(){
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    swRegistration = reg;
+
+    // Sayfa açılırken zaten bekleyen bir sürüm varsa (ör. sekme arka
+    // planda güncellendiyse) doğrudan banner'ı göster.
+    if(reg.waiting && navigator.serviceWorker.controller){
+      showRealUpdateBanner();
+    }
+
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      if(!newWorker) return;
+      newWorker.addEventListener('statechange', () => {
+        if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
+          // Yeni worker kuruldu ve bekliyor; eskisi hâlâ sayfayı yönetiyor.
+          showRealUpdateBanner();
+        }
+      });
+    });
+  }).catch(()=>{});
+
+  // Yeni worker devraldığında (kullanıcı Güncelle'ye bastıktan sonra)
+  // sayfayı bir kere otomatik yenile.
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(swUpdateReloading){
+      swUpdateReloading = false;
+      location.reload();
+    }
+  });
+}
 </script>
 </body>
 </html>
