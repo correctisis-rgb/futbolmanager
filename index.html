@@ -1160,6 +1160,10 @@ const pick = arr => arr[Math.floor(Math.random()*arr.length)];
 const clamp = (v,a=0,b=100) => Math.max(a,Math.min(b,v));
 const TL = n => Math.round(n).toLocaleString('tr-TR')+' ₺';
 const chance = p => Math.random() < p;
+// binlik ayraçlı (100.000 gibi) tutar gösterimi/çözümlemesi — pazarlık inputları için
+const fmtThousands = n => Math.round(Number(n)||0).toLocaleString('tr-TR');
+const parseThousands = v => parseInt(String(v==null?'':v).replace(/\./g,'').replace(/[^0-9]/g,''), 10) || 0;
+const fmtThousandsInput = v => { const d = String(v==null?'':v).replace(/[^0-9]/g,''); return d ? parseInt(d,10).toLocaleString('tr-TR') : ''; };
 
 /* ---------- mağaza / stadyum görsel ikonları (inline SVG) ---------- */
 const Icon = {
@@ -2217,7 +2221,7 @@ function addNews(text, tag='genel'){
    KAYIT
    ========================================================= */
 const SAVE_KEY = 'saha-kariyer-v3';
-const APP_VERSION = 'v3.2';
+const APP_VERSION = 'v3.3';
 function save(){
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){}
 }
@@ -3151,8 +3155,9 @@ function openClubNegotiate(teamName){
   if(!c) return;
   modal(`<h3 style="color:var(--flood)">${teamName} ile pazarlık</h3>
     <p class="sub">Şu anki tahmini teklif: <b>${TL(c.wage)}</b> maç başı. Kalan pazarlık hakkın: <b>${neg.rights}</b></p>
-    <input id="cneg-amount" type="number" inputmode="numeric" min="0" step="500" value="${c.wage}"
+    <input id="cneg-amount" type="text" inputmode="numeric" value="${fmtThousands(c.wage)}"
       style="width:100%;margin-top:10px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--inputbg);color:var(--ink);font-size:1.05rem"
+      oninput="this.value=fmtThousandsInput(this.value)"
       onkeydown="if(event.key==='Enter'){event.preventDefault();submitClubNegotiate('${teamName.replace(/'/g,"\\'")}');}">
     <p id="cneg-msg" class="sub" style="min-height:1.3em;margin:6px 0 0"></p>
     <div class="btngrid" style="margin-top:8px">
@@ -3166,7 +3171,7 @@ function submitClubNegotiate(teamName){
   const c = interestedClubs().find(x=>x.t.n===teamName);
   if(!c || neg.rights<=0) return;
   const inp = $('cneg-amount'); const msg = $('cneg-msg');
-  const wanted = Math.round(+((inp && inp.value)||0));
+  const wanted = parseThousands(inp && inp.value);
   if(!wanted || wanted<=0){ if(msg){ msg.style.color='var(--bad)'; msg.textContent='Geçerli bir tutar yaz.'; } return; }
   const ratio = wanted / c.baseWage;
   neg.rights--;
@@ -3178,6 +3183,8 @@ function submitClubNegotiate(teamName){
     neg.note = neg.rights>0 ? warn : {c:warn.c, t: warn.t + ' Pazarlık hakkın kalmadı.'};
   }
   closeModal(); save(); render();
+  // sonucu hem popup (toast) hem de kulüp kartında göster
+  toast(neg.note.t);
 }
 
 /* ---------- TRANSFER PAZARI ---------- */
@@ -3196,10 +3203,20 @@ function teamBudgetFactor(t){
 }
 // Kulüp + oyuncu adına bağlı sabit (deterministik) 0-1 sayısı: her render'da değişmez ama kulüpten kulübe farklıdır
 function clubOfferSeed(t){
-  const str = t.n + '|' + (S && S.p ? S.p.name : '');
+  // teklifler 15 haftada bir "period" değişerek yenilenir; aynı period içinde sabit kalır
+  const period = (S && S.offerRenewalCount) || 0;
+  const str = t.n + '|' + (S && S.p ? S.p.name : '') + '|' + period;
   let h = 0;
   for(let i=0;i<str.length;i++) h = (h*31 + str.charCodeAt(i)) | 0;
   return (Math.abs(h) % 1000) / 1000;
+}
+// Sezonluk transfer tekliflerini yeniler: pazarlık haklarını/notlarını sıfırlar ve
+// tekliflerin (maaş/yıl varyasyonu) yeni bir "period" ile yeniden hesaplanmasını sağlar.
+function renewSeasonOffers(){
+  S.p.clubNegotiations = {};
+  S.offerRenewalCount = (S.offerRenewalCount||0) + 1;
+  addNews('İlgilenen kulüplerin teklifleri yenilendi.','transfer');
+  S.pendingOfferRenewalPopup = true;
 }
 // Kulübün teklif edeceği sözleşme süresi: yaşa, ilgiye ve kulübe özgü sabit sapmaya göre
 function offerYearsFor(t, interest, age){
@@ -5682,13 +5699,15 @@ function endWeek(){
   S.week++; S.weekDone=false;
   if(S.week<=34) scheduleNational(S.week);
   if(S.week>34){ addNews(`Süper Lig ${S.seasonLabel} sezonu tamamlandı.`,'lig'); }
+  // sezonluk transfer teklifleri 15 haftada bir yenilenir (15. haftanın maçları oynandıktan sonra)
+  if(wk % 15 === 0) renewSeasonOffers();
   save(); render();
   showHeadline();
 }
 
 function showHeadline(){
   const pp = S.papers[0];
-  if(!pp) return;
+  if(!pp){ afterHeadlineClosed(); return; }
   Sfx.init(); Sfx.paper();
   modal(`
     <div class="paper paper-toss" style="padding:14px 12px">
@@ -5700,8 +5719,24 @@ function showHeadline(){
       ${pp.arts[0]?`<div class="box"><b>${pp.arts[0].t}</b><br>${pp.arts[0].b}</div>`:''}
     </div>
     <div class="row" style="margin-top:12px;gap:8px">
-      <button class="btn primary" style="flex:1" onclick="closeModal();go('v-paper')">Gazeteyi oku</button>
-      <button class="btn" style="flex:1" onclick="closeModal()">Devam et</button>
+      <button class="btn primary" style="flex:1" onclick="closeModal();go('v-paper');afterHeadlineClosed()">Gazeteyi oku</button>
+      <button class="btn" style="flex:1" onclick="closeModal();afterHeadlineClosed()">Devam et</button>
+    </div>`);
+}
+// Gazete penceresi kapandıktan sonra, teklifler yenilendiyse bunu sezonluk bir popup ile sorar.
+function afterHeadlineClosed(){
+  if(S.pendingOfferRenewalPopup){
+    S.pendingOfferRenewalPopup = false;
+    save();
+    showOfferRenewalPopup();
+  }
+}
+function showOfferRenewalPopup(){
+  modal(`<h3 style="color:var(--flood)">🔄 Sezon teklifleri yenilendi</h3>
+    <p class="sub">İlgilenen kulüplerin maç başı teklifleri ve pazarlık hakların güncellendi. Transfer sekmesinde görmek ister misin?</p>
+    <div class="btngrid" style="margin-top:10px">
+      <button class="btn" onclick="closeModal()">Daha sonra</button>
+      <button class="btn primary" onclick="closeModal();go('v-transfers')">Evet, göster</button>
     </div>`);
 }
 
@@ -6073,8 +6108,9 @@ function openNegotiate(key){
   const label = key==='stay' ? st.team : ctx.offer.n;
   modal(`<h3 style="color:var(--flood)">${label} ile sözleşme pazarlığı</h3>
     <p class="sub">Şu anki teklif: <b>${TL(st.current)}</b> maç başı. Kalan pazarlık hakkın: <b>${st.rights}</b></p>
-    <input id="neg-amount" type="number" inputmode="numeric" min="0" step="500" placeholder="İstediğin maç başı ücret (₺)" value="${st.current}"
+    <input id="neg-amount" type="text" inputmode="numeric" placeholder="İstediğin maç başı ücret (₺)" value="${fmtThousands(st.current)}"
       style="width:100%;margin-top:10px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--inputbg);color:var(--ink);font-size:1.05rem"
+      oninput="this.value=fmtThousandsInput(this.value)"
       onkeydown="if(event.key==='Enter'){event.preventDefault();submitNegotiate('${key}');}">
     <p id="neg-msg" class="sub" style="min-height:1.3em;margin:6px 0 0"></p>
     <div class="btngrid" style="margin-top:8px">
@@ -6087,7 +6123,7 @@ function submitNegotiate(key){
   const ctx = SEASON_CTX; if(!ctx) return;
   const st = ctx[key]; if(!st) return;
   const inp = $('neg-amount'); const msg = $('neg-msg');
-  const wanted = Math.round(+((inp && inp.value) || 0));
+  const wanted = parseThousands(inp && inp.value);
   if(!wanted || wanted<=0){ if(msg){ msg.style.color='var(--bad)'; msg.textContent='Geçerli bir tutar yaz.'; } return; }
   const ratio = wanted / st.base;
   st.rights--;
@@ -6099,6 +6135,8 @@ function submitNegotiate(key){
     st.note = st.rights>0 ? warn : {c:warn.c, t: warn.t + ' Pazarlık hakkın kalmadı — mevcut teklifi kabul etmen ya da öbür seçeneği değerlendirmen gerekiyor.'};
   }
   renderSeasonSummaryModal();
+  // sonucu hem popup (toast) hem de teklif kartında göster
+  toast(st.note.t);
 }
 function acceptSeasonOffer(key){
   const ctx = SEASON_CTX; if(!ctx) return;
