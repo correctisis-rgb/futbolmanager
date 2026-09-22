@@ -888,6 +888,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
       <p class="sub" id="s-preview" style="margin-bottom:12px"></p>
       <button class="btn primary block" id="s-start">Kariyere başla</button>
       <button class="btn block" id="s-load" style="margin-top:8px;display:none">Kayıtlı kariyere devam et</button>
+      <button class="btn block" id="s-restore" style="margin-top:8px">📥 Yedekten yükle</button>
     </div>
   </section>
 
@@ -1077,6 +1078,48 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
 
     <!-- ---------- LIFE ---------- -->
     <section class="view" id="v-life"><div id="lifeBox"></div></section>
+
+    <!-- ---------- SETTINGS ---------- -->
+    <section class="view" id="v-settings">
+      <div class="card">
+        <h3>Ses &amp; görünüm</h3>
+        <div class="statbox">
+          <div class="spread">
+            <div><b>Ses</b><br><span class="sub">Maç ve arayüz efektleri</span></div>
+            <button class="btn sm" id="set-sound">🔊 Açık</button>
+          </div>
+        </div>
+        <div class="statbox">
+          <div class="spread">
+            <div><b>Görünüm</b><br><span class="sub">Gündüz / gece modu</span></div>
+            <button class="btn sm" id="set-theme">🌙 Gece</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Yedekleme</h3>
+        <p class="sub">Kariyerin bu cihazda saklanıyor, hesap gerekmiyor. Başka bir cihazda devam etmek için buradan yedek al, o cihazda yükle.</p>
+        <div class="btngrid" style="margin-top:10px">
+          <button class="btn" onclick="backupNow()">💾 Yedek al</button>
+          <button class="btn" onclick="openRestoreModal()">📥 Yedekten yükle</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Uygulama</h3>
+        <div class="statbox">
+          <div class="spread">
+            <div><b>Sürüm</b><br><span class="sub" id="set-version">—</span></div>
+            <button class="btn sm" onclick="hardRefreshApp()">♻️ Güncelle</button>
+          </div>
+        </div>
+        <p class="sub" style="margin-top:6px">Oyun takılıyor ya da güncellenmiyor gibi görünüyorsa bu, önbelleği temizleyip son sürümü indirir. Kariyerin silinmez.</p>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--bad)">Tehlikeli bölge</h3>
+        <p class="sub">Kariyerini tamamen siler, geri alınamaz. Önce yedek almanı öneririz.</p>
+        <button class="btn red block" style="margin-top:8px" onclick="confirmWipe()">🗑️ Kariyeri sıfırla</button>
+      </div>
+    </section>
   </div>
 </div>
 
@@ -1093,6 +1136,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
   <button data-view="v-league"><i>🏆</i>Lig<span class="navdot" id="dot-league"></span></button>
   <button data-view="v-paper"><i>📰</i>Gazete<span class="navdot" id="dot-paper"></span></button>
   <button data-view="v-life"><i>🌆</i>Yaşam<span class="navdot" id="dot-life"></span></button>
+  <button data-view="v-settings"><i>⚙️</i>Ayarlar</button>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -1387,9 +1431,10 @@ function applyTheme(mode){
   const meta = document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute('content', mode==='light' ? '#eef2f1' : '#0a1014');
   const ic = mode==='light' ? '☀️' : '🌙';
-  const a = $('theme-toggle-setup'), b = $('theme-toggle-game');
+  const a = $('theme-toggle-setup'), b = $('theme-toggle-game'), c = $('set-theme');
   if(a) a.textContent = ic;
   if(b) b.textContent = ic;
+  if(c) c.textContent = ic + (mode==='light' ? ' Gündüz' : ' Gece');
 }
 function toggleTheme(){
   const cur = document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark';
@@ -2168,6 +2213,7 @@ function addNews(text, tag='genel'){
    KAYIT
    ========================================================= */
 const SAVE_KEY = 'saha-kariyer-v3';
+const APP_VERSION = 'v3';
 function save(){
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){}
 }
@@ -2214,6 +2260,104 @@ function confirmWipe(){
 }
 
 /* =========================================================
+   YEDEK ALMA / YEDEKTEN YÜKLEME
+   Sunucu/hesap yok: kariyer verisi cihazdaki localStorage'da duruyor.
+   Kullanıcı bir "yedek kodu" (ya da .json dosyası) üretip başka bir
+   cihazda/tarayıcıda o kodu/dosyayı yükleyerek kariyerini taşıyabiliyor.
+   ========================================================= */
+const BACKUP_KEYS = [SAVE_KEY, 'sahaUsedCodes'];
+function backupPayload(){
+  const data = {};
+  BACKUP_KEYS.forEach(k=>{ try{ const v = localStorage.getItem(k); if(v!=null) data[k] = v; }catch(e){} });
+  return { app:'saha-kariyer', v:1, ts:Date.now(), data };
+}
+function backupNow(){
+  if(!S){ toast('Önce bir kariyer başlat.'); return; }
+  save(); // en güncel hali yedekle
+  downloadBackupFile();
+}
+function downloadBackupFile(){
+  try{
+    const blob = new Blob([JSON.stringify(backupPayload())], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'saha-kariyer-yedek.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    toast('⬇️ Yedek dosyası indirildi.');
+  }catch(e){ toast('Dosya indirilemedi.'); }
+}
+function openRestoreModal(){
+  modal(`<h3 style="color:var(--flood)">📥 Yedekten yükle</h3>
+    <p class="sub">Başka bir cihazda indirdiğin yedek dosyasını (.json) seç, kariyerin bu cihaza yüklensin.</p>
+    <input id="restore-file" type="file" accept="application/json,.json" style="margin-top:10px;width:100%;color:var(--ink)" onchange="handleRestoreFile(event)">
+    <p id="restore-msg" class="sub" style="min-height:1.3em;margin:6px 0 0"></p>
+    <div class="btngrid" style="margin-top:8px">
+      <button class="btn block" onclick="closeModal()">Kapat</button>
+    </div>`);
+}
+function handleRestoreFile(e){
+  const file = e.target.files && e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    let payload = null;
+    try{ payload = JSON.parse(reader.result); }catch(err){ payload = null; }
+    if(!payload){ const m=$('restore-msg'); if(m){ m.style.color='var(--bad)'; m.textContent='Dosya okunamadı, bozuk olabilir.'; } return; }
+    doRestore(payload);
+  };
+  reader.readAsText(file);
+}
+function doRestore(payload){
+  const msg = $('restore-msg');
+  if(!payload || payload.app!=='saha-kariyer' || !payload.data || !payload.data[SAVE_KEY]){
+    if(msg){ msg.style.color='var(--bad)'; msg.textContent='Bu bir Saha Kariyer yedeği değil ya da bozuk.'; }
+    return;
+  }
+  const doApply = ()=>{
+    try{
+      Object.keys(payload.data).forEach(k=>{ localStorage.setItem(k, payload.data[k]); });
+      toast('✅ Yedek yüklendi, kariyerin geri geldi.');
+      closeModal();
+      setTimeout(()=>location.reload(), 500);
+    }catch(e){ const m=$('restore-msg'); if(m){ m.style.color='var(--bad)'; m.textContent='Yüklenirken bir hata oldu.'; } }
+  };
+  let hasCurrent=false; try{ hasCurrent = !!localStorage.getItem(SAVE_KEY); }catch(e){}
+  if(hasCurrent){
+    modal(`<h3 style="color:var(--bad)">Mevcut kariyer değişecek</h3>
+      <p class="sub">Bu cihazdaki kariyerin, yedekteki kariyerle değiştirilecek. Bu işlem geri alınamaz.</p>
+      <div class="btngrid" style="margin-top:12px">
+        <button class="btn" onclick="closeModal()">Vazgeç</button>
+        <button class="btn red" id="restore-confirm">Evet, değiştir</button>
+      </div>`);
+    setTimeout(()=>{ const b=$('restore-confirm'); if(b) b.onclick = doApply; }, 30);
+  } else {
+    doApply();
+  }
+}
+function renderSettings(){
+  const sb = $('set-sound'); if(sb) sb.textContent = Sfx.on ? '🔊 Açık' : '🔇 Kapalı';
+  const mode = document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark';
+  const tb = $('set-theme'); if(tb) tb.textContent = (mode==='light'?'☀️':'🌙') + (mode==='light'?' Gündüz':' Gece');
+  const vb = $('set-version'); if(vb) vb.textContent = APP_VERSION;
+}
+function hardRefreshApp(){
+  (async ()=>{
+    try{
+      if('serviceWorker' in navigator){
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for(const r of regs){ await r.unregister(); }
+      }
+      if(window.caches && caches.keys){
+        const keys = await caches.keys();
+        for(const k of keys){ await caches.delete(k); }
+      }
+    }catch(e){}
+    toast('♻️ Önbellek temizlendi, güncelleniyor…');
+    setTimeout(()=>location.reload(), 500);
+  })();
+}
+
+/* =========================================================
    NAVİGASYON
    ========================================================= */
 let currentView = 'v-match';
@@ -2256,6 +2400,7 @@ function render(){
     case 'v-league': renderTable(); renderFix(); renderCup(); renderStats(); renderEuro(); renderNat(); break;
     case 'v-paper':  renderPaper(); break;
     case 'v-life':   renderLife(); break;
+    case 'v-settings': renderSettings(); break;
   }
   updateVideoButtons();
 }
@@ -2488,7 +2633,7 @@ function renderProfile(){
     ${p.career.seasons.length?`<hr class="sep"><table><tr><th>Sezon</th><th>Takım</th><th class="num">M</th><th class="num">G</th><th class="num">A</th></tr>
       ${p.career.seasons.map(s=>`<tr><td>${s.label}</td><td>${s.team}</td><td class="num">${s.apps}</td><td class="num">${s.goals}</td><td class="num">${s.assists}</td></tr>`).join('')}</table>`:''}
     <hr class="sep">
-    <button class="btn red sm" onclick="confirmWipe()">Kariyeri sıfırla</button>
+    <p class="sub">Yedek alma, geri yükleme ve kariyer sıfırlama artık ⚙️ <a href="#" onclick="go('v-settings');return false;" style="color:var(--flood);font-weight:600;text-decoration:none">Ayarlar</a> bölümünde.</p>
   </div>`;
 }
 
@@ -6293,10 +6438,18 @@ function bindUI(){
   $('t-sound').addEventListener('click', ()=>{
     const on = Sfx.toggle();
     $('t-sound').textContent = on ? '🔊' : '🔇';
+    const sb = $('set-sound'); if(sb) sb.textContent = on ? '🔊 Açık' : '🔇 Kapalı';
     toast(on?'Ses açık':'Ses kapalı');
   });
   $('theme-toggle-setup').addEventListener('click', toggleTheme);
   $('theme-toggle-game').addEventListener('click', toggleTheme);
+  $('set-sound').addEventListener('click', ()=>{
+    const on = Sfx.toggle();
+    $('t-sound').textContent = on ? '🔊' : '🔇';
+    $('set-sound').textContent = on ? '🔊 Açık' : '🔇 Kapalı';
+    toast(on?'Ses açık':'Ses kapalı');
+  });
+  $('set-theme').addEventListener('click', toggleTheme);
   $('modal').addEventListener('click', e=>{ if(e.target.id==='modal') { /* özet kapanmasın */ } });
   $('s-start').addEventListener('click', ()=>{
     const name = ($('s-name').value||'').trim() || 'İsimsiz Oyuncu';
@@ -6313,6 +6466,7 @@ function bindUI(){
     if(load()){ $('setup').style.display='none'; $('game').style.display='block'; go('v-match'); initRewardedProvider(); }
     else toast('Kayıt bulunamadı.');
   });
+  $('s-restore').addEventListener('click', openRestoreModal);
   // sayfa kapanırken kaydet
   window.addEventListener('beforeunload', ()=>{ if(S) save(); });
 }
