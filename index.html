@@ -2246,7 +2246,7 @@ function addNews(text, tag='genel'){
    KAYIT
    ========================================================= */
 const SAVE_KEY = 'saha-kariyer-v3';
-const APP_VERSION = 'v4';
+const APP_VERSION = 'v4.1';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2255,9 +2255,26 @@ const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
    sürüm görülmüşse, yani ilk kurulum değilse) üstte "Yeni sürüm var"
    çubuğunu gösteriyoruz. */
 function checkVersionUpdate(){
+  // NOT: Bu fonksiyon artık "Güncelle" eylemli banner'ı GÖSTERMEZ.
+  // Gerçek güncelleme kararı tamamen sw.js tabanlı mekanizmaya
+  // (showRealUpdateBanner / applyUpdate) bırakılmıştır.
+  //
+  // Neden: index.html network-first stratejisiyle çekildiği için,
+  // sw.js gerçek güncellemeyi bitirip sayfayı yenilediği anda bu
+  // fonksiyon da boot() içinde tekrar çalışır ve APP_VERSION artık
+  // localStorage'daki eski değerden farklıdır — güncelleme AZ ÖNCE
+  // tamamlanmış olmasına rağmen. Eskiden bu durumda AYNI "Güncelle"
+  // banner'ı ikinci kez gösteriliyor, kullanıcı tekrar tıklayınca
+  // (artık bekleyen bir worker olmadığı için) gereksiz bir
+  // hardRefreshApp() (tam önbellek temizliği + yeniden yükleme) daha
+  // tetikleniyordu. Yani güncelleme "2 kere geliyor" sorunu buradan
+  // kaynaklanıyordu. Artık burada sadece bilgilendirici bir toast
+  // gösteriliyor, eylemli banner tetiklenmiyor.
   let last = null;
   try{ last = localStorage.getItem(LAST_VERSION_KEY); }catch(e){}
-  if(last && last !== APP_VERSION) showUpdateBanner(last, APP_VERSION);
+  if(last && last !== APP_VERSION){
+    toast(`✅ Uygulama ${APP_VERSION} sürümüne güncellendi`);
+  }
   try{ localStorage.setItem(LAST_VERSION_KEY, APP_VERSION); }catch(e){}
 }
 function showUpdateBanner(oldV, newV){
