@@ -6164,9 +6164,10 @@ function bindUI(){
     $('setup').style.display='none'; $('game').style.display='block';
     Sfx.init();
     go('v-match');
+    initRewardedProvider(); // reklam altyapısı ancak gerçek oyun ekranına geçildiğinde yüklensin
   });
   $('s-load').addEventListener('click', ()=>{
-    if(load()){ $('setup').style.display='none'; $('game').style.display='block'; go('v-match'); }
+    if(load()){ $('setup').style.display='none'; $('game').style.display='block'; go('v-match'); initRewardedProvider(); }
     else toast('Kayıt bulunamadı.');
   });
   // sayfa kapanırken kaydet
@@ -6175,7 +6176,6 @@ function bindUI(){
 
 (function boot(){
   initTheme();
-  initRewardedProvider();
   fillSetup(); bindUI();
   let has=false;
   try{ has = !!localStorage.getItem(SAVE_KEY); }catch(e){}
@@ -6185,6 +6185,7 @@ function bindUI(){
   if(has && load()){
     $('setup').style.display='none'; $('game').style.display='block';
     go('v-match');
+    initRewardedProvider(); // reklam altyapısı ancak gerçek oyun ekranına geçildiğinde yüklensin
   }
   if('serviceWorker' in navigator){
     window.addEventListener('load', ()=>{
