@@ -2246,7 +2246,7 @@ function addNews(text, tag='genel'){
    KAYIT
    ========================================================= */
 const SAVE_KEY = 'saha-kariyer-v3';
-const APP_VERSION = 'v3.6';
+const APP_VERSION = 'v3.7';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -6916,6 +6916,20 @@ function registerSW(){
         }
       });
     });
+
+    /* ---------- Sayfayı yenilemeden otomatik güncelleme kontrolü ----------
+       Normalde tarayıcı sw.js'i sadece sayfa yeniden yüklendiğinde/
+       navigasyon olduğunda kontrol eder. Kullanıcı sekmeyi açık bıraktıysa
+       ve GitHub'a yeni dosya yüklendiyse, biz de düzenli aralıklarla ve
+       sekme tekrar görünür/odaklandığında reg.update() ile elle kontrol
+       ediyoruz ki banner sayfa yenilenmeden, arka planda kendiliğinden
+       çıksın. */
+    const checkForUpdate = () => { reg.update().catch(()=>{}); };
+    setInterval(checkForUpdate, 60 * 1000); // her 60 saniyede bir
+    document.addEventListener('visibilitychange', () => {
+      if(document.visibilityState === 'visible') checkForUpdate();
+    });
+    window.addEventListener('focus', checkForUpdate);
   }).catch(()=>{});
 
   // Yeni worker devraldığında (kullanıcı Güncelle'ye bastıktan sonra)
