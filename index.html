@@ -663,6 +663,15 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
 
 /* ---------- Newspaper ---------- */
 .paper{background-color:#f3ece0;background-image:linear-gradient(rgba(243,236,224,0.88),rgba(243,236,224,0.88)),url('gazete/futbolcu.jpg');background-size:cover;background-position:center;background-repeat:no-repeat;color:#181410;border-radius:10px;padding:16px 14px;border:1px solid #cdbfa8;font-family:Georgia,'Times New Roman',serif;}
+@keyframes paperToss{
+  0%{transform:translate(150%,-170%) rotate(-410deg) scale(.35);opacity:0;box-shadow:0 30px 40px -10px rgba(0,0,0,.5);}
+  50%{transform:translate(-4%,3%) rotate(10deg) scale(1.05);opacity:1;}
+  72%{transform:translate(1.5%,-1%) rotate(-4deg) scale(.98);}
+  88%{transform:translate(-.5%,.4%) rotate(1.5deg) scale(1.01);}
+  100%{transform:translate(0,0) rotate(0deg) scale(1);opacity:1;box-shadow:0 8px 24px -8px rgba(0,0,0,.35);}
+}
+.paper-toss{animation:paperToss .9s cubic-bezier(.22,.8,.25,1) both;transform-origin:center center;will-change:transform,opacity;}
+@media (prefers-reduced-motion: reduce){ .paper-toss{ animation:none; } }
 .paper .masthead{text-align:center;border-bottom:3px double #2a2118;padding-bottom:8px;margin-bottom:10px;}
 .paper .masthead h2{font-family:Georgia,serif;font-weight:700;font-size:2rem;letter-spacing:4px;color:#171310;}
 .paper .dateline{display:flex;justify-content:space-between;font-size:.7rem;letter-spacing:1px;color:#5b4f42;margin-top:6px;}
@@ -5279,7 +5288,7 @@ function showHeadline(){
   const pp = S.papers[0];
   if(!pp) return;
   modal(`
-    <div class="paper" style="padding:14px 12px">
+    <div class="paper paper-toss" style="padding:14px 12px">
       <div class="masthead"><h2>SAHA POSTASI</h2>
         <div class="dateline"><span>${pp.season}</span><span>${pp.week}. HAFTA</span><span>SON BASKI</span></div></div>
       <div class="kicker">${pp.kicker}</div>
@@ -5298,7 +5307,10 @@ function makePaper(wk){
   const res = S.results.filter(r=>r.week===wk);
   const top = sortTable().slice(0,5);
   const bottom = sortTable().slice(-3);
-  const my = res.find(r=>r.h===S.p.team||r.a===S.p.team);
+  const myMatches = res.filter(r=>r.h===S.p.team||r.a===S.p.team);
+  // Aynı hafta birden fazla maç oynanmışsa (kupa haftaları vb.) manşete ligi al, diğerlerini haber olarak ekle.
+  const my = myMatches.find(r=>r.comp==='lig') || myMatches[0];
+  const myOthers = myMatches.filter(r=>r!==my);
   const wkNews = S.news.filter(n=>n.w===wk);
   const p=S.p;
   let kicker='SÜPER LİG', headline='', lead='';
@@ -5398,6 +5410,18 @@ function makePaper(wk){
   const stars = weeklyStars(wk);
   if(stars.length) arts.push({t: pick(['Haftanın Yıldızları','Formda İsimler','Öne Çıkanlar']),
     b: stars.map(s=>s.motm?`${s.name} (${s.team}) maçın adamı seçildi.`:`${s.name} (${s.team}) ${s.n} gol attı.`).join(' ')});
+
+  const COMP_NAME = {lig:'Lig', kupa:'Türkiye Kupası', euro:'Avrupa Ligi', euroko:'Avrupa Kupası eleme', milli:'Milli Takım'};
+  myOthers.forEach(r=>{
+    const home = r.h===p.team;
+    const sc = home ? `${r.hs}-${r.as}` : `${r.as}-${r.hs}`;
+    const oppName = home ? r.a : r.h;
+    const cname = COMP_NAME[r.comp] || 'Diğer';
+    const won = home ? r.hs>r.as : r.as>r.hs;
+    const lost = home ? r.hs<r.as : r.as<r.hs;
+    const verb = won ? 'kazandı' : lost ? 'kaybetti' : 'berabere kaldı';
+    arts.push({t: cname, b: `${p.team}, aynı hafta oynanan ${cname} mücadelesinde ${oppName} ile karşılaştı ve ${sc}'lik skorla ${verb}.`});
+  });
 
   arts.push({t: pick(['Zirvenin hali','Şampiyonluk Yarışı','Puan Durumu']), b: pick([
     `${top[0].n} ${top[0].p} puanla lider. ${top[1]?`${top[1].n} ${top[1].p} puanla takipte.`:''} Averaj farkı şimdiden belirleyici olmaya başladı.`,
