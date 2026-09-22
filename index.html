@@ -1079,6 +1079,9 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
     <!-- ---------- LIFE ---------- -->
     <section class="view" id="v-life"><div id="lifeBox"></div></section>
 
+    <!-- ---------- TRANSFER ---------- -->
+    <section class="view" id="v-transfers"><div id="transferBox"></div></section>
+
     <!-- ---------- SETTINGS ---------- -->
     <section class="view" id="v-settings">
       <div class="card">
@@ -1136,6 +1139,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
   <button data-view="v-league"><i>🏆</i>Lig<span class="navdot" id="dot-league"></span></button>
   <button data-view="v-paper"><i>📰</i>Gazete<span class="navdot" id="dot-paper"></span></button>
   <button data-view="v-life"><i>🌆</i>Yaşam<span class="navdot" id="dot-life"></span></button>
+  <button data-view="v-transfers"><i>🔁</i>Transfer<span class="navdot" id="dot-transfer"></span></button>
   <button data-view="v-settings"><i>⚙️</i>Ayarlar</button>
 </nav>
 
@@ -2033,7 +2037,7 @@ function newPlayerObj(name, age, posKey, team, foot, num){
     lifePoints: 3, trainPoints: 2,
     injuryWeeks: 0, injuryName: null, injuryHistory: [], banWeeks: 0, yellowStreak: 0,
     caps: 0, natGoals: 0, natCalled: false, captain: false, love: 55,
-    sponsors: [], badges: [], badgesEligible: [], teammateRel: {}, tacticPref: 'dengeli', transferRequested: false,
+    sponsors: [], badges: [], badgesEligible: [], teammateRel: {}, tacticPref: 'dengeli', transferRequested: false, transferTarget: null,
     season:{apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,ratingSum:0,cleanSheet:0,saves:0},
     career:{apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,trophies:[],seasons:[]}
   };
@@ -2213,7 +2217,7 @@ function addNews(text, tag='genel'){
    KAYIT
    ========================================================= */
 const SAVE_KEY = 'saha-kariyer-v3';
-const APP_VERSION = 'v3';
+const APP_VERSION = 'v3.1';
 function save(){
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){}
 }
@@ -2400,6 +2404,7 @@ function render(){
     case 'v-league': renderTable(); renderFix(); renderCup(); renderStats(); renderEuro(); renderNat(); break;
     case 'v-paper':  renderPaper(); break;
     case 'v-life':   renderLife(); break;
+    case 'v-transfers': renderTransfers(); break;
     case 'v-settings': renderSettings(); break;
   }
   updateVideoButtons();
@@ -2430,6 +2435,7 @@ function updateNavBadges(){
   setNavDot('dot-career', careerN);
   // Yaşam: kullanılmayı bekleyen gün hakkı
   setNavDot('dot-life', p.role!=='Teknik Direktör' ? (p.lifePoints||0) : 0);
+  setNavDot('dot-transfer', (p.role!=='Teknik Direktör' && !p.transferRequested && interestedClubs().some(c=>c.interest>=0.72)) ? 1 : 0);
   // Kariyer alt sekmeleri: hangisinde yeni bir gelişme var?
   const isPlayer = p.role!=='Teknik Direktör';
   setNavDot('dot-train', isPlayer ? (p.trainPoints||0) : 0);
@@ -3097,8 +3103,7 @@ function renderRoom(){
   </div>
   <div class="card">
     <h3>Kulüp değişikliği</h3>
-    <p class="sub">${p.transferRequested?'Talebin yönetime iletildi. Sezon sonunda değerlendirilecek.':'Formayı hak ettiğini düşünüyorsan transfer talebinde bulunabilirsin.'}</p>
-    <button class="btn sm" style="margin-top:8px" ${p.transferRequested?'disabled':''} onclick="requestTransfer()">Transfer talebinde bulun</button>
+    <p class="sub">İlgilenen kulüpler, tahmini teklifler ve transfer talebi artık 🔁 <a href="#" onclick="go('v-transfers');return false;" style="color:var(--flood);font-weight:600;text-decoration:none">Transfer</a> sekmesinde.</p>
   </div>`;
 }
 function chatMate(name){
@@ -3134,10 +3139,109 @@ function talkCoach(){
   }
   save(); render();
 }
-function requestTransfer(){
-  S.p.transferRequested = true; S.p.trust = clamp(S.p.trust-5);
-  addNews(`${S.p.name} kulüp yönetiminden transfer izni istedi.`,'transfer');
-  toast('Talebin iletildi.'); save(); render();
+function requestTransfer(teamName){
+  S.p.transferRequested = true; S.p.transferTarget = teamName || null; S.p.trust = clamp(S.p.trust-5);
+  addNews(teamName ? `${S.p.name}, ${teamName}'a transfer olmak için kulüp yönetiminden izin istedi.` : `${S.p.name} kulüp yönetiminden transfer izni istedi.`,'transfer');
+  toast(teamName ? `${teamName}'a talebin iletildi.` : 'Talebin iletildi.'); save(); render();
+}
+
+/* ---------- TRANSFER PAZARI ---------- */
+function marketValue(){
+  const p = S.p;
+  const ovr = userOverall();
+  const base = Math.pow(Math.max(ovr-38,1), 2.15) * 260;
+  const ageFactor = p.age<=22 ? 1.4 : p.age<=25 ? 1.25 : p.age<=28 ? 1.05 : p.age<=31 ? 0.8 : p.age<=34 ? 0.55 : 0.35;
+  const fameFactor = 1 + (p.fame||0)/260;
+  const val = Math.round(base * ageFactor * fameFactor / 5000) * 5000;
+  return clamp(val, 150000, 95000000);
+}
+// Kulübün maaş bütçesi: büyük/güçlü kulüpler çok daha yüksek ücret öder, küçük kulüpler daha az (gerçekteki gibi)
+function teamBudgetFactor(t){
+  return Math.pow(t.s/72, 2.1);
+}
+// Kulüp + oyuncu adına bağlı sabit (deterministik) 0-1 sayısı: her render'da değişmez ama kulüpten kulübe farklıdır
+function clubOfferSeed(t){
+  const str = t.n + '|' + (S && S.p ? S.p.name : '');
+  let h = 0;
+  for(let i=0;i<str.length;i++) h = (h*31 + str.charCodeAt(i)) | 0;
+  return (Math.abs(h) % 1000) / 1000;
+}
+// Kulübün teklif edeceği sözleşme süresi: yaşa, ilgiye ve kulübe özgü sabit sapmaya göre
+function offerYearsFor(t, interest, age){
+  let years = age<=23 ? 4 : age<=27 ? 3 : age<=31 ? 2 : 1;
+  if(interest>=0.72) years++;
+  else if(interest<0.3) years = Math.max(1, years-1);
+  const seed = clubOfferSeed(t);
+  if(seed>0.7) years++;
+  else if(seed<0.25) years = Math.max(1, years-1);
+  return clamp(years, 1, 5);
+}
+function interestedClubs(){
+  const p = S.p;
+  const myS = teamStrength(p.team);
+  const ovr = userOverall();
+  return TEAMS.filter(t=>t.n!==p.team).map(t=>{
+    const gap = t.s - myS;
+    const interest = clamp(0.5 + (ovr-(t.s-6))/40 + (p.fame||0)/220 - Math.max(gap,0)*0.03, 0.02, 0.97);
+    const years = offerYearsFor(t, interest, p.age);
+    const budgetFactor = teamBudgetFactor(t);
+    const seed = clubOfferSeed(t);
+    const variance = 0.88 + seed*0.34; // kulübe özgü ~%12 sapma — sabit kalır, her render'da değişmez
+    const wage = Math.round(p.wage * (1 + Math.max(gap,0)/40) * budgetFactor * variance / 500) * 500;
+    const totalValue = Math.round(wage*40*years/5000)*5000;
+    return {t, gap, interest, years, wage, totalValue};
+  }).sort((a,b)=>b.interest-a.interest).slice(0,6);
+}
+function interestLabel(v){
+  if(v>=0.72) return {t:'Seni yakından takip ediyor', c:'var(--good)'};
+  if(v>=0.5)  return {t:'Raporların masasında', c:'var(--flood)'};
+  if(v>=0.3)  return {t:'Uzun vadede düşünüyor', c:'var(--warn)'};
+  return {t:'Şimdilik uzak ihtimal', c:'var(--dim)'};
+}
+function renderTransfers(){
+  const p = S.p;
+  const box = $('transferBox'); if(!box) return;
+  if(p.role==='Teknik Direktör'){
+    box.innerHTML = `<div class="card"><h3>Transfer</h3>
+      <p class="sub">Teknik direktör olarak transferleri burada değil, kulüp yönetimi ekranından takip ediyorsun.</p></div>`;
+    return;
+  }
+  const myTeam = TEAMS.find(t=>t.n===p.team);
+  const ovr = userOverall();
+  const annualEst = Math.round(p.wage * 40 / 5000) * 5000;
+  const mv = marketValue();
+  const clubs = interestedClubs();
+  box.innerHTML = `
+  <div class="card">
+    <h3>Senin durumun</h3>
+    <div class="statbox">
+      <div class="spread"><span class="sub">Kulüp</span><b>${kitDot(p.team)}${p.team} <span style="color:var(--dim);font-weight:600">(${myTeam?myTeam.s:teamStrength(p.team)})</span></b></div>
+      <div class="spread"><span class="sub">Genel güç</span><b>${ovr}</b></div>
+      <div class="spread"><span class="sub">Kalan sözleşme</span><b>${p.contractYears} yıl</b></div>
+      <div class="spread"><span class="sub">Maç başı ücret</span><b>${TL(p.wage)}</b></div>
+      <div class="spread"><span class="sub">Tahmini yıllık kazanç</span><b>${TL(annualEst)}</b></div>
+      <div class="spread"><span class="sub">Tahmini piyasa değeri</span><b>${TL(mv)}</b></div>
+    </div>
+    ${p.transferRequested
+      ? `<p class="sub" style="margin-top:8px"><b>${p.transferTarget || 'seçtiğin kulübe'}</b>'e gönderdiğin talep yönetime iletildi, sezon sonunda değerlendirilecek.</p>`
+      : `<p class="sub" style="margin-top:8px">Aşağıdaki ilgilenen kulüplerden birini seçip talep gönderebilirsin.</p>`}
+  </div>
+  <div class="card">
+    <h3>İlgilenen kulüpler</h3>
+    <p class="sub">Performansına ve ününe göre seni izleyen kulüpler. Bir kulübe talep gönderirsen gerçek teklif sezon sonu özetinde gelir.</p>
+    ${clubs.map(c=>{
+      const lb = interestLabel(c.interest);
+      const isTarget = p.transferRequested && p.transferTarget===c.t.n;
+      return `<div class="statbox"${isTarget?' style="border-color:var(--flood)"':''}>
+        <div class="spread"><b>${kitDot(c.t.n)}${c.t.n}</b><span class="sub">Güç ${c.t.s}</span></div>
+        <div class="spread" style="margin-top:4px"><span class="sub">Tahmini maç başı teklif</span><b>${TL(c.wage)}</b></div>
+        <div class="spread" style="margin-top:2px"><span class="sub">Teklif edilen sözleşme</span><b>${c.years} yıl</b></div>
+        <div class="spread" style="margin-top:2px"><span class="sub">Tahmini toplam sözleşme değeri</span><b>${TL(c.totalValue)}</b></div>
+        <div class="sub" style="margin-top:4px;color:${lb.c};font-weight:600">${lb.t}</div>
+        <button class="btn sm block" style="margin-top:8px" ${p.transferRequested?'disabled':''} onclick="requestTransfer('${c.t.n.replace(/'/g,"\\'")}')">${isTarget?'✅ Talep gönderildi':'Bu kulübe talep gönder'}</button>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 /* ---------- SPONSORLAR ---------- */
@@ -5814,24 +5918,36 @@ function showSeasonSummary(tbl, champ, scorer, avg){
   const ovr = userOverall();
   let offer = null;
   if((avg>=7.0 && p.season.apps>=12) || p.transferRequested){
-    const better = TEAMS.filter(t=>t.s > (TEAMS.find(x=>x.n===p.team).s - (p.transferRequested?3:-2))).sort((a,b)=>b.s-a.s);
-    if(better.length && chance(p.transferRequested?0.85:0.7)) offer = pick(better.slice(0,5));
+    if(p.transferRequested && p.transferTarget){
+      const target = TEAMS.find(t=>t.n===p.transferTarget && t.n!==p.team);
+      if(target && chance(0.72)) offer = target;
+    }
+    if(!offer){
+      const better = TEAMS.filter(t=>t.s > (TEAMS.find(x=>x.n===p.team).s - (p.transferRequested?3:-2))).sort((a,b)=>b.s-a.s);
+      if(better.length && chance(p.transferRequested?0.85:0.7)) offer = pick(better.slice(0,5));
+    }
   }
   const newWage = Math.round(p.wage * (1 + (avg-6.4)*0.16 + (p.season.goals>10?0.12:0)));
   txt += `<div class="statbox"><b>Sözleşme</b><div class="sub">Yeni maç ücreti teklifi: ${TL(Math.max(newWage,p.wage))}</div></div>`;
   if(offer){
+    // teklif veren kulübün gerçek bütçesine göre ücret, ilgisine ve yaşına göre sözleşme süresi
+    const offerWage = Math.round(newWage * teamBudgetFactor(offer) / 500) * 500;
+    const offerYears = offerYearsFor(offer, 0.8, p.age);
     txt += `<div class="statbox" style="border-color:var(--flood)"><b>Transfer teklifi: ${offer.n}</b>
-      <div class="sub">Daha güçlü bir kadro, daha yüksek ücret (${TL(Math.round(newWage*1.6))}). Ama forma rekabeti sert.</div>
+      <div class="sub">Daha güçlü bir kadro, daha yüksek ücret (${TL(offerWage)}) — ${offerYears} yıllık sözleşme. Ama forma rekabeti sert.</div>
       <div class="row" style="margin-top:8px">
-        <button class="btn primary sm" onclick="nextSeason('${offer.n}',${Math.round(newWage*1.6)})">Kabul et</button>
+        <button class="btn primary sm" onclick="nextSeason('${offer.n}',${offerWage},${offerYears})">Kabul et</button>
         <button class="btn sm" onclick="nextSeason(null,${Math.max(newWage,p.wage)})">Kulübümde kalayım</button>
       </div></div>`;
   } else {
+    if(p.transferRequested){
+      txt += `<div class="statbox"><div class="sub">${p.transferTarget?`<b>${p.transferTarget}</b>'e gönderdiğin talep`:'Gönderdiğin transfer talebi'} bu sezon sonuçsuz kaldı, kulüpten somut bir teklif gelmedi.</div></div>`;
+    }
     txt += `<button class="btn primary block" style="margin-top:12px" onclick="nextSeason(null,${Math.max(newWage,p.wage)})">Yeni sezona başla</button>`;
   }
   modal(txt);
 }
-function nextSeason(newTeam, newWage){
+function nextSeason(newTeam, newWage, newYears){
   closeModal();
   const p = S.p;
   // kariyer arşivi
@@ -5848,7 +5964,7 @@ function nextSeason(newTeam, newWage){
   p.wage = newWage; p.goalBonus = Math.round(newWage*0.4);
   p.age++;
   if(newTeam){
-    p.contractYears = 3;
+    p.contractYears = clamp(newYears||3, 1, 5);
   } else {
     p.contractYears = Math.max(0, p.contractYears - 1);
     if(p.contractYears === 0){
@@ -5871,7 +5987,7 @@ function nextSeason(newTeam, newWage){
   });
   p.season = {apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,ratingSum:0,cleanSheet:0,saves:0};
   p.fitness=100; p.injuryWeeks=0; p.injuryName=null; p.banWeeks=0; p.yellowStreak=0; p.lifePoints=3; p.trainPoints=2;
-  p.transferRequested=false; p.captain=false; p._hattrick = p._hattrick||false;
+  p.transferRequested=false; p.transferTarget=null; p.captain=false; p._hattrick = p._hattrick||false;
   p._weeklyMotm=false;
 
   // yeni sezon
