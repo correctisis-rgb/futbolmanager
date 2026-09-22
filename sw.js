@@ -4,16 +4,22 @@
    (manifest, ikonlar) için "cache-first + arka planda güncelle".
    Reklam/analitik ağ isteklerine hiç dokunulmaz, hep ağdan gider.
 
-   ÖNEMLİ — GÜNCELLEME NASIL ÇALIŞIR:
-   Tarayıcı yeni bir sürüm var mı diye bakarken sw.js dosyasının
-   byte'larını eski kayıtlı sw.js ile karşılaştırır. Bu dosyanın
-   içeriği hiç değişmezse (sadece index.html değişmiş olsa bile)
-   tarayıcı yeni bir service worker kurulumu (install) TETİKLEMEZ ve
-   kullanıcı güncellemeyi asla görmez. Bu yüzden her deploy'da
-   SW_VERSION değerini artırın (v1 -> v2 -> v3 ...). Sadece SW_VERSION
-   satırını değiştirmek bile dosyanın byte'larını değiştirdiği için
-   yeterlidir. */
-const SW_VERSION = 'v3';                 // <-- HER YAYINDA (DEPLOY) ARTIRIN
+   GÜNCELLEME BANNER'I ARTIK BU DOSYAYA BAĞLI DEĞİL:
+   index.html içindeki checkHtmlVersionUpdate() fonksiyonu, index.html'i
+   düzenli aralıklarla ağdan (no-store) tekrar indirip içindeki
+   APP_VERSION'ı okuyup çalışan sürümle karşılaştırıyor. Yani "Yeni sürüm
+   var" banner'ının çıkması için SADECE index.html'deki APP_VERSION'ı
+   artırmak yeterli — bu dosyaya (sw.js) dokunmanıza gerek yok.
+
+   Bu dosyayı ne zaman değiştirmeniz gerekir: sadece CORE listesindeki
+   statik dosyaları (manifest.json, ikonlar) da değiştirdiyseniz ve
+   bunların eski cache'teki kopyalarının hemen atılıp yeniden indirilmesini
+   istiyorsanız, aşağıdaki SW_VERSION'ı artırın (index.html'deki
+   APP_VERSION ile aynı tutmak zorunlu değil, sadece pratik bir kural).
+   index.html zaten "network-first" çekildiği için, sadece index.html'i
+   değiştirdiğiniz normal deploy'larda bu dosyayı hiç değiştirmenize
+   gerek yok. */
+const SW_VERSION = 'v3.8';                // <-- sadece manifest/ikon gibi statik dosyalar değiştiyse artırın
 const CACHE = 'saha-kariyer-' + SW_VERSION;
 
 const CORE = [
