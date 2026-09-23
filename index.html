@@ -1160,8 +1160,8 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
   <button data-view="v-match" class="on"><i>⚽</i>Maç<span class="navdot" id="dot-match"></span></button>
   <button data-view="v-career"><i>👤</i>Kariyer<span class="navdot" id="dot-career"></span></button>
   <button data-view="v-league"><i>🏆</i>Lig<span class="navdot" id="dot-league"></span></button>
-  <button data-view="v-transfers"><i>🔁</i>Transfer<span class="navdot" id="dot-transfer"></span></button>
-  <button data-view="v-life"><i>🌆</i>Yaşam<span class="navdot" id="dot-life"></span></button>
+  <button data-view="v-transfers" id="nav-transfer"><i id="nav-transfer-icon">🔁</i><span id="nav-transfer-label">Transfer</span><span class="navdot" id="dot-transfer"></span></button>
+  <button data-view="v-life" id="nav-life"><i>🌆</i>Yaşam<span class="navdot" id="dot-life"></span></button>
   <button data-view="v-paper"><i>📰</i>Gazete<span class="navdot" id="dot-paper"></span></button>
   <button data-view="v-settings"><i>⚙️</i>Ayarlar</button>
 </nav>
@@ -2274,7 +2274,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v5.4';
+const APP_VERSION = 'v5.5';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2541,6 +2541,7 @@ function render(){
   $('t-money').textContent = TL(p.money);
   $('t-ovr').textContent = 'GÜÇ ' + userOverall();
   updateNavBadges();
+  updateNavForRole();
   updateAdBanner();
 
   if(S.inMatch) return;   // maç ekranı kendi kendini günceller
@@ -2593,6 +2594,42 @@ function updateNavBadges(){
   setNavDot('dot-sponsor-tab', isPlayer ? SPONSORS.filter(s=>p.fame>=s.req && !p.sponsors.includes(s.id)).length : 0);
   setNavDot('dot-contract-tab', isPlayer && canJubilee(p) ? 1 : 0);
   setNavDot('dot-badges-tab', (p.badgesEligible||[]).length);
+}
+
+/* ---------- Jübile sonrası menü/tab düzeni ----------
+   Teknik direktörlüğe geçince artık oyuncuya özel ekranların (antrenman,
+   sağlık, soyunma odası, mağaza, stadyum, sponsorlar, yaşam) hiçbir
+   karşılığı kalmıyor; Transfer sekmesi ise kulüp yönetimine dönüşüyor.
+   Bu fonksiyon her render'da nav ve Kariyer alt sekmelerini role göre
+   günceller — jübile öncesi/sonrası state'ini elle senkronize etmeye
+   gerek kalmasın diye. */
+const MANAGER_HIDDEN_CAREER_PANES = ['c-train','c-health','c-room','c-shop','c-stad','c-sponsor'];
+function updateNavForRole(){
+  if(!S) return;
+  const isManager = S.p.role==='Teknik Direktör';
+
+  // Alt nav: Transfer → Kulüp Yönetimi, Yaşam sekmesi tamamen kalkar
+  const navTransferIcon = $('nav-transfer-icon'), navTransferLabel = $('nav-transfer-label');
+  if(navTransferIcon) navTransferIcon.textContent = isManager ? '📋' : '🔁';
+  if(navTransferLabel) navTransferLabel.textContent = isManager ? 'Kulüp' : 'Transfer';
+  const navLife = $('nav-life');
+  if(navLife) navLife.style.display = isManager ? 'none' : '';
+  if(isManager && currentView==='v-life') go('v-match');
+
+  // Kariyer alt sekmeleri: oyuncuya özel olanlar gizlenir
+  const tabsWrap = document.querySelector('.tabs[data-tabs="career"]');
+  if(tabsWrap){
+    let activeHidden = false;
+    tabsWrap.querySelectorAll('button[data-pane]').forEach(btn=>{
+      const hide = isManager && MANAGER_HIDDEN_CAREER_PANES.includes(btn.dataset.pane);
+      btn.style.display = hide ? 'none' : '';
+      if(hide && btn.classList.contains('on')) activeHidden = true;
+    });
+    if(activeHidden){
+      const profileBtn = tabsWrap.querySelector('button[data-pane="c-profile"]');
+      if(profileBtn) profileBtn.click();
+    }
+  }
 }
 
 /* ---------- HUB ---------- */
@@ -3021,6 +3058,7 @@ const PHYSIO_COST = 25000;
 const JUBILEE_SEASONS = 1;
 const JUBILEE_MIN_AGE = 19;
 function canJubilee(p){
+  if(p.role==='Teknik Direktör') return false; // zaten jübile yaptıysa tekrar aktif görünmesin
   return (p.career.seasons.length >= JUBILEE_SEASONS) && p.age >= JUBILEE_MIN_AGE;
 }
 function physio(){
@@ -3483,14 +3521,141 @@ function interestLabel(v){
   if(v>=0.3)  return {t:'Uzun vadede düşünüyor', c:'var(--warn)'};
   return {t:'Şimdilik uzak ihtimal', c:'var(--dim)'};
 }
+/* =========================================================
+   KULÜP YÖNETİMİ (teknik direktör modu)
+   ========================================================= */
+function squadAvgOvr(name){
+  const sq = S.squads[name];
+  if(!sq || !sq.length) return teamStrength(name);
+  return sq.reduce((s,x)=>s+x.ovr,0)/sq.length;
+}
+// Bonservis değeri: userOverall tabanlı marketValue()'ya benzer ama
+// AI oyuncuları için (yaş/ün olmadan) sadeleştirilmiş hâli.
+function playerValue(ovr){
+  const base = Math.pow(Math.max(ovr-38,1), 2.15) * 180;
+  return clamp(Math.round(base/5000)*5000, 75000, 40000000);
+}
+function sellPriceFor(ovr){ return Math.round(playerValue(ovr)*0.7/5000)*5000; }
+function ensureMarketPool(){
+  const key = S.season+'_'+S.week;
+  if(S.marketPoolKey === key && S.marketPool) return;
+  S.marketPoolKey = key;
+  const myOvr = Math.round(squadAvgOvr(S.p.team));
+  S.marketPool = [];
+  for(let i=0;i<4;i++){
+    const posKey = pick(POSITIONS).k;
+    const grp = posByKey(posKey).grp;
+    const ovr = clamp(Math.round(myOvr + ri(-10,14)), 40, 92);
+    S.marketPool.push({id:'m'+S.week+'_'+i, name:randName(), posKey, grp, ovr, num:ri(2,29), price:playerValue(ovr)});
+  }
+}
+const MIN_SQUAD_SIZE = 11; // ilk 11'i doldurmak için gereken asgari kadro
+function sellClubPlayer(idx){
+  const p = S.p, sq = S.squads[p.team];
+  const pl = sq[idx]; if(!pl || pl.isUser) return;
+  if(sq.length<=MIN_SQUAD_SIZE) return toast(`Kadron ${MIN_SQUAD_SIZE} kişiye düştü, önce transfer almadan satamazsın.`);
+  const income = sellPriceFor(pl.ovr);
+  S.clubBudget = (S.clubBudget||0) + income;
+  sq.splice(idx,1); // yerine kimse üretilmiyor — kadro küçülüyor, istersen pazardan doldurursun
+  // ilk 11'den biri gittiyse, yedekten en güçlüsünü onun yerine ilk 11'e çek
+  if(pl.on){
+    const bench = sq.filter(x=>!x.on);
+    if(bench.length){
+      const promote = bench.reduce((a,b)=> a.ovr>=b.ovr?a:b);
+      promote.on = true; promote.slot = pl.slot;
+    }
+  }
+  addNews(`${p.team}, ${pl.name} oyuncusunu ${TL(income)} karşılığında sattı.`,'transfer');
+  toast(`${pl.name} satıldı: +${TL(income)}`);
+  save(); render();
+}
+function buyClubPlayer(id){
+  const p = S.p;
+  ensureMarketPool();
+  const mp = S.marketPool.find(x=>x.id===id); if(!mp) return;
+  if((S.clubBudget||0) < mp.price) return toast('Bütçe yetersiz.');
+  const sq = S.squads[p.team];
+  const a = {...TEMPLATE[mp.posKey]};
+  const diff = mp.ovr - 70;
+  for(const k in a) a[k] = clamp(Math.round(a[k]+diff*0.85),25,96);
+  const starterCount = sq.filter(x=>x.on).length;
+  const newPl = {name:mp.name, posKey:mp.posKey, attrs:a, ovr:mp.ovr,
+    stamina:100, goals:0, assists:0, yellow:0, sub:false, num:mp.num, team:p.team};
+  if(sq.length < 18){
+    // kadroda yer var — boşluğa ekleniyor; ilk 11 eksikse doğrudan ilk 11'e giriyor
+    newPl.on = starterCount<11; newPl.slot = posByKey(mp.posKey).slot;
+    sq.push(newPl);
+    addNews(`${p.team}, ${mp.name} transferini ${TL(mp.price)} bonservisle tamamladı.`,'transfer');
+    toast(`${mp.name} transfer edildi!`);
+  } else {
+    // kadro dolu (18 kişi) — aynı mevkideki en zayıfın yerine giriyor
+    const candidates = sq.filter(x=>!x.isUser && posByKey(x.posKey).grp===mp.grp);
+    const pool = candidates.length ? candidates : sq.filter(x=>!x.isUser);
+    const weakest = pool.reduce((a,b)=> a.ovr<=b.ovr?a:b);
+    const idx = sq.indexOf(weakest);
+    newPl.on = weakest.on; newPl.slot = weakest.slot;
+    sq.splice(idx,1,newPl);
+    addNews(`${p.team}, ${mp.name} transferini ${TL(mp.price)} bonservisle tamamladı.`,'transfer');
+    toast(`${mp.name} transfer edildi! ${weakest.name} kadrodan ayrıldı.`);
+  }
+  S.clubBudget -= mp.price;
+  S.marketPool = S.marketPool.filter(x=>x.id!==id);
+  save(); render();
+}
+function renderClubManagement(){
+  const p = S.p;
+  const box = $('transferBox'); if(!box) return;
+  ensureMarketPool();
+  const sq = S.squads[p.team]||[];
+  const baseT = TEAMS.find(x=>x.n===p.team);
+  const avgOvr = Math.round(squadAvgOvr(p.team));
+  const eff = teamStrength(p.team);
+  const diff = baseT ? eff-baseT.s : 0;
+  const rank = sortTable().findIndex(t=>t.n===p.team)+1;
+  const rows = sq.map((pl,idx)=>({pl,idx})).sort((a,b)=> (b.pl.on-a.pl.on) || b.pl.ovr-a.pl.ovr);
+  box.innerHTML = `
+  <div class="card">
+    <h3>📋 Kulüp Yönetimi <span class="chip gold">${TL(S.clubBudget||0)}</span></h3>
+    <div class="statbox">
+      <div class="spread"><span class="sub">Kulüp</span><b>${kitDot(p.team)}${p.team}</b></div>
+      <div class="spread"><span class="sub">Lig sırası</span><b>${rank}. sıra</b></div>
+      <div class="spread"><span class="sub">Kadro ortalaması</span><b>${avgOvr}</b></div>
+      <div class="spread"><span class="sub">Takım gücü</span><b>${eff}${diff!==0?` <span style="color:${diff>0?'var(--good)':'var(--bad)'}">(${diff>0?'+':''}${diff})</span>`:''}</b></div>
+    </div>
+    <p class="sub" style="margin-top:8px">Transferlerle kadronu güçlendirdikçe takımının maçlardaki gerçek gücü de değişir.</p>
+  </div>
+  <div class="card">
+    <h3>Kadro <span class="sub">${sq.length} oyuncu</span></h3>
+    ${sq.length<=MIN_SQUAD_SIZE?`<p class="sub" style="margin-bottom:8px">Kadron ${MIN_SQUAD_SIZE} kişiye indi — ilk 11'i doldurmak için daha fazla satamazsın, önce pazardan takviye al.</p>`:''}
+    ${rows.map(({pl,idx})=>`
+      <div class="statbox" style="margin-bottom:6px">
+        <div class="shoprow">
+          <div class="sinfo"><b>${pl.name}</b><div class="sub">#${pl.num} · ${posByKey(pl.posKey).short} · ${pl.on?'İlk 11':'Yedek'}</div></div>
+          <div style="text-align:right">
+            <div class="chip ovr" style="margin-bottom:4px">${pl.ovr}</div><br>
+            ${pl.isUser?'<span class="sub">Sen</span>':`<button class="btn sm red" ${sq.length<=MIN_SQUAD_SIZE?'disabled':''} onclick="sellClubPlayer(${idx})">Sat · ${TL(sellPriceFor(pl.ovr))}</button>`}
+          </div>
+        </div>
+      </div>`).join('')}
+  </div>
+  <div class="card">
+    <h3>Transfer Pazarı</h3>
+    <p class="sub" style="margin-bottom:8px">Bu haftaki bonservis fırsatları. Liste her hafta yenilenir.</p>
+    ${S.marketPool.length ? S.marketPool.map(mp=>`
+      <div class="statbox" style="margin-bottom:6px">
+        <div class="shoprow">
+          <div class="sinfo"><b>${mp.name}</b><div class="sub">${posByKey(mp.posKey).short} · Güç ${mp.ovr}</div></div>
+          <div style="text-align:right">
+            <button class="btn sm ${(S.clubBudget||0)>=mp.price?'primary':''}" ${(S.clubBudget||0)<mp.price?'disabled':''} onclick="buyClubPlayer('${mp.id}')">${TL(mp.price)}</button>
+          </div>
+        </div>
+      </div>`).join('') : '<p class="sub">Pazarda kimse yok, gelecek hafta tekrar bak.</p>'}
+  </div>`;
+}
 function renderTransfers(){
   const p = S.p;
   const box = $('transferBox'); if(!box) return;
-  if(p.role==='Teknik Direktör'){
-    box.innerHTML = `<div class="card"><h3>Transfer</h3>
-      <p class="sub">Teknik direktör olarak transferleri burada değil, kulüp yönetimi ekranından takip ediyorsun.</p></div>`;
-    return;
-  }
+  if(p.role==='Teknik Direktör'){ renderClubManagement(); return; }
   const myTeam = TEAMS.find(t=>t.n===p.team);
   const ovr = userOverall();
   const annualEst = Math.round(p.wage * 40 / 5000) * 5000;
@@ -3653,12 +3818,14 @@ function renderContract(){
   </div>
   <div class="card">
     <h3>Kariyer kararı</h3>
+    ${p.role==='Teknik Direktör' ? `<p class="sub">Artık ${p.team} teknik direktörüsün. Oyunculuk kariyerin geride kaldı.</p>` : `
     <p class="sub">${canJubilee(p)?'Kramponları asıp teknik direktörlüğe geçebilirsin.':'Yeterince sezon oynayıp yaş şartını doldurunca kramponları asıp teknik direktör olabilirsin.'}</p>
     ${canJubilee(p)?'':`<div class="statbox" style="margin-top:8px">
       ${reqBar('Oynanan sezon', p.career.seasons.length, JUBILEE_SEASONS, p.career.seasons.length, `≥${JUBILEE_SEASONS}`)}
       ${reqBar('Yaş', p.age, JUBILEE_MIN_AGE, p.age, `≥${JUBILEE_MIN_AGE}`)}
     </div>`}
     <button class="btn red sm" style="margin-top:8px" ${canJubilee(p)?'':'disabled'} onclick="confirmJubilee()">👔 Jübile yap, Teknik Direktör ol</button>
+    `}
   </div>`;
 }
 function doJubilee(){
@@ -3674,6 +3841,16 @@ function doJubilee(){
       stamina:100, on:true, goals:0, assists:0, yellow:0, sub:false, team:p.team, num:ri(2,29)});
   }
   p.role = 'Teknik Direktör';
+  // Kulüp yönetimi: transferlerin takım gücüne gerçek etkisi olması için
+  // jübile anındaki kadro ortalamasını "referans" olarak kaydediyoruz —
+  // teamStrength() bundan sonraki sapmayı (avg - baseline) t.s'ye ekliyor.
+  S.squadBaseline = S.squadBaseline || {};
+  if(S.squads[p.team] && S.squads[p.team].length){
+    S.squadBaseline[p.team] = S.squads[p.team].reduce((s,x)=>s+x.ovr,0)/S.squads[p.team].length;
+  }
+  const myClubT = TEAMS.find(x=>x.n===p.team);
+  S.clubBudget = Math.round((myClubT?teamBudgetFactor(myClubT):1) * 9000000/50000)*50000;
+  S.marketPoolKey = null; S.marketPool = [];
   addNews(`${p.name} kramponlarını astı ve ${p.team} teknik direktörlüğüne getirildi.`,'genel');
   toast('Artık teknik direktörsün. Hafta hafta takımını yönet.');
   save(); go('v-match');
@@ -4066,9 +4243,18 @@ const TACTICS = {
   defans: {n:'Defansif ağırlıklı', bias:-7, atk:-0.03, def:0.05, note:'Az riskli, gol yeme ihtimali düşer.'}
 };
 function teamStrength(name){
-  const t = TEAMS.find(x=>x.n===name); if(t) return t.s;
-  const e = EURO_CLUBS.find(x=>x.n===name); if(e) return e.s;
-  return 76;
+  const t = TEAMS.find(x=>x.n===name);
+  const base = t ? t.s : ((EURO_CLUBS.find(x=>x.n===name)||{}).s ?? 76);
+  // Teknik direktörlük: kadroda transferle yapılan değişiklikler artık maç
+  // gücüne gerçekten yansısın. Sadece jübile anında "başlangıç" ortalaması
+  // kaydedilen kulüp için devreye girer (yani sadece kullanıcının kendi
+  // kulübü) — diğer tüm takımlar eskisi gibi sabit t.s kullanmaya devam eder.
+  if(typeof S!=='undefined' && S && S.squadBaseline && S.squadBaseline[name]!=null && S.squads && S.squads[name] && S.squads[name].length){
+    const avg = S.squads[name].reduce((s,x)=>s+x.ovr,0)/S.squads[name].length;
+    const delta = avg - S.squadBaseline[name];
+    return clamp(Math.round(base + delta), 40, 99);
+  }
+  return base;
 }
 function getSquadFor(name){
   if(S.squads[name]) return deepSquad(name);
@@ -6577,7 +6763,9 @@ function managerNextSeason(){
   S.cup = buildCup(p.team);
   S.results = []; S.scorers = {}; S.weekGoals = [];
   S.euro = null; S.national = buildNational();
-  TEAMS.forEach(t => S.squads[t.n] = makeSquad(t.n, t.s));
+  // Rakip kadroları tazelenir; kendi kulübümüzün kadrosu (yaptığımız
+  // transferlerle) korunur — yoksa her sezon başı sıfırlanırdı.
+  TEAMS.forEach(t => { if(t.n!==p.team) S.squads[t.n] = makeSquad(t.n, t.s); });
   addNews(`${S.seasonLabel} sezonu başladı. ${p.name} ${p.team} teknik direktörlüğüne devam ediyor.`,'lig');
   save(); go('v-match');
   toast('Yeni sezon başladı!');
