@@ -631,14 +631,14 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
 .toast.show{opacity:1;}
 
 .offline-banner{position:fixed;left:0;right:0;top:0;z-index:220;
-  padding:8px 14px;padding-top:calc(8px + env(safe-area-inset-top,0px));
+  padding:8px 14px;padding-top:calc(8px + max(22px, env(safe-area-inset-top,22px)));
   background:#7a4a06;color:#ffe9c2;font-size:.78rem;line-height:1.35;text-align:center;
   border-bottom:1px solid #a56a0e;
   transform:translateY(-100%);transition:transform .3s ease,top .3s ease;pointer-events:none;}
 .offline-banner.show{transform:translateY(0);pointer-events:auto;}
 
 .update-banner{position:fixed;left:0;right:0;top:0;z-index:221;
-  padding:8px 14px;padding-top:calc(8px + env(safe-area-inset-top,0px));
+  padding:8px 14px;padding-top:calc(8px + max(22px, env(safe-area-inset-top,22px)));
   background:#0e4429;color:#d9ffe9;font-size:.78rem;line-height:1.35;text-align:center;
   border-bottom:1px solid #1d7a43;
   display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
@@ -2274,7 +2274,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v5.2';
+const APP_VERSION = 'v5.3';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -3286,7 +3286,7 @@ function renderRoom(){
     ${p.captain?'':`<button class="btn sm ${canCaptain?'primary':''}" style="margin-top:8px" ${canCaptain?'':'disabled'} onclick="askCaptain()">Kaptanlığı iste</button>`}
     ${!canCaptain && !p.captain?`<div class="statbox" style="margin-top:8px">
       ${reqBar('Hoca güveni', p.trust, 72, Math.round(p.trust), '≥72')}
-      ${reqBar('Yaş', p.age, 22, p.age, '≥22')}
+      ${reqBar('Yaş', p.age, 19, p.age, '≥19')}
       ${reqBar('Sezondaki maç', p.season.apps, 6, p.season.apps, '≥6')}
     </div>`:''}
   </div>
