@@ -878,7 +878,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
 <body>
 <div id="update-banner" class="update-banner">
   <span id="update-banner-text">🚀 Oyunun yeni sürümü var!</span>
-  <button type="button" class="btn primary sm" onclick="applyUpdate()">Güncelle</button>
+  <button type="button" class="btn primary sm" onclick="applyUpdate()" title="Güncellemeden önce kariyerinin bir yedeği (.json) cihazına indirilir, bu normaldir.">Yedekle ve Güncelle</button>
 </div>
 <div id="offline-banner" class="offline-banner">📡 Çevrimdışısın — kariyerin cihazında kayıtlı, oynamaya devam edebilirsin. Reklam/ödül videoları bağlantı gelince tekrar çalışır.</div>
 
@@ -1135,7 +1135,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
         <div class="statbox">
           <div class="spread">
             <div><b>Sürüm</b><br><span class="sub" id="set-version">—</span></div>
-            <button class="btn sm" onclick="hardRefreshApp()">♻️ Güncelle</button>
+            <button class="btn sm" onclick="hardRefreshApp()">♻️ Yedekle&Güncelle</button>
           </div>
         </div>
         <p class="sub" style="margin-top:6px">Oyun takılıyor ya da güncellenmiyor gibi görünüyorsa bu, önbelleği temizleyip son sürümü indirir. Kariyerin silinmez.</p>
@@ -2274,7 +2274,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v5';
+const APP_VERSION = 'v5.1';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
