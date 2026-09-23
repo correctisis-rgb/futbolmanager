@@ -838,10 +838,11 @@ body,.card,.modal .box,nav#bottom,.paper,.statbox{transition:background-color .3
 .pcard-ovr b{font-family:'Barlow Condensed';font-size:1.3rem;font-weight:800;}
 .pcard-ovr small{font-size:.58rem;font-weight:700;letter-spacing:.4px;opacity:.85;}
 /* isim: ortada */
-.pcard-name{font-size:.8rem;font-weight:800;line-height:1.15;min-height:2.1em;display:flex;align-items:center;
-  justify-content:center;margin-top:4px;}
+.pcard-name{font-size:.95rem;font-weight:800;line-height:1.15;min-height:2.1em;display:flex;align-items:center;
+  justify-content:center;margin-top:2px;}
 .pcard-role{font-size:.6rem;opacity:.7;margin-top:-4px;}
-.pcard-tierword{font-size:.56rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.85;margin-top:5px;}
+.pcard-tierword{font-size:.98rem;font-weight:900;letter-spacing:.6px;text-transform:uppercase;opacity:1;
+  margin-top:-6px;margin-bottom:2px;line-height:1.05;}
 /* özellikler: altta */
 .pcard-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:2px 6px;width:100%;margin-top:auto;
   padding-top:5px;border-top:1px solid rgba(255,255,255,.18);}
@@ -849,39 +850,73 @@ body,.card,.modal .box,nav#bottom,.paper,.statbox{transition:background-color .3
 .pcard-stats b{font-size:.72rem;font-weight:800;}
 .pcard-stats span{font-size:.5rem;opacity:.75;letter-spacing:.3px;}
 .pcard-item .psell{width:100%;font-size:.72rem;padding:6px 4px;white-space:normal;line-height:1.2;}
+/* ---------- Satış / transfer damgası (stamp) ---------- */
+.pcard-stamp-layer{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;background:rgba(4,2,2,.4);border-radius:8px;opacity:0;animation:stampFadeIn .12s ease forwards;}
+.pcard-stamp{font-family:'Barlow Condensed','Barlow',sans-serif;font-weight:900;font-size:1.02rem;letter-spacing:.8px;
+  text-transform:uppercase;color:#ff6b6b;border:3px solid #ff5252;border-radius:8px;padding:6px 10px;
+  background:rgba(12,4,4,.6);box-shadow:0 0 18px rgba(255,82,82,.65),inset 0 0 10px rgba(255,82,82,.3);
+  text-shadow:0 0 8px rgba(255,82,82,.85);transform:rotate(-11deg) scale(2.3);opacity:0;
+  animation:stampHit .5s cubic-bezier(.22,1.6,.4,1) forwards;text-align:center;}
+.pcard-stamp.joined{color:#6bffb0;border-color:#34d399;box-shadow:0 0 18px rgba(52,211,153,.65),inset 0 0 10px rgba(52,211,153,.3);
+  text-shadow:0 0 8px rgba(52,211,153,.85);}
+@keyframes stampFadeIn{to{opacity:1;}}
+@keyframes stampHit{
+  0%{transform:rotate(-11deg) scale(2.6);opacity:0;}
+  55%{transform:rotate(-11deg) scale(.82);opacity:1;}
+  75%{transform:rotate(-11deg) scale(1.08);}
+  100%{transform:rotate(-11deg) scale(1);opacity:1;}
+}
 /* güç kademeleri: FUT usulü bronz/gümüş/altın/özel renklendirme */
 .pcard.tier-elite{background:linear-gradient(160deg,#ff5ec4,#8b5cf6 45%,#22d47a 100%);
   box-shadow:0 0 0 1px rgba(255,94,196,.4),0 0 16px rgba(139,92,246,.3);}
 .pcard.tier-elite .pcard-body{background:linear-gradient(165deg,#2a1140,#140a24 75%);color:#fdf2ff;}
 .pcard.tier-elite .pcard-ovr b,.pcard.tier-elite .pcard-name{color:#ff8fe0;}
+.pcard.tier-elite .pcard-tierword{color:#ffd8f7;
+  text-shadow:0 0 5px rgba(255,94,196,.9),0 0 12px rgba(139,92,246,.7),0 0 20px rgba(139,92,246,.35);}
 
 .pcard.tier-great{background:linear-gradient(160deg,#ffe27a,#caa42e 60%,#8a6a12 100%);
   box-shadow:0 0 0 1px rgba(255,210,74,.35),0 0 12px rgba(255,210,74,.2);}
 .pcard.tier-great .pcard-body{background:linear-gradient(165deg,#2b2308,#1c1706 75%);color:#fff6da;}
 .pcard.tier-great .pcard-ovr b,.pcard.tier-great .pcard-name{color:#ffd75e;}
+.pcard.tier-great .pcard-tierword{color:#ffe9a3;
+  text-shadow:0 0 5px rgba(255,210,74,.9),0 0 12px rgba(202,164,46,.6),0 0 18px rgba(202,164,46,.3);}
 
 .pcard.tier-good{background:linear-gradient(160deg,#eef2f7,#aab6c4 55%,#6b7887 100%);}
 .pcard.tier-good .pcard-body{background:linear-gradient(165deg,#20262d,#151a1f 75%);color:#eef2f6;}
 .pcard.tier-good .pcard-ovr b,.pcard.tier-good .pcard-name{color:#c9d3dc;}
+.pcard.tier-good .pcard-tierword{color:#f3f6f9;text-shadow:0 0 5px rgba(255,255,255,.6),0 0 10px rgba(170,182,196,.4);}
 
 .pcard.tier-pro{background:linear-gradient(160deg,#e2a765,#b3703a 55%,#7a481f 100%);}
 .pcard.tier-pro .pcard-body{background:linear-gradient(165deg,#2a1c10,#1b120a 75%);color:#f7e6d3;}
 .pcard.tier-pro .pcard-ovr b,.pcard.tier-pro .pcard-name{color:#e2a765;}
+.pcard.tier-pro .pcard-tierword{color:#f3caa0;text-shadow:0 0 5px rgba(226,167,101,.8),0 0 10px rgba(179,112,58,.4);}
 
 .pcard.tier-youth{background:linear-gradient(160deg,#7dd3fc,#3b82f6 55%,#1e3a8a 100%);
   box-shadow:0 0 0 1px rgba(96,165,250,.3),0 0 10px rgba(96,165,250,.18);}
 .pcard.tier-youth .pcard-body{background:linear-gradient(165deg,#0e1b33,#0a1424 75%);color:#e6f1ff;}
 .pcard.tier-youth .pcard-ovr b,.pcard.tier-youth .pcard-name{color:#7dd3fc;}
+.pcard.tier-youth .pcard-tierword{color:#bfe6ff;text-shadow:0 0 5px rgba(125,211,252,.8),0 0 10px rgba(59,130,246,.4);}
 .pcard.tier-youth .ptier{filter:none;}
 
 .pcard-item.bench .pcard{opacity:.72;}
 .pcard-item.bench .pcard.tier-elite,.pcard-item.bench .pcard.tier-great{opacity:.85;} /* yıldız oyuncu yedekte bile sönmesin */
 @media (prefers-reduced-motion:no-preference){
   .pcard.tier-elite{animation:pcardGlow 2.6s ease-in-out infinite;}
+  .pcard.tier-elite .pcard-tierword{animation:pcardTextGlow 2.6s ease-in-out infinite;}
+  .pcard.tier-great .pcard-tierword{animation:pcardTextGlowGold 2.6s ease-in-out infinite;}
 }
 @keyframes pcardGlow{
   0%,100%{box-shadow:0 0 0 1px rgba(255,94,196,.4),0 0 12px rgba(139,92,246,.25);}
   50%{box-shadow:0 0 0 1px rgba(255,94,196,.65),0 0 22px rgba(139,92,246,.5);}
+}
+@keyframes pcardTextGlow{
+  0%,100%{text-shadow:0 0 5px rgba(255,94,196,.9),0 0 12px rgba(139,92,246,.7),0 0 20px rgba(139,92,246,.35);}
+  50%{text-shadow:0 0 7px rgba(255,94,196,1),0 0 18px rgba(139,92,246,.95),0 0 30px rgba(139,92,246,.55);}
+}
+@keyframes pcardTextGlowGold{
+  0%,100%{text-shadow:0 0 5px rgba(255,210,74,.9),0 0 12px rgba(202,164,46,.6),0 0 18px rgba(202,164,46,.3);}
+  50%{text-shadow:0 0 7px rgba(255,210,74,1),0 0 18px rgba(202,164,46,.85),0 0 26px rgba(202,164,46,.5);}
 }
 @media (max-width:520px){
   .squad-grid{grid-template-columns:repeat(2,1fr);}
@@ -1499,6 +1534,19 @@ function toast(msg){
 }
 function modal(html){ $('modalBox').innerHTML = html; $('modal').classList.add('on'); }
 function closeModal(){ $('modal').classList.remove('on','fullscreen'); $('modalBox').innerHTML=''; }
+/* Kart üstüne "SATILDI" / "TAKIMA KATILDI" damgası vurup animasyonun bitmesini
+   bekledikten sonra asıl işlemi (satış/alım) çalıştırır. Kart artık DOM'da
+   yoksa (örn. liste arada değiştiyse) damga atlanır, işlem direkt çalışır. */
+function stampCard(wrapperEl, text, kind, done){
+  const pcard = wrapperEl ? wrapperEl.querySelector('.pcard') : null;
+  if(!pcard){ done(); return; }
+  const layer = document.createElement('div');
+  layer.className = 'pcard-stamp-layer';
+  layer.innerHTML = `<span class="pcard-stamp${kind==='joined'?' joined':''}">${text}</span>`;
+  pcard.appendChild(layer);
+  try{ Sfx.card(); }catch(e){}
+  setTimeout(done, 850);
+}
 
 // Kısa kırmızı ekran vinyeti — sakatlık anında hissedilir bir vurgu. Tek eleman, ~1.1sn sonra kendini kaldırır.
 function injuryFlash(){
@@ -2076,11 +2124,15 @@ const BADGES = [
 /* Teknik direktör iken listede yalnızca bu başarımlar görünür (bkz. visibleBadges) */
 const MANAGER_BADGE_IDS = ['bd57','bd58','bd59','bd60','bd61','bd62','bd63','bd64','bd65','bd66'];
 function visibleBadges(p){
-  if(p.role!=='Teknik Direktör') return BADGES;
-  // Teknik direktör olunca futbolcuyken kazanılanlar da dahil oyunculuk
-  // başarımları listeden tamamen kalkar; yalnızca teknik direktörlükle
-  // ilgili başarımlar görünür.
-  return BADGES.filter(b=> MANAGER_BADGE_IDS.includes(b.id));
+  if(p.role==='Teknik Direktör'){
+    // Teknik direktör olunca futbolcuyken kazanılanlar da dahil oyunculuk
+    // başarımları listeden tamamen kalkar; yalnızca teknik direktörlükle
+    // ilgili başarımlar görünür.
+    return BADGES.filter(b=> MANAGER_BADGE_IDS.includes(b.id));
+  }
+  // Henüz futbolcuyken (teknik direktörlüğe geçmeden) teknik direktör
+  // başarımları hiç görünmemeli — ulaşılması imkânsız olurlardı.
+  return BADGES.filter(b=> !MANAGER_BADGE_IDS.includes(b.id));
 }
 /* başarım şartı sağlandığında: sadece bildir, ödülü kariyerdeki "Başarımlar" sekmesinden elle topla */
 function checkBadges(){
@@ -2385,7 +2437,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v6.1';
+const APP_VERSION = 'v6.2';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2577,6 +2629,13 @@ function doRestore(payload){
   const doApply = ()=>{
     try{
       Object.keys(payload.data).forEach(k=>{ localStorage.setItem(k, payload.data[k]); });
+      // ÖNEMLİ: kariyer zaten başlamışsa hafızadaki eski S nesnesi hâlâ duruyor.
+      // Aşağıdaki location.reload() 'beforeunload' olayını tetikler ve o da
+      // (S varsa) save() çağırarak az önce yazdığımız yedeği eski kariyerle
+      // ezerdi — restore'un "başlamadan önce" çalışıp "başladıktan sonra"
+      // çalışmıyormuş gibi görünmesinin sebebi buydu. S'yi burada temizleyip
+      // beforeunload'ın tekrar kaydetmesini engelliyoruz.
+      S = null;
       toast('✅ Yedek yüklendi, kariyerin geri geldi.');
       closeModal();
       setTimeout(()=>location.reload(), 500);
@@ -3125,6 +3184,15 @@ function renderTrain(){
   </div>`;
 }
 let trainGame = null;
+// boşluk tuşu da DUR! butonuyla aynı işi yapsın; sayfanın kaymasını (default space-scroll) engelle,
+// tuşa basılı tutulunca (auto-repeat) birden fazla tetiklenmesin
+document.addEventListener('keydown', e=>{
+  if(!trainGame) return;
+  if(e.code==='Space' || e.key===' ' || e.key==='Spacebar'){
+    e.preventDefault();
+    if(!e.repeat) stopTrainGame();
+  }
+});
 function openTrainGame(k){
   const p=S.p;
   if(p.attrs[k]>=99) return toast(`${ATTR_LABEL[k]} zaten maksimum seviyede (99), daha fazla geliştirilemez.`);
@@ -3139,7 +3207,7 @@ function openTrainGame(k){
   const period = ri(650, 950);
   trainGame = {k, zoneCenter, gw, ow, rw, t0:null, period, raf:null, pos:50};
   modal(`<h3>${ATTR_LABEL[k]} antrenmanı</h3>
-    <p class="sub">Gösterge tam zamanında <b>DUR!</b>'a bas: yeşilde +4, turuncuda +2, kırmızıda +1 puan. Bölgelerin dışında puan yok.</p>
+    <p class="sub">Gösterge tam zamanında <b>DUR!</b>'a bas (ya da <b>boşluk</b> tuşu): yeşilde +4, turuncuda +2, kırmızıda +1 puan. Bölgelerin dışında puan yok.</p>
     <div class="tg-track" id="tg-track">
       <div class="tg-zone red" style="left:${zoneCenter-rw/2}%;width:${rw}%"></div>
       <div class="tg-zone orange" style="left:${zoneCenter-ow/2}%;width:${ow}%"></div>
@@ -3465,20 +3533,23 @@ function closeMates(){
 function renderRoom(){
   const p = S.p;
   const mates = closeMates();
-  const canCaptain = !p.captain && p.trust>=72 && p.age>=22 && p.season.apps>=6;
+  const avgRel = Math.round(teamChemistry());
+  const canCaptain = !p.captain && p.trust>=72 && p.age>=22 && p.season.apps>=6 && avgRel>=60;
   $('roomBox').innerHTML = `
   <div class="card">
     <h3>Kaptanlık ${p.captain?'<span class="chip ovr">Kaptansın</span>':''}</h3>
-    <p class="sub">Hocanın güveni ve tecrüben yeterliyse pazubandı isteyebilirsin.</p>
+    <p class="sub">Hocanın güveni, tecrüben ve takım arkadaşlarının sana olan güveni (ortalama ilişki) yeterliyse pazubandı isteyebilirsin.</p>
     ${p.captain?'':`<button class="btn sm ${canCaptain?'primary':''}" style="margin-top:8px" ${canCaptain?'':'disabled'} onclick="askCaptain()">Kaptanlığı iste</button>`}
     ${!canCaptain && !p.captain?`<div class="statbox" style="margin-top:8px">
       ${reqBar('Hoca güveni', p.trust, 72, Math.round(p.trust), '≥72')}
       ${reqBar('Yaş', p.age, 22, p.age, '≥22')}
       ${reqBar('Sezondaki maç', p.season.apps, 6, p.season.apps, '≥6')}
+      ${reqBar('Takım arkadaşlarınla olan ortalama ilişki', avgRel, 60, avgRel+'%', '≥60%')}
     </div>`:''}
   </div>
   <div class="card">
-    <h3>Takım arkadaşların</h3>
+    <h3>Takım arkadaşların <span class="chip ${avgRel>=60?'ovr':''}" style="font-weight:600">Kimya %${avgRel}</span></h3>
+    <p class="sub">Yüksek ilişki maç performansını ve moralini besler; düşük ilişki sakatlık/kart riskini ve moralini olumsuz etkiler.</p>
     ${mates.map(m=>{
       const v = p.teammateRel[m.name];
       return `<div class="statbox">
@@ -3516,7 +3587,8 @@ function giftMate(name){
 }
 function askCaptain(){
   const p=S.p;
-  if(chance(0.5 + (p.trust-72)/150)){
+  const avgRel = teamChemistry();
+  if(chance(0.5 + (p.trust-72)/150 + (avgRel-60)/200)){
     p.captain = true; p.trust = clamp(p.trust+8); p.fame = clamp(p.fame+6);
     addNews(`${p.name} ${p.team}'ın yeni kaptanı oldu.`,'genel');
     toast('Tebrikler, kaptan sensin!');
@@ -3701,14 +3773,34 @@ function generateMarketPool(){
     const posKey = pick(POSITIONS).k;
     const grp = posByKey(posKey).grp;
     const ovr = clamp(Math.round(myOvr + ri(-10,14)), 40, 92);
-    S.marketPool.push({id:'m'+S.season+'_'+S.week+'_'+Date.now()+'_'+i, name:randName(), posKey, grp, ovr, num:ri(2,29), price:playerValue(ovr)});
+    // oyuncunun "şu an" başka bir kulüpte oynadığını göstermek için ona
+    // rastgele bir menşe kulüp atıyoruz (kendi takımı hariç) — gücüne yakın
+    // takımlardan seçmeye çalışıyoruz ki '90 OVR, 65 güçlük takımdan'
+    // gibi tuhaf eşleşmeler nadir olsun.
+    const otherTeams = TEAMS.filter(t=>t.n!==S.p.team);
+    const near = otherTeams.filter(t=>Math.abs(t.s-ovr)<=12);
+    const fromTeam = pick(near.length?near:otherTeams);
+    S.marketPool.push({id:'m'+S.season+'_'+S.week+'_'+Date.now()+'_'+i, name:randName(), posKey, grp, ovr, num:ri(2,29), price:playerValue(ovr), fromTeam:fromTeam.n});
   }
   S.marketPoolSeason = S.season; S.marketPoolWeek = S.week;
 }
 function ensureMarketPool(){
   if(!S.marketPool || S.marketPoolSeason==null){ generateMarketPool(); return; }
   const passed = weekIndex(S.season,S.week) - weekIndex(S.marketPoolSeason,S.marketPoolWeek);
-  if(passed >= MARKET_AUTO_REFRESH_WEEKS) generateMarketPool(); // süre doldu, otomatik yenile
+  if(passed >= MARKET_AUTO_REFRESH_WEEKS) { generateMarketPool(); return; } // süre doldu, otomatik yenile
+  // Eski kayıtlarda (bu özellik eklenmeden önce oluşturulmuş pazar listesi)
+  // "fromTeam" alanı olmayabilir — kart üstünde tire ("—") görünmesin diye
+  // burada geriye dönük olarak eksik olanlara bir kulüp atıyoruz.
+  let patched = false;
+  S.marketPool.forEach(mp=>{
+    if(!mp.fromTeam){
+      const otherTeams = TEAMS.filter(t=>t.n!==S.p.team);
+      const near = otherTeams.filter(t=>Math.abs(t.s-mp.ovr)<=12);
+      mp.fromTeam = pick(near.length?near:otherTeams).n;
+      patched = true;
+    }
+  });
+  if(patched) save();
 }
 function marketWeeksUntilRefresh(){
   if(!S.marketPool || S.marketPoolSeason==null) return 0;
@@ -3740,7 +3832,45 @@ async function watchMarketRefreshVideo(){
   }
 }
 const MIN_SQUAD_SIZE = 11; // ilk 11'i doldurmak için gereken asgari kadro
-function sellClubPlayer(idx){
+function confirmSellClubPlayer(idx, el){
+  const p = S.p, sq = S.squads[p.team];
+  const pl = sq[idx]; if(!pl || pl.isUser) return;
+  if(sq.length<=MIN_SQUAD_SIZE) return toast(`Kadron ${MIN_SQUAD_SIZE} kişiye düştü, önce transfer almadan satamazsın.`);
+  const grp = posByKey(pl.posKey).grp;
+  if(grp==='GK' && !sq.some((x,i)=> i!==idx && posByKey(x.posKey).grp==='GK')){
+    return toast('Kadrondaki tek kaleciyi satamazsın — önce yedek bir kaleci transfer et.');
+  }
+  const income = sellPriceFor(pl.ovr);
+  const tier = ovrTier(pl.ovr);
+  const attrs = displayAttrsFor(pl.attrs,pl.posKey,pl.ovr);
+  const wrapper = el ? el.closest('.pcard-item') : null;
+  modal(`<h3 style="color:var(--bad)">Bu oyuncu satılsın mı?</h3>
+    <div class="squad-grid" style="grid-template-columns:1fr;max-width:168px;margin:10px auto 6px">
+      <div class="pcard-item">
+        <div class="pcard tier-${tier}">
+          <div class="pcard-body">
+            <span class="pcard-num">#${pl.num}</span>
+            <div class="pcard-head">${ovrTierIcon(tier)}<div class="pcard-ovr"><b>${pl.ovr}</b><small>${posByKey(pl.posKey).short}</small></div></div>
+            <span class="pcard-tierword">${ovrTierWord(tier)}</span>
+            <div class="pcard-name">${pl.name}</div>
+            <span class="pcard-role">${pl.on?'İlk 11':'Yedek'}</span>
+            ${pcardStatsHTML(attrs)}
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="sub" style="text-align:center">${pl.name} kadrodan ayrılacak.</p>
+    <p class="sub" style="text-align:center;margin-top:2px"><b style="color:var(--ink)">Sat · ${TL(income)}</b></p>
+    <div class="btngrid" style="margin-top:12px">
+      <button class="btn" onclick="closeModal()">Vazgeç</button>
+      <button class="btn red" id="confirm-sell-btn">Evet, sat</button>
+    </div>`);
+  setTimeout(()=>{ const b=$('confirm-sell-btn'); if(b) b.onclick = ()=>{
+    closeModal();
+    stampCard(wrapper, 'SATILDI', 'sold', ()=> doSellClubPlayer(idx));
+  }; }, 30);
+}
+function doSellClubPlayer(idx){
   const p = S.p, sq = S.squads[p.team];
   const pl = sq[idx]; if(!pl || pl.isUser) return;
   if(sq.length<=MIN_SQUAD_SIZE) return toast(`Kadron ${MIN_SQUAD_SIZE} kişiye düştü, önce transfer almadan satamazsın.`);
@@ -3771,7 +3901,41 @@ function sellClubPlayer(idx){
   checkBadges();
   save(); render();
 }
-function buyClubPlayer(id){
+function confirmBuyClubPlayer(id, el){
+  const p = S.p;
+  ensureMarketPool();
+  const mp = S.marketPool.find(x=>x.id===id); if(!mp) return;
+  if((S.clubBudget||0) < mp.price) return toast('Bütçe yetersiz.');
+  const tier = ovrTier(mp.ovr);
+  const attrs = displayAttrsFor(mp.attrs,mp.posKey,mp.ovr);
+  const wrapper = el ? el.closest('.pcard-item') : null;
+  modal(`<h3 style="color:var(--flood)">Bu oyuncu alınsın mı?</h3>
+    <div class="squad-grid" style="grid-template-columns:1fr;max-width:168px;margin:10px auto 6px">
+      <div class="pcard-item">
+        <div class="pcard tier-${tier}">
+          <div class="pcard-body">
+            <span class="pcard-num">#${mp.num}</span>
+            <div class="pcard-head">${ovrTierIcon(tier)}<div class="pcard-ovr"><b>${mp.ovr}</b><small>${posByKey(mp.posKey).short}</small></div></div>
+            <span class="pcard-tierword">${ovrTierWord(tier)}</span>
+            <div class="pcard-name">${mp.name}</div>
+            <span class="pcard-role">${mp.fromTeam || '—'}</span>
+            ${pcardStatsHTML(attrs)}
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="sub" style="text-align:center">${mp.name}${mp.fromTeam?` (${mp.fromTeam})`:''} kadrona katılacak.</p>
+    <p class="sub" style="text-align:center;margin-top:2px"><b style="color:var(--ink)">Bonservis · ${TL(mp.price)}</b></p>
+    <div class="btngrid" style="margin-top:12px">
+      <button class="btn" onclick="closeModal()">Vazgeç</button>
+      <button class="btn primary" id="confirm-buy-btn">Evet, al</button>
+    </div>`);
+  setTimeout(()=>{ const b=$('confirm-buy-btn'); if(b) b.onclick = ()=>{
+    closeModal();
+    stampCard(wrapper, 'TAKIMA KATILDI', 'joined', ()=> doBuyClubPlayer(id));
+  }; }, 30);
+}
+function doBuyClubPlayer(id){
   const p = S.p;
   ensureMarketPool();
   const mp = S.marketPool.find(x=>x.id===id); if(!mp) return;
@@ -3780,12 +3944,11 @@ function buyClubPlayer(id){
   const a = {...TEMPLATE[mp.posKey]};
   const diff = mp.ovr - 70;
   for(const k in a) a[k] = clamp(Math.round(a[k]+diff*0.85),25,96);
-  const starterCount = sq.filter(x=>x.on).length;
   const newPl = {name:mp.name, posKey:mp.posKey, attrs:a, ovr:mp.ovr,
-    stamina:100, goals:0, assists:0, yellow:0, sub:false, num:mp.num, team:p.team};
+    stamina:100, on:false, goals:0, assists:0, yellow:0, sub:false, num:mp.num, team:p.team};
   if(sq.length < 18){
-    // kadroda yer var — boşluğa ekleniyor; ilk 11 eksikse doğrudan ilk 11'e giriyor
-    newPl.on = starterCount<11; newPl.slot = posByKey(mp.posKey).slot;
+    // kadroda yer var — boşluğa ekleniyor, ilk 11'e girip girmeyeceğine aşağıda karar veriliyor
+    newPl.slot = posByKey(mp.posKey).slot;
     sq.push(newPl);
     addNews(`${p.team}, ${mp.name} transferini ${TL(mp.price)} bonservisle tamamladı.`,'transfer');
     toast(`${mp.name} transfer edildi!`);
@@ -3795,16 +3958,40 @@ function buyClubPlayer(id){
     const pool = candidates.length ? candidates : sq.filter(x=>!x.isUser);
     const weakest = pool.reduce((a,b)=> a.ovr<=b.ovr?a:b);
     const idx = sq.indexOf(weakest);
-    newPl.on = weakest.on; newPl.slot = weakest.slot;
+    newPl.slot = weakest.slot;
     sq.splice(idx,1,newPl);
     addNews(`${p.team}, ${mp.name} transferini ${TL(mp.price)} bonservisle tamamladı.`,'transfer');
     toast(`${mp.name} transfer edildi! ${weakest.name} kadrodan ayrıldı.`);
   }
+  // Yeni transfer, aynı mevki grubundaki en zayıf İLK 11 oyuncusundan güçlüyse
+  // (ya da İlk 11'de hâlâ boş yer varsa) doğrudan İlk 11'e giriyor — böylece
+  // "İlk 11 ortalaması" ve "Takım gücü" transfer anında gerçekten güncelleniyor.
+  promoteIfStronger(newPl, sq);
   S.clubBudget -= mp.price;
   S.marketPool = S.marketPool.filter(x=>x.id!==id);
   bumpAch('mgrBuys');
   checkBadges();
   save(); render();
+}
+/* Yeni/gelen bir oyuncuyu, aynı mevki grubundaki (GK/DEF/MID/WING/FWD) en
+   zayıf İlk 11 oyuncusuyla kıyaslar; İlk 11 hâlâ 11 kişiye tamamlanmadıysa
+   ya da bu oyuncu daha güçlüyse onu doğrudan İlk 11'e sokar. */
+function promoteIfStronger(pl, sq){
+  const grp = posByKey(pl.posKey).grp;
+  const starterCount = sq.filter(x=>x.on).length;
+  if(starterCount<11){
+    pl.on = true; pl.slot = posByKey(pl.posKey).slot;
+    return;
+  }
+  const rivals = sq.filter(x=>x.on && x!==pl && posByKey(x.posKey).grp===grp);
+  if(!rivals.length) return;
+  const weakest = rivals.reduce((a,b)=> a.ovr<=b.ovr?a:b);
+  if(pl.ovr > weakest.ovr){
+    pl.on = true; pl.slot = weakest.slot;
+    weakest.on = false;
+  } else {
+    pl.on = false;
+  }
 }
 function renderClubManagement(){
   const p = S.p;
@@ -3849,7 +4036,7 @@ function renderClubManagement(){
               ${pcardStatsHTML(a)}
             </div>
           </div>
-          <button class="btn sm red psell" ${sq.length<=MIN_SQUAD_SIZE?'disabled':''} onclick="sellClubPlayer(${idx})">Sat · ${TL(sellPriceFor(pl.ovr))}</button>
+          <button class="btn sm red psell" ${sq.length<=MIN_SQUAD_SIZE?'disabled':''} onclick="confirmSellClubPlayer(${idx}, this)">Sat · ${TL(sellPriceFor(pl.ovr))}</button>
         </div>`;}).join('')}
     </div>
   </div>
@@ -3870,11 +4057,11 @@ function renderClubManagement(){
             </div>
             <span class="pcard-tierword">${ovrTierWord(tier)}</span>
             <div class="pcard-name">${mp.name}</div>
-            <span class="pcard-role">Bonservis</span>
+            <span class="pcard-role">${mp.fromTeam || '—'}</span>
             ${pcardStatsHTML(a)}
           </div>
         </div>
-        <button class="btn sm ${(S.clubBudget||0)>=mp.price?'primary':''} psell" ${(S.clubBudget||0)<mp.price?'disabled':''} onclick="buyClubPlayer('${mp.id}')">${TL(mp.price)}</button>
+        <button class="btn sm ${(S.clubBudget||0)>=mp.price?'primary':''} psell" ${(S.clubBudget||0)<mp.price?'disabled':''} onclick="confirmBuyClubPlayer('${mp.id}', this)">${TL(mp.price)}</button>
       </div>`;}).join('')}</div>` : '<p class="sub">Pazarda kimse yok, gelecek hafta tekrar bak.</p>'}
   </div>`;
 }
@@ -4405,6 +4592,13 @@ function effOvr(pl){
   const fatigue = pl.stamina < 60 ? (60-pl.stamina)*0.22 : 0;
   return Math.max(20, base - fatigue);
 }
+// Soyunma odası kimyası: takım arkadaşı ilişkilerinin ortalaması (henüz hiç kayıt yoksa nötr 50 kabul edilir)
+function teamChemistry(){
+  const rel = (S && S.p && S.p.teammateRel) || {};
+  const vals = Object.values(rel);
+  if(!vals.length) return 50;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
 function teamPower(T, part){
   const on = T.squad.filter(p=>p.on);
   if(!on.length) return 40;
@@ -4417,6 +4611,9 @@ function teamPower(T, part){
   const arr = sel.length?sel:on;
   let v = arr.reduce((s,p)=>s+effOvr(p),0)/arr.length + (11-on.length)*-4;
   if(M && T===M.us && M.usHome && M.comp!=='milli') v += SB().home;   // stadyum/tribün desteği
+  // soyunma odası kimyası: iyi anlaşan bir takım (yüksek ortalama ilişki) sahada biraz daha iyi oynar,
+  // dağınık bir soyunma odası (düşük ortalama ilişki) takım gücünden bir miktar götürür
+  if(M && T===M.us && M.comp!=='milli') v += (teamChemistry()-50)/12;
   return v;
 }
 
@@ -5398,7 +5595,9 @@ function foulEvent(){
   let offender = pick(on);
   const me = M.us.squad.find(x=>x.isUser);
   // yorgun oyuncu daha çok faul yapar; kullanıcı savunmacıysa ihtimali artar
-  if(usFouls && M.userOn && chance(posByKey(S.p.posKey).grp==='DEF'?0.35:0.15)) offender = me;
+  // soyunma odasıyla arası bozuksa oyuncu sahada da daha gergin/uyumsuzdur, faule daha yatkın olur
+  const chemFoulBump = clamp((50-teamChemistry())/400, -0.06, 0.10);
+  if(usFouls && M.userOn && chance((posByKey(S.p.posKey).grp==='DEF'?0.35:0.15) + chemFoulBump)) offender = me;
   ballToPlayer(usFouls?'us':'them', offender, 2);
 
   Sfx.foul();
@@ -5426,7 +5625,9 @@ function foulEvent(){
     return maybeVarPenalty(usFouls, offender, ok=>{ M.paused=false; if(ok) penalty(!usFouls); else schedule(); });
   }
   say(`🚩 Faul: ${offender.name} rakibini düşürdü, oyun durdu.`);
-  if(chance(0.26)){
+  // düşük soyunma odası kimyası, kullanıcının bu faulden kart görme ihtimalini bir miktar artırır
+  const cardChance = offender.isUser ? clamp(0.26 + (50-teamChemistry())/250, 0.14, 0.42) : 0.26;
+  if(chance(cardChance)){
     offender.mYellow++;
     Sfx.card();
     if(offender.mYellow>=2){
@@ -5485,7 +5686,9 @@ function injuryEvent(){
   if(!all.length) return;
   let v = pick(all);
   const me = M.us.squad.find(x=>x.isUser);
-  const risk = (me && me.stamina<20?0.3:0.12) * (1 + M.effort*0.2) * (M.usHome?SB().injury:1);
+  // soyunma odasıyla arası bozuk bir oyuncu sahada daha dikkatsiz/gergindir: düşük ortalama ilişki sakatlık riskini artırır
+  const chemRisk = clamp(1 + (50-teamChemistry())/160, 0.75, 1.35);
+  const risk = (me && me.stamina<20?0.3:0.12) * (1 + M.effort*0.2) * (M.usHome?SB().injury:1) * chemRisk;
   if(me && me.on && chance(risk)) v = me;
   ballToPlayer(M.us.squad.includes(v)?'us':'them', v, 2);
   if(v.isUser && me.stamina>55 && chance(0.6)) { say(`${S.p.name} sert bir müdahalenin ardından yerde kaldı ama devam ediyor.`); return; }
@@ -5673,7 +5876,8 @@ function userChoice(a){
   const at = S.p.attrs;
   const fit = clamp(me.stamina,10,100)/100;
   const mood = (S.p.morale-50)/300;
-  const bonus = (M.boost>0?0.07:0) + mood + EFFORT[M.effort].edge + M.weather.tech;
+  const chem = (teamChemistry()-50)/300; // soyunma odası kimyası: iyi ilişkiler sahada küçük bir ekstra güven verir
+  const bonus = (M.boost>0?0.07:0) + mood + chem + EFFORT[M.effort].edge + M.weather.tech;
   const sk = k => (at[k]/100) * (0.55+0.45*fit) + bonus;
   Sfx.kick();
 
@@ -6080,8 +6284,14 @@ function finishMatch(){
 
   // moral / güven / kondisyon
   p.fitness = clamp(M.userOn ? me.stamina : Math.max(me.stamina, 25));
-  p.morale = clamp(p.morale + (rating-6.4)*6 + (M.us.score>M.them.score?6:M.us.score<M.them.score?-5:0));
+  // düşük soyunma odası kimyası morali de aşağı çeker; yüksek kimya küçük bir moral desteği verir
+  p.morale = clamp(p.morale + (rating-6.4)*6 + (M.us.score>M.them.score?6:M.us.score<M.them.score?-5:0) + (teamChemistry()-50)/25);
   if(!isMilli) p.trust  = clamp(p.trust + (rating-6.5)*5 + (me.mGoals?5:0));
+  // birlikte kazanmak/kaybetmek soyunma odası ilişkilerini de zamanla etkiler
+  if(!isMilli && p.teammateRel){
+    const relDrift = M.us.score>M.them.score ? ri(1,2) : (M.us.score<M.them.score ? -ri(1,2) : 0);
+    if(relDrift) Object.keys(p.teammateRel).forEach(k=>{ p.teammateRel[k] = clamp(p.teammateRel[k] + relDrift); });
+  }
   p.fame   = clamp(p.fame + me.mGoals*(isMilli?3:2) + (motm?3:0) + (isMilli?2:0.4));
   p.happiness = clamp(p.happiness + (M.us.score>M.them.score?4:-2));
   p.love = clamp(p.love + (M.us.score>M.them.score?4:M.us.score<M.them.score?-5:0) + me.mGoals*3);
