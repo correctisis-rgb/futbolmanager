@@ -1971,6 +1971,28 @@ const BADGES = [
   {id:'bd55',n:'Aile Babası',        d:'Evlendin ve çocuğun oldu.',                  chk:p=>!!p.partner&&p.kids>=1, reward:86000},
   {id:'bd56',n:'Mücadeleci',         d:'İlk yardım paketiyle 5 kez sahada kaldın.',  chk:p=>ACH('medkitSaves')>=5, reward:94000},
 ];
+/* Teknik direktörlüğe geçince artık oynayamayacağın (maç/gol/asist/kap gibi
+   oyunculuk performansına dayalı) ya da erişimin kapandığı (antrenman, yaşam,
+   sponsorluk sekmeleri gizli) başarımlar bir daha asla tamamlanamaz. Bunları
+   zaten kazanmadıysan listede göstermenin anlamı yok — sadece halihazırda
+   kazanılmış olanlar (rozet zaten cepte) her zaman görünmeye devam eder. */
+const MANAGER_HIDDEN_BADGES = [
+  // oyunculuk performansı: gol, asist, maç, MOTM, puan, hat-trick vb.
+  'bd1','bd2','bd4','bd13','bd14','bd16','bd17','bd19','bd20','bd21','bd22','bd23',
+  'bd24','bd25','bd3','bd26','bd28','bd30','bd31','bd33','bd34','bd35','bd41','bd42','bd56',
+  // milli takım: kap, milli gol, kaptanlık — hepsi sahaya çıkmayı gerektirir
+  'bd8','bd43','bd9','bd44','bd10',
+  // gelişim: antrenman sekmesi teknik direktör için kapalı
+  'bd12','bd45',
+  // yaşam sekmesi (lüks eşya, aile) teknik direktör için tamamen kapalı
+  'bd49','bd50','bd51','bd52','bd55',
+  // sponsorluk sekmesi teknik direktör için kapalı
+  'bd53','bd54',
+];
+function visibleBadges(p){
+  if(p.role!=='Teknik Direktör') return BADGES;
+  return BADGES.filter(b=> p.badges.includes(b.id) || !MANAGER_HIDDEN_BADGES.includes(b.id));
+}
 /* başarım şartı sağlandığında: sadece bildir, ödülü kariyerdeki "Başarımlar" sekmesinden elle topla */
 function checkBadges(){
   const p = S.p; let n=0;
@@ -1999,7 +2021,7 @@ function claimAllBadges(){
   const p = S.p;
   checkBadges();
   const elig = (p.badgesEligible||[]).slice();
-  const ready = BADGES.filter(b=>!p.badges.includes(b.id) && (elig.includes(b.id) || b.chk(p)));
+  const ready = visibleBadges(p).filter(b=>!p.badges.includes(b.id) && (elig.includes(b.id) || b.chk(p)));
   if(!ready.length) return toast('Toplanacak hazır başarım yok.');
   let total = 0;
   ready.forEach(b=>{
@@ -2274,7 +2296,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v5.5';
+const APP_VERSION = 'v5.6';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2752,7 +2774,45 @@ function renderHub(){
 }
 
 /* ---------- PROFİL ---------- */
+/* ---------- PROFİL: Teknik Direktör sürümü ----------
+   Oyunculuğa özgü içerik (sakatlık/ceza durumu, "maça çıkabilirsin",
+   bu sezonki maç/gol/asist istatistikleri, oyuncu yetenek çubukları)
+   teknik direktör için hiçbir anlam ifade etmiyor; onun yerine
+   yönettiği kulübün durumunu ve geride kalan oyunculuk kariyerinin
+   özetini gösteriyoruz. */
+function renderManagerProfile(){
+  const p = S.p;
+  const rank = sortTable().findIndex(t=>t.n===p.team)+1;
+  const pts = (S.table.find(t=>t.n===p.team)||{p:0}).p;
+  $('profileBox').innerHTML = `
+  <div class="card">
+    <h3>👔 ${p.name} <span class="chip">Teknik Direktör</span></h3>
+    <div class="statbox">
+      <div class="spread"><span class="sub">Yönettiği kulüp</span><b>${kitDot(p.team)}${p.team}</b></div>
+      <div class="spread"><span class="sub">Lig sırası</span><b>${rank}. sıra</b></div>
+      <div class="spread"><span class="sub">Puan</span><b>${pts}</b></div>
+      <div class="spread"><span class="sub">Kulüp bütçesi</span><b>${TL(S.clubBudget||0)}</b></div>
+      <div class="spread"><span class="sub">Ün</span><b>${Math.round(p.fame)}/100</b></div>
+    </div>
+    <p class="sub" style="margin-top:8px">Kadro ve transferleri 📋 Kulüp sekmesinden yönetebilirsin.</p>
+  </div>
+  <div class="card">
+    <h3>Oyunculuk kariyeri <span class="sub" style="font-weight:600">(geride kaldı)</span></h3>
+    <div class="statbox">
+      <div class="spread"><span class="sub">Maç</span><b>${p.career.apps}</b></div>
+      <div class="spread"><span class="sub">Gol</span><b>${p.career.goals}</b></div>
+      <div class="spread"><span class="sub">Asist</span><b>${p.career.assists}</b></div>
+      <div class="spread"><span class="sub">Maçın adamı</span><b>${p.career.motm}</b></div>
+    </div>
+    ${p.career.trophies.length?`<p class="sub" style="margin-top:8px">🏆 ${p.career.trophies.join(', ')}</p>`:''}
+    ${p.career.seasons.length?`<hr class="sep"><table><tr><th>Sezon</th><th>Takım</th><th class="num">M</th><th class="num">G</th><th class="num">A</th></tr>
+      ${p.career.seasons.map(s=>`<tr><td>${s.label}</td><td>${s.team}</td><td class="num">${s.apps}</td><td class="num">${s.goals}</td><td class="num">${s.assists}</td></tr>`).join('')}</table>`:''}
+    <hr class="sep">
+    <p class="sub">Yedek alma, geri yükleme ve kariyer sıfırlama artık ⚙️ <a href="#" onclick="go('v-settings');return false;" style="color:var(--flood);font-weight:600;text-decoration:none">Ayarlar</a> bölümünde.</p>
+  </div>`;
+}
 function renderProfile(){
+  if(S.p.role==='Teknik Direktör'){ renderManagerProfile(); return; }
   const p = S.p, po = posByKey(p.posKey);
   const b = BOOTS.find(x=>x.id===p.boot);
   const avg = p.season.apps ? (p.season.ratingSum/p.season.apps).toFixed(2) : '—';
@@ -3527,7 +3587,9 @@ function interestLabel(v){
 function squadAvgOvr(name){
   const sq = S.squads[name];
   if(!sq || !sq.length) return teamStrength(name);
-  return sq.reduce((s,x)=>s+x.ovr,0)/sq.length;
+  const starters = sq.filter(x=>x.on);
+  const list = starters.length ? starters : sq;
+  return list.reduce((s,x)=>s+x.ovr,0)/list.length;
 }
 // Bonservis değeri: userOverall tabanlı marketValue()'ya benzer ama
 // AI oyuncuları için (yaş/ün olmadan) sadeleştirilmiş hâli.
@@ -3536,17 +3598,56 @@ function playerValue(ovr){
   return clamp(Math.round(base/5000)*5000, 75000, 40000000);
 }
 function sellPriceFor(ovr){ return Math.round(playerValue(ovr)*0.7/5000)*5000; }
-function ensureMarketPool(){
-  const key = S.season+'_'+S.week;
-  if(S.marketPoolKey === key && S.marketPool) return;
-  S.marketPoolKey = key;
+/* ---------- Transfer Pazarı yenileme ----------
+   Liste artık HER hafta otomatik yenilenmiyor: normal şartlarda 5 hafta
+   boyunca sabit kalıyor ve o süre dolunca otomatik yenileniyor. Bu süreyi
+   beklemeden hemen yenilemek istersen ödüllü reklam izlemen ZORUNLU —
+   pazarı manuel yenilemenin tek yolu bu (generateMarketPool ile). */
+const MARKET_AUTO_REFRESH_WEEKS = 5;
+function weekIndex(season, week){ return (season||1)*1000 + (week||1); } // sezon+hafta'yı tek sayıda karşılaştırılabilir hale getirir
+function generateMarketPool(){
   const myOvr = Math.round(squadAvgOvr(S.p.team));
   S.marketPool = [];
   for(let i=0;i<4;i++){
     const posKey = pick(POSITIONS).k;
     const grp = posByKey(posKey).grp;
     const ovr = clamp(Math.round(myOvr + ri(-10,14)), 40, 92);
-    S.marketPool.push({id:'m'+S.week+'_'+i, name:randName(), posKey, grp, ovr, num:ri(2,29), price:playerValue(ovr)});
+    S.marketPool.push({id:'m'+S.season+'_'+S.week+'_'+Date.now()+'_'+i, name:randName(), posKey, grp, ovr, num:ri(2,29), price:playerValue(ovr)});
+  }
+  S.marketPoolSeason = S.season; S.marketPoolWeek = S.week;
+}
+function ensureMarketPool(){
+  if(!S.marketPool || S.marketPoolSeason==null){ generateMarketPool(); return; }
+  const passed = weekIndex(S.season,S.week) - weekIndex(S.marketPoolSeason,S.marketPoolWeek);
+  if(passed >= MARKET_AUTO_REFRESH_WEEKS) generateMarketPool(); // süre doldu, otomatik yenile
+}
+function marketWeeksUntilRefresh(){
+  if(!S.marketPool || S.marketPoolSeason==null) return 0;
+  const passed = weekIndex(S.season,S.week) - weekIndex(S.marketPoolSeason,S.marketPoolWeek);
+  return Math.max(0, MARKET_AUTO_REFRESH_WEEKS - passed);
+}
+let marketVidBusy = false;
+async function watchMarketRefreshVideo(){
+  if(!S || marketVidBusy) return;
+  if(S.inMatch) return toast('Maç sürerken video izlenemez.');
+  if(!navigator.onLine) return toast('📡 Çevrimdışıyken video oynatılamaz. Bağlantı gelince tekrar dene.');
+  if(!REWARD_CONFIG.enabled) return toast('Video ödülü şu an kapalı.');
+  marketVidBusy = true; renderClubManagement();
+  let r;
+  try{
+    r = REWARD_CONFIG.provider==='h5' ? await h5Rewarded()
+      : REWARD_CONFIG.provider==='native' ? await nativeRewarded()
+      : await placeholderRewarded();
+  }catch(e){ r = {rewarded:false, reason:'unavailable'}; }
+  marketVidBusy = false;
+  if(r && r.rewarded){
+    generateMarketPool();
+    closeModal();
+    toast('📺 Transfer pazarı yenilendi!');
+    save(); render();
+  } else {
+    renderClubManagement();
+    toast(r && r.reason==='unavailable' ? 'Şu an gösterilecek video yok, biraz sonra tekrar dene.' : 'Video tamamlanmadı, pazar yenilenmedi.');
   }
 }
 const MIN_SQUAD_SIZE = 11; // ilk 11'i doldurmak için gereken asgari kadro
@@ -3554,14 +3655,24 @@ function sellClubPlayer(idx){
   const p = S.p, sq = S.squads[p.team];
   const pl = sq[idx]; if(!pl || pl.isUser) return;
   if(sq.length<=MIN_SQUAD_SIZE) return toast(`Kadron ${MIN_SQUAD_SIZE} kişiye düştü, önce transfer almadan satamazsın.`);
+  // Kaleci güvenliği: kadroda başka kaleci yoksa tek kaleciyi satamazsın —
+  // yoksa yedekten alakasız bir mevkiden (örn. forvet) oyuncu "kaleciymiş
+  // gibi" ilk 11'e girer, ki bu saçma olurdu.
+  const grp = posByKey(pl.posKey).grp;
+  if(grp==='GK' && !sq.some((x,i)=> i!==idx && posByKey(x.posKey).grp==='GK')){
+    return toast('Kadrondaki tek kaleciyi satamazsın — önce yedek bir kaleci transfer et.');
+  }
   const income = sellPriceFor(pl.ovr);
   S.clubBudget = (S.clubBudget||0) + income;
   sq.splice(idx,1); // yerine kimse üretilmiyor — kadro küçülüyor, istersen pazardan doldurursun
-  // ilk 11'den biri gittiyse, yedekten en güçlüsünü onun yerine ilk 11'e çek
+  // ilk 11'den biri gittiyse, yedekten aynı mevki grubundaki en güçlüsünü
+  // (mümkünse) onun yerine ilk 11'e çek
   if(pl.on){
     const bench = sq.filter(x=>!x.on);
-    if(bench.length){
-      const promote = bench.reduce((a,b)=> a.ovr>=b.ovr?a:b);
+    const sameGrp = bench.filter(x=>posByKey(x.posKey).grp===grp);
+    const pool = sameGrp.length ? sameGrp : bench;
+    if(pool.length){
+      const promote = pool.reduce((a,b)=> a.ovr>=b.ovr?a:b);
       promote.on = true; promote.slot = pl.slot;
     }
   }
@@ -3619,7 +3730,7 @@ function renderClubManagement(){
     <div class="statbox">
       <div class="spread"><span class="sub">Kulüp</span><b>${kitDot(p.team)}${p.team}</b></div>
       <div class="spread"><span class="sub">Lig sırası</span><b>${rank}. sıra</b></div>
-      <div class="spread"><span class="sub">Kadro ortalaması</span><b>${avgOvr}</b></div>
+      <div class="spread"><span class="sub">İlk 11 ortalaması</span><b>${avgOvr}</b></div>
       <div class="spread"><span class="sub">Takım gücü</span><b>${eff}${diff!==0?` <span style="color:${diff>0?'var(--good)':'var(--bad)'}">(${diff>0?'+':''}${diff})</span>`:''}</b></div>
     </div>
     <p class="sub" style="margin-top:8px">Transferlerle kadronu güçlendirdikçe takımının maçlardaki gerçek gücü de değişir.</p>
@@ -3639,8 +3750,11 @@ function renderClubManagement(){
       </div>`).join('')}
   </div>
   <div class="card">
-    <h3>Transfer Pazarı</h3>
-    <p class="sub" style="margin-bottom:8px">Bu haftaki bonservis fırsatları. Liste her hafta yenilenir.</p>
+    <div class="spread" style="align-items:center">
+      <h3 style="margin:0">Transfer Pazarı</h3>
+      <button class="btn sm primary" ${marketVidBusy?'disabled':''} onclick="watchMarketRefreshVideo()">${marketVidBusy?'…':'📺 Reklam izle, yenile'}</button>
+    </div>
+    <p class="sub" style="margin:6px 0 8px">Bonservis fırsatları. Liste kendiliğinden ${MARKET_AUTO_REFRESH_WEEKS} haftada bir yenilenir${marketWeeksUntilRefresh()>0?` (otomatik yenilenmeye <b>${marketWeeksUntilRefresh()}</b> hafta kaldı)`:''} — hemen yenilemek için reklam izlemen gerekir.</p>
     ${S.marketPool.length ? S.marketPool.map(mp=>`
       <div class="statbox" style="margin-bottom:6px">
         <div class="shoprow">
@@ -3740,15 +3854,17 @@ function signSponsor(id){
 function renderBadges(){
   const p = S.p;
   checkBadges();
+  const list = visibleBadges(p);
   const elig = p.badgesEligible||[];
-  const readyCount = BADGES.filter(b=>!p.badges.includes(b.id) && (elig.includes(b.id) || b.chk(p))).length;
+  const readyCount = list.filter(b=>!p.badges.includes(b.id) && (elig.includes(b.id) || b.chk(p))).length;
+  const isManager = p.role==='Teknik Direktör';
   $('badgesBox').innerHTML = `<div class="card">
     <div class="spread" style="align-items:center">
-      <h3 style="margin:0">Başarımlar <span class="chip">${p.badges.length}/${BADGES.length}</span></h3>
+      <h3 style="margin:0">Başarımlar <span class="chip">${p.badges.length}/${list.length}</span></h3>
       ${readyCount>0?`<button class="btn sm primary" onclick="claimAllBadges()">✨ Tümünü Topla (${readyCount})</button>`:''}
     </div>
-    <p class="sub" style="margin:6px 0 8px">Şartını sağladığın başarımlar burada "Topla" butonuyla belirir — ödülü almak için tıklaman gerekir.</p>
-    ${BADGES.map(b=>{
+    <p class="sub" style="margin:6px 0 8px">${isManager?'Teknik direktör olarak artık kazanamayacağın oyunculuk başarımları listeden kaldırıldı; kazandıkların burada duruyor. Şartını sağladıkların "Topla" butonuyla belirir.':'Şartını sağladığın başarımlar burada "Topla" butonuyla belirir — ödülü almak için tıklaman gerekir.'}</p>
+    ${list.map(b=>{
       const got = p.badges.includes(b.id);
       const ready = !got && (elig.includes(b.id) || b.chk(p));
       return `<div class="badge-card${got?' got':''}${ready?' ready':''}">
@@ -3846,11 +3962,13 @@ function doJubilee(){
   // teamStrength() bundan sonraki sapmayı (avg - baseline) t.s'ye ekliyor.
   S.squadBaseline = S.squadBaseline || {};
   if(S.squads[p.team] && S.squads[p.team].length){
-    S.squadBaseline[p.team] = S.squads[p.team].reduce((s,x)=>s+x.ovr,0)/S.squads[p.team].length;
+    const starters0 = S.squads[p.team].filter(x=>x.on);
+    const list0 = starters0.length ? starters0 : S.squads[p.team];
+    S.squadBaseline[p.team] = list0.reduce((s,x)=>s+x.ovr,0)/list0.length;
   }
   const myClubT = TEAMS.find(x=>x.n===p.team);
   S.clubBudget = Math.round((myClubT?teamBudgetFactor(myClubT):1) * 9000000/50000)*50000;
-  S.marketPoolKey = null; S.marketPool = [];
+  S.marketPool = []; S.marketPoolSeason = null; S.marketPoolWeek = null;
   addNews(`${p.name} kramponlarını astı ve ${p.team} teknik direktörlüğüne getirildi.`,'genel');
   toast('Artık teknik direktörsün. Hafta hafta takımını yönet.');
   save(); go('v-match');
@@ -4249,8 +4367,12 @@ function teamStrength(name){
   // gücüne gerçekten yansısın. Sadece jübile anında "başlangıç" ortalaması
   // kaydedilen kulüp için devreye girer (yani sadece kullanıcının kendi
   // kulübü) — diğer tüm takımlar eskisi gibi sabit t.s kullanmaya devam eder.
+  // ÖNEMLİ: ortalama sadece İLK 11'den alınır — yedek kulübesindeki oyuncu
+  // hiç sahaya çıkmıyor, o yüzden onu satmak/almak takım gücünü etkilememeli.
   if(typeof S!=='undefined' && S && S.squadBaseline && S.squadBaseline[name]!=null && S.squads && S.squads[name] && S.squads[name].length){
-    const avg = S.squads[name].reduce((s,x)=>s+x.ovr,0)/S.squads[name].length;
+    const starters = S.squads[name].filter(x=>x.on);
+    const list = starters.length ? starters : S.squads[name];
+    const avg = list.reduce((s,x)=>s+x.ovr,0)/list.length;
     const delta = avg - S.squadBaseline[name];
     return clamp(Math.round(base + delta), 40, 99);
   }
