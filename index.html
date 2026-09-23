@@ -827,6 +827,11 @@ body,.card,.modal .box,nav#bottom,.paper,.statbox{transition:background-color .3
   padding:9px 6px 8px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;
   min-height:154px;transition:box-shadow .3s,border-color .3s,transform .15s;}
 .pcard:active{transform:scale(.97);}
+/* çapraz, büyük kademe yazısı (EFSANE/YILDIZ/...) — kartın arkaplanında, içeriğin altında */
+.pcard::before{content:attr(data-wm);position:absolute;inset:-10% -30%;display:flex;align-items:center;justify-content:center;
+  font-family:'Barlow Condensed';font-weight:800;font-size:1.55rem;letter-spacing:2px;white-space:nowrap;
+  transform:rotate(-26deg);color:var(--ink);opacity:.07;pointer-events:none;z-index:0;text-transform:uppercase;}
+.pcard>*{position:relative;z-index:1;}
 .pcard .ptier{position:absolute;top:4px;right:5px;font-size:.72rem;line-height:1;filter:drop-shadow(0 0 3px rgba(0,0,0,.5));}
 .pcard .pnum{font-family:'Barlow Condensed';font-size:1.05rem;font-weight:800;color:var(--dim);}
 .pcard .pname{font-size:.78rem;font-weight:700;line-height:1.15;min-height:2.2em;display:flex;align-items:center;justify-content:center;}
@@ -839,6 +844,7 @@ body,.card,.modal .box,nav#bottom,.paper,.statbox{transition:background-color .3
   border-color:#caa42e;
   box-shadow:0 0 0 1px rgba(255,210,74,.35),0 0 16px rgba(255,210,74,.26);
 }
+.pcard.tier-elite::before{color:var(--flood);opacity:.20;}
 .pcard.tier-elite .povr{background:var(--flood);color:var(--flood-ink);border-color:#caa42e;font-weight:800;}
 .pcard.tier-elite .pname{color:var(--flood);}
 .pcard.tier-great{
@@ -846,8 +852,18 @@ body,.card,.modal .box,nav#bottom,.paper,.statbox{transition:background-color .3
   border-color:#2e8a63;
   box-shadow:0 0 0 1px rgba(52,211,153,.25),0 0 12px rgba(52,211,153,.18);
 }
+.pcard.tier-great::before{color:var(--good);opacity:.17;}
 .pcard.tier-good{border-color:var(--line);}
-.pcard.tier-low{opacity:.8;filter:saturate(.85);}
+.pcard.tier-good::before{opacity:.08;}
+.pcard.tier-pro{border-color:var(--line);}
+.pcard.tier-pro::before{opacity:.07;}
+.pcard.tier-youth{
+  background:linear-gradient(160deg,rgba(96,165,250,.17),var(--surf3) 62%);
+  border-color:#3b6fa8;
+  box-shadow:0 0 0 1px rgba(96,165,250,.22),0 0 10px rgba(96,165,250,.16);
+}
+.pcard.tier-youth::before{color:#60a5fa;opacity:.15;}
+.pcard.tier-youth .ptier{filter:none;}
 .pcard.bench{opacity:.72;}
 .pcard.bench.tier-elite,.pcard.bench.tier-great{opacity:.85;} /* yıldız oyuncu yedekte bile sönmesin */
 @media (prefers-reduced-motion:no-preference){
@@ -859,6 +875,7 @@ body,.card,.modal .box,nav#bottom,.paper,.statbox{transition:background-color .3
 }
 @media (max-width:520px){
   .squad-grid{grid-template-columns:repeat(2,1fr);}
+  .pcard::before{font-size:1.2rem;}
 }
 
 /* ---------- Takım rozeti (forma önizleme) ---------- */
@@ -1715,9 +1732,10 @@ const POSITIONS = [
   {k:'CF', label:'Yalancı Dokuz',             short:'Y9',  slot:9,  grp:'FWD'}
 ];
 const posByKey = k => POSITIONS.find(p=>p.k===k) || POSITIONS[15];
-/* oyuncu kartı görsel kalite kademesi: güce göre parlaklık/çerçeve */
-function ovrTier(ovr){ return ovr>=87?'elite': ovr>=80?'great': ovr>=70?'good':'low'; }
-function ovrTierIcon(t){ return t==='elite'?'<span class="ptier">🌟</span>':t==='great'?'<span class="ptier">🔷</span>':''; }
+/* oyuncu kartı görsel kalite kademesi: güce göre parlaklık/çerçeve + arkaplan yazısı */
+function ovrTier(ovr){ return ovr>=87?'elite': ovr>=80?'great': ovr>=70?'good': ovr>=60?'pro':'youth'; }
+function ovrTierIcon(t){ return t==='elite'?'<span class="ptier">🌟</span>':t==='great'?'<span class="ptier">🔷</span>':t==='youth'?'<span class="ptier">🌱</span>':''; }
+function ovrTierWord(t){ return t==='elite'?'Dünya Klası':t==='great'?'Efsanevi':t==='good'?'Elit':t==='pro'?'Profesyonel':'Geleceğin Yıldızı'; }
 
 /* ---------- takım kısaltmaları (skor barı için) ---------- */
 const TEAM_ABBR = {
@@ -2337,7 +2355,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v5.7';
+const APP_VERSION = 'v5.8';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -3787,7 +3805,7 @@ function renderClubManagement(){
     ${sq.length<=MIN_SQUAD_SIZE?`<p class="sub" style="margin-bottom:8px">Kadron ${MIN_SQUAD_SIZE} kişiye indi — ilk 11'i doldurmak için daha fazla satamazsın, önce pazardan takviye al.</p>`:''}
     <div class="squad-grid">
       ${rows.map(({pl,idx})=>{ const tier=ovrTier(pl.ovr); return `
-        <div class="pcard tier-${tier}${pl.on?'':' bench'}">
+        <div class="pcard tier-${tier}${pl.on?'':' bench'}" data-wm="${ovrTierWord(tier)}">
           ${ovrTierIcon(tier)}
           <span class="pnum">#${pl.num}</span>
           <div class="pname">${pl.name}</div>
@@ -3804,7 +3822,7 @@ function renderClubManagement(){
     </div>
     <p class="sub" style="margin:6px 0 8px">Bonservis fırsatları. Liste kendiliğinden ${MARKET_AUTO_REFRESH_WEEKS} haftada bir yenilenir${marketWeeksUntilRefresh()>0?` (otomatik yenilenmeye <b>${marketWeeksUntilRefresh()}</b> hafta kaldı)`:''} — hemen yenilemek için reklam izlemen gerekir.</p>
     ${S.marketPool.length ? `<div class="squad-grid">${S.marketPool.map(mp=>{ const tier=ovrTier(mp.ovr); return `
-      <div class="pcard tier-${tier}">
+      <div class="pcard tier-${tier}" data-wm="${ovrTierWord(tier)}">
         ${ovrTierIcon(tier)}
         <span class="pnum">${posByKey(mp.posKey).short}</span>
         <div class="pname">${mp.name}</div>
