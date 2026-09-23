@@ -821,6 +821,20 @@ body,.card,.modal .box,nav#bottom,.paper,.statbox{transition:background-color .3
   border:1px solid #caa42e;border-radius:999px;padding:2px 9px;white-space:nowrap;}
 .badge-card:not(.got) .breward{background:var(--chipbg);color:var(--dim);border-color:var(--line);}
 
+/* ---------- Kadro / Transfer Pazarı: dikey dikdörtgen oyuncu kartları ---------- */
+.squad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.pcard{background:var(--surf3);border:1px solid var(--line);border-radius:10px;padding:9px 6px 8px;
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;min-height:150px;}
+.pcard.bench{opacity:.78;}
+.pcard .pnum{font-family:'Barlow Condensed';font-size:1.05rem;font-weight:800;color:var(--dim);}
+.pcard .pname{font-size:.78rem;font-weight:700;line-height:1.15;min-height:2.2em;display:flex;align-items:center;justify-content:center;}
+.pcard .ppos{font-size:.66rem;color:var(--dim);}
+.pcard .povr{margin-top:auto;margin-bottom:2px;}
+.pcard .psell{width:100%;font-size:.72rem;padding:6px 4px;white-space:normal;line-height:1.2;}
+@media (max-width:520px){
+  .squad-grid{grid-template-columns:repeat(2,1fr);}
+}
+
 /* ---------- Takım rozeti (forma önizleme) ---------- */
 .kitdot.kd-lg{width:24px;height:26px;}
 
@@ -1970,28 +1984,26 @@ const BADGES = [
   {id:'bd54',n:'Marka Değeri',       d:'20 sponsorluk anlaşmasının hepsini aldın.',  chk:p=>p.sponsors.length>=20, reward:432000},
   {id:'bd55',n:'Aile Babası',        d:'Evlendin ve çocuğun oldu.',                  chk:p=>!!p.partner&&p.kids>=1, reward:86000},
   {id:'bd56',n:'Mücadeleci',         d:'İlk yardım paketiyle 5 kez sahada kaldın.',  chk:p=>ACH('medkitSaves')>=5, reward:94000},
+  /* --- teknik direktörlük --- */
+  {id:'bd57',n:'Kramponları Astım',  d:'Teknik direktörlüğe geçtin.',                chk:p=>p.role==='Teknik Direktör', reward:29000},
+  {id:'bd58',n:'İlk Transfer',       d:'Teknik direktör olarak ilk transferini yaptın.', chk:p=>ACH('mgrBuys')>=1,   reward:36000},
+  {id:'bd59',n:'Piyasa Ustası',      d:'Teknik direktör olarak 10 transfer tamamladın.', chk:p=>ACH('mgrBuys')>=10,  reward:158000},
+  {id:'bd60',n:'Hoca Koltuğu',       d:'Teknik direktör olarak ilk maçını yönettin.', chk:p=>ACH('mgrMatches')>=1, reward:22000},
+  {id:'bd61',n:'On Galibiyet (TD)',  d:'Teknik direktör olarak 10 maç kazandın.',    chk:p=>ACH('mgrWins')>=10,    reward:101000},
+  {id:'bd62',n:'Elli Galibiyet (TD)',d:'Teknik direktör olarak 50 maç kazandın.',    chk:p=>ACH('mgrWins')>=50,    reward:252000},
+  {id:'bd63',n:'Bir Sezon Bitti',    d:'Teknik direktör olarak bir sezonu tamamladın.', chk:p=>ACH('mgrSeasons')>=1, reward:65000},
+  {id:'bd64',n:'Kariyer Koçu',       d:'Teknik direktör olarak 5 sezon tamamladın.', chk:p=>ACH('mgrSeasons')>=5,  reward:216000},
+  {id:'bd65',n:'Şampiyon Hoca',      d:'Teknik direktör olarak lig şampiyonu oldun.', chk:p=>p.career.trophies.some(t=>t.includes('(TD)')), reward:360000},
+  {id:'bd66',n:'Kasa Şişirdim',      d:'Kulüp bütçen 20.000.000 ₺ oldu.',            chk:p=>(S.clubBudget||0)>=20000000, reward:180000},
 ];
-/* Teknik direktörlüğe geçince artık oynayamayacağın (maç/gol/asist/kap gibi
-   oyunculuk performansına dayalı) ya da erişimin kapandığı (antrenman, yaşam,
-   sponsorluk sekmeleri gizli) başarımlar bir daha asla tamamlanamaz. Bunları
-   zaten kazanmadıysan listede göstermenin anlamı yok — sadece halihazırda
-   kazanılmış olanlar (rozet zaten cepte) her zaman görünmeye devam eder. */
-const MANAGER_HIDDEN_BADGES = [
-  // oyunculuk performansı: gol, asist, maç, MOTM, puan, hat-trick vb.
-  'bd1','bd2','bd4','bd13','bd14','bd16','bd17','bd19','bd20','bd21','bd22','bd23',
-  'bd24','bd25','bd3','bd26','bd28','bd30','bd31','bd33','bd34','bd35','bd41','bd42','bd56',
-  // milli takım: kap, milli gol, kaptanlık — hepsi sahaya çıkmayı gerektirir
-  'bd8','bd43','bd9','bd44','bd10',
-  // gelişim: antrenman sekmesi teknik direktör için kapalı
-  'bd12','bd45',
-  // yaşam sekmesi (lüks eşya, aile) teknik direktör için tamamen kapalı
-  'bd49','bd50','bd51','bd52','bd55',
-  // sponsorluk sekmesi teknik direktör için kapalı
-  'bd53','bd54',
-];
+/* Teknik direktör iken listede yalnızca bu başarımlar görünür (bkz. visibleBadges) */
+const MANAGER_BADGE_IDS = ['bd57','bd58','bd59','bd60','bd61','bd62','bd63','bd64','bd65','bd66'];
 function visibleBadges(p){
   if(p.role!=='Teknik Direktör') return BADGES;
-  return BADGES.filter(b=> p.badges.includes(b.id) || !MANAGER_HIDDEN_BADGES.includes(b.id));
+  // Teknik direktör olunca futbolcuyken kazanılanlar da dahil oyunculuk
+  // başarımları listeden tamamen kalkar; yalnızca teknik direktörlükle
+  // ilgili başarımlar görünür.
+  return BADGES.filter(b=> MANAGER_BADGE_IDS.includes(b.id));
 }
 /* başarım şartı sağlandığında: sadece bildir, ödülü kariyerdeki "Başarımlar" sekmesinden elle topla */
 function checkBadges(){
@@ -2296,7 +2308,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v5.6';
+const APP_VERSION = 'v5.7';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -3678,6 +3690,8 @@ function sellClubPlayer(idx){
   }
   addNews(`${p.team}, ${pl.name} oyuncusunu ${TL(income)} karşılığında sattı.`,'transfer');
   toast(`${pl.name} satıldı: +${TL(income)}`);
+  bumpAch('mgrSells');
+  checkBadges();
   save(); render();
 }
 function buyClubPlayer(id){
@@ -3711,6 +3725,8 @@ function buyClubPlayer(id){
   }
   S.clubBudget -= mp.price;
   S.marketPool = S.marketPool.filter(x=>x.id!==id);
+  bumpAch('mgrBuys');
+  checkBadges();
   save(); render();
 }
 function renderClubManagement(){
@@ -3723,7 +3739,9 @@ function renderClubManagement(){
   const eff = teamStrength(p.team);
   const diff = baseT ? eff-baseT.s : 0;
   const rank = sortTable().findIndex(t=>t.n===p.team)+1;
-  const rows = sq.map((pl,idx)=>({pl,idx})).sort((a,b)=> (b.pl.on-a.pl.on) || b.pl.ovr-a.pl.ovr);
+  // Teknik direktör artık sahaya çıkmıyor — kadro kartlarında kendi
+  // oyuncu kaydı asla görünmemeli (isUser her ihtimale karşı burada da eleniyor).
+  const rows = sq.map((pl,idx)=>({pl,idx})).filter(r=>!r.pl.isUser).sort((a,b)=> (b.pl.on-a.pl.on) || b.pl.ovr-a.pl.ovr);
   box.innerHTML = `
   <div class="card">
     <h3>📋 Kulüp Yönetimi <span class="chip gold">${TL(S.clubBudget||0)}</span></h3>
@@ -3736,18 +3754,18 @@ function renderClubManagement(){
     <p class="sub" style="margin-top:8px">Transferlerle kadronu güçlendirdikçe takımının maçlardaki gerçek gücü de değişir.</p>
   </div>
   <div class="card">
-    <h3>Kadro <span class="sub">${sq.length} oyuncu</span></h3>
+    <h3>Kadro <span class="sub">${rows.length} oyuncu</span></h3>
     ${sq.length<=MIN_SQUAD_SIZE?`<p class="sub" style="margin-bottom:8px">Kadron ${MIN_SQUAD_SIZE} kişiye indi — ilk 11'i doldurmak için daha fazla satamazsın, önce pazardan takviye al.</p>`:''}
-    ${rows.map(({pl,idx})=>`
-      <div class="statbox" style="margin-bottom:6px">
-        <div class="shoprow">
-          <div class="sinfo"><b>${pl.name}</b><div class="sub">#${pl.num} · ${posByKey(pl.posKey).short} · ${pl.on?'İlk 11':'Yedek'}</div></div>
-          <div style="text-align:right">
-            <div class="chip ovr" style="margin-bottom:4px">${pl.ovr}</div><br>
-            ${pl.isUser?'<span class="sub">Sen</span>':`<button class="btn sm red" ${sq.length<=MIN_SQUAD_SIZE?'disabled':''} onclick="sellClubPlayer(${idx})">Sat · ${TL(sellPriceFor(pl.ovr))}</button>`}
-          </div>
-        </div>
-      </div>`).join('')}
+    <div class="squad-grid">
+      ${rows.map(({pl,idx})=>`
+        <div class="pcard${pl.on?'':' bench'}">
+          <span class="pnum">#${pl.num}</span>
+          <div class="pname">${pl.name}</div>
+          <span class="ppos">${posByKey(pl.posKey).short} · ${pl.on?'İlk 11':'Yedek'}</span>
+          <span class="chip ovr povr">${pl.ovr}</span>
+          <button class="btn sm red psell" ${sq.length<=MIN_SQUAD_SIZE?'disabled':''} onclick="sellClubPlayer(${idx})">Sat · ${TL(sellPriceFor(pl.ovr))}</button>
+        </div>`).join('')}
+    </div>
   </div>
   <div class="card">
     <div class="spread" style="align-items:center">
@@ -3755,15 +3773,13 @@ function renderClubManagement(){
       <button class="btn sm primary" ${marketVidBusy?'disabled':''} onclick="watchMarketRefreshVideo()">${marketVidBusy?'…':'📺 Reklam izle, yenile'}</button>
     </div>
     <p class="sub" style="margin:6px 0 8px">Bonservis fırsatları. Liste kendiliğinden ${MARKET_AUTO_REFRESH_WEEKS} haftada bir yenilenir${marketWeeksUntilRefresh()>0?` (otomatik yenilenmeye <b>${marketWeeksUntilRefresh()}</b> hafta kaldı)`:''} — hemen yenilemek için reklam izlemen gerekir.</p>
-    ${S.marketPool.length ? S.marketPool.map(mp=>`
-      <div class="statbox" style="margin-bottom:6px">
-        <div class="shoprow">
-          <div class="sinfo"><b>${mp.name}</b><div class="sub">${posByKey(mp.posKey).short} · Güç ${mp.ovr}</div></div>
-          <div style="text-align:right">
-            <button class="btn sm ${(S.clubBudget||0)>=mp.price?'primary':''}" ${(S.clubBudget||0)<mp.price?'disabled':''} onclick="buyClubPlayer('${mp.id}')">${TL(mp.price)}</button>
-          </div>
-        </div>
-      </div>`).join('') : '<p class="sub">Pazarda kimse yok, gelecek hafta tekrar bak.</p>'}
+    ${S.marketPool.length ? `<div class="squad-grid">${S.marketPool.map(mp=>`
+      <div class="pcard">
+        <span class="pnum">${posByKey(mp.posKey).short}</span>
+        <div class="pname">${mp.name}</div>
+        <span class="ppos">Güç ${mp.ovr}</span>
+        <button class="btn sm ${(S.clubBudget||0)>=mp.price?'primary':''} psell" ${(S.clubBudget||0)<mp.price?'disabled':''} onclick="buyClubPlayer('${mp.id}')">${TL(mp.price)}</button>
+      </div>`).join('')}</div>` : '<p class="sub">Pazarda kimse yok, gelecek hafta tekrar bak.</p>'}
   </div>`;
 }
 function renderTransfers(){
@@ -3858,12 +3874,13 @@ function renderBadges(){
   const elig = p.badgesEligible||[];
   const readyCount = list.filter(b=>!p.badges.includes(b.id) && (elig.includes(b.id) || b.chk(p))).length;
   const isManager = p.role==='Teknik Direktör';
+  const gotInList = list.filter(b=>p.badges.includes(b.id)).length;
   $('badgesBox').innerHTML = `<div class="card">
     <div class="spread" style="align-items:center">
-      <h3 style="margin:0">Başarımlar <span class="chip">${p.badges.length}/${list.length}</span></h3>
+      <h3 style="margin:0">Başarımlar <span class="chip">${gotInList}/${list.length}</span></h3>
       ${readyCount>0?`<button class="btn sm primary" onclick="claimAllBadges()">✨ Tümünü Topla (${readyCount})</button>`:''}
     </div>
-    <p class="sub" style="margin:6px 0 8px">${isManager?'Teknik direktör olarak artık kazanamayacağın oyunculuk başarımları listeden kaldırıldı; kazandıkların burada duruyor. Şartını sağladıkların "Topla" butonuyla belirir.':'Şartını sağladığın başarımlar burada "Topla" butonuyla belirir — ödülü almak için tıklaman gerekir.'}</p>
+    <p class="sub" style="margin:6px 0 8px">${isManager?'Teknik direktör olarak artık futbolcu başarımları listelenmiyor, burada yalnızca teknik direktörlükle ilgili başarımlar var. Şartını sağladıkların "Topla" butonuyla belirir.':'Şartını sağladığın başarımlar burada "Topla" butonuyla belirir — ödülü almak için tıklaman gerekir.'}</p>
     ${list.map(b=>{
       const got = p.badges.includes(b.id);
       const ready = !got && (elig.includes(b.id) || b.chk(p));
@@ -6852,6 +6869,8 @@ function managerPlayWeek(){
   const lose = (fx.h===S.p.team && r.hs<r.as) || (fx.a===S.p.team && r.as<r.hs);
   toast(`${fx.h} ${r.hs} - ${r.as} ${fx.a}${win?' 🎉':lose?' 😞':''}`);
   addNews(`${fx.h} ${r.hs} - ${r.as} ${fx.a}`, 'lig');
+  bumpAch('mgrMatches');
+  if(win) bumpAch('mgrWins');
   checkBadges();
   endWeek();
 }
@@ -6870,6 +6889,9 @@ function endSeasonManager(){
       ${champ.n===p.team?'<p style="color:var(--good)"><b>🏆 Teknik direktörlüğünde şampiyon oldunuz!</b></p>':''}
       <button class="btn primary block" style="margin-top:12px" onclick="managerNextSeason()">Yeni sezona başla</button>`;
     if(champ.n===p.team) p.career.trophies.push(`${S.seasonLabel} Süper Lig (TD)`);
+    bumpAch('mgrSeasons');
+    checkBadges();
+    save();
     modal(txt);
   });
 }
@@ -7044,7 +7066,8 @@ const REWARD_CONFIG = {
   h5Test: false,                          // false: gerçek reklam. Onay gelene kadar reklam boşsa video sadece atlanır.
   cooldownSec: 45,                        // iki video arası bekleme
   dailyCap: 12,                           // günlük en fazla video
-  minReward: 50000
+  minReward: 50000,
+  testDurationSec: 5                      // provider 'placeholder' iken sahte test reklamının süresi (sn)
 };
 function rewardAmount(){
   const w = (S && S.p && S.p.wage) || 40000;
@@ -7089,7 +7112,7 @@ setInterval(updateVideoButtons, 1000);
 /* --- sağlayıcılar: hepsi {rewarded:boolean, reason?} döner --- */
 function placeholderRewarded(){
   return new Promise(res=>{
-    let t = 0; const total = 5;
+    let t = 0; const total = REWARD_CONFIG.testDurationSec;
     modal(`<h3 style="color:var(--flood)">🎬 Test reklamı</h3>
       <p class="sub">Bu gerçek bir reklam değil. Gerçek reklam ağı bağlanınca burada video oynar.</p>
       <div class="bar" style="margin:14px 0 6px"><i id="vid-bar" style="width:0%"></i></div>
