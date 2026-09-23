@@ -2274,7 +2274,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v5.3';
+const APP_VERSION = 'v5.4';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -3019,7 +3019,7 @@ const PHYSIO_COST = 25000;
 // sıkıntısı ortadan kalkar. Ayrıca çok erken jübileyi anlamsızlaştırmamak için
 // makul bir minimum yaş tutuluyor (aşılması kolay, sadece bir güvenlik payı).
 const JUBILEE_SEASONS = 1;
-const JUBILEE_MIN_AGE = 22;
+const JUBILEE_MIN_AGE = 19;
 function canJubilee(p){
   return (p.career.seasons.length >= JUBILEE_SEASONS) && p.age >= JUBILEE_MIN_AGE;
 }
@@ -3286,7 +3286,7 @@ function renderRoom(){
     ${p.captain?'':`<button class="btn sm ${canCaptain?'primary':''}" style="margin-top:8px" ${canCaptain?'':'disabled'} onclick="askCaptain()">Kaptanlığı iste</button>`}
     ${!canCaptain && !p.captain?`<div class="statbox" style="margin-top:8px">
       ${reqBar('Hoca güveni', p.trust, 72, Math.round(p.trust), '≥72')}
-      ${reqBar('Yaş', p.age, 19, p.age, '≥19')}
+      ${reqBar('Yaş', p.age, 22, p.age, '≥22')}
       ${reqBar('Sezondaki maç', p.season.apps, 6, p.season.apps, '≥6')}
     </div>`:''}
   </div>
