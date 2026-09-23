@@ -1014,6 +1014,20 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
       <button class="btn block" id="s-load" style="margin-top:8px;display:none">Kayıtlı kariyere devam et</button>
       <button class="btn block" id="s-restore" style="margin-top:8px">📥 Yedekten yükle</button>
     </div>
+
+    <div class="card" id="about-content">
+      <h3>Saha Kariyer nedir?</h3>
+      <p class="sub" style="line-height:1.6">Saha Kariyer, Türkiye Süper Lig'i temalı, tamamen tarayıcıda oynanan ücretsiz bir futbol kariyer simülasyonudur. Gerçek bir kulüp altyapısından çıkıp profesyonel futbolcu olan genç bir oyuncunun hikâyesini yaşarsınız: kendi futbolcunuzu isim, yaş, mevki, ayak tercihi ve forma numarasıyla yaratır, bir Süper Lig kulübüyle profesyonel sözleşme imzalar ve kariyerinizi haftadan haftaya kendiniz şekillendirirsiniz.</p>
+      <h3 style="margin-top:14px">Nasıl oynanır?</h3>
+      <p class="sub" style="line-height:1.6">Her hafta antrenman mini-oyunlarıyla oyuncunuzun hız, şut, pas, dripling gibi özelliklerini geliştirir, formunuzu ve sağlığınızı yönetirsiniz. Hafta sonu sahaya çıkar, maç anlatımını takip ederek takımınıza gol ve asistlerle katkı sağlarsınız. Performansınıza göre gazete manşetlerine çıkar, rozetler ve başarımlar kazanır, sponsorluk anlaşmaları yapar ve diğer kulüplerden transfer teklifleri alırsınız.</p>
+      <h3 style="margin-top:14px">Transfer ve Teknik Direktörlük</h3>
+      <p class="sub" style="line-height:1.6">Kariyeriniz ilerledikçe transfer pazarında pazarlık yapabilir, daha büyük kulüplere geçebilirsiniz. Futbolcu kariyerinizi tamamladıktan sonra isterseniz Teknik Direktör rolüne geçip artık sahada değil, kadro kurma ve transfer kararlarıyla kulübü yönetme tarafında devam edebilirsiniz. Oyun içi para (₺) antrenman, sağlık ve transfer kararlarında kullanılır; kariyeriniz cihazınıza otomatik olarak kaydedilir ve istediğiniz zaman yedeğini alabilirsiniz.</p>
+      <p class="sub" style="line-height:1.6;margin-top:14px">Saha Kariyer ücretsiz oynanabilir; site banner reklamlarla ve isteğe bağlı oyun içi satın alımlarla finanse edilir. Reklam ve çerez kullanımı hakkında bilgi için <a href="gizlilik-politikasi.html">Gizlilik Politikası</a> sayfamıza bakabilirsiniz.</p>
+    </div>
+
+    <footer style="text-align:center;color:var(--dim);font-size:.78rem;padding:10px 0 22px">
+      <a href="gizlilik-politikasi.html" style="color:var(--dim)">Gizlilik Politikası</a>
+    </footer>
   </section>
 
   <!-- ============ GAME ============ -->
@@ -1160,7 +1174,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
         <button data-pane="c-train">Antrenman<span class="tabdot" id="dot-train"></span></button>
         <button data-pane="c-health">Sağlık<span class="tabdot" id="dot-health"></span></button>
         <button data-pane="c-room">Soyunma Odası</button>
-        <button data-pane="c-shop">Mağaza</button>
+        <button data-pane="c-shop" id="tab-c-shop">Mağaza</button>
         <button data-pane="c-cash">Para Kazan</button>
         <button data-pane="c-stad">Stadyum</button>
         <button data-pane="c-sponsor">Sponsorlar<span class="tabdot" id="dot-sponsor-tab"></span></button>
@@ -1240,6 +1254,13 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
           </div>
         </div>
         <p class="sub" style="margin-top:6px">Oyun takılıyor ya da güncellenmiyor gibi görünüyorsa bu, önbelleği temizleyip son sürümü indirir. Kariyerin silinmez.</p>
+      </div>
+      <div class="card">
+        <h3>Hakkında</h3>
+        <div class="btngrid" style="margin-top:4px">
+          <button class="btn" onclick="openAboutModal()">ℹ️ Hakkında / Nasıl Oynanır</button>
+          <a class="btn" href="gizlilik-politikasi.html" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">🔒 Gizlilik Politikası</a>
+        </div>
       </div>
       <div class="card">
         <h3 style="color:var(--bad)">Tehlikeli bölge</h3>
@@ -2437,7 +2458,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v6.3';
+const APP_VERSION = 'v6.4';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2599,6 +2620,17 @@ function downloadBackupFile(){
     setTimeout(()=>URL.revokeObjectURL(url), 2000);
     toast('⬇️ Yedek dosyası indirildi.');
   }catch(e){ toast('Dosya indirilemedi.'); }
+}
+function openAboutModal(){
+  modal(`<h3 style="color:var(--flood)">Saha Kariyer nedir?</h3>
+    <p class="sub" style="line-height:1.6">Türkiye Süper Lig temalı, tarayıcıda oynanan ücretsiz bir futbol kariyer simülasyonu. Kendi futbolcunuzu yaratır, bir Süper Lig kulübüyle profesyonel sözleşme imzalar ve kariyerinizi haftadan haftaya şekillendirirsiniz.</p>
+    <h3 style="color:var(--flood);margin-top:12px">Nasıl oynanır?</h3>
+    <p class="sub" style="line-height:1.6">Antrenmanlarla özelliklerinizi geliştirir, maçlarda gol ve asistlerle katkı sağlar, gazete manşetlerine çıkar, rozetler ve sponsorluk anlaşmaları kazanırsınız.</p>
+    <h3 style="color:var(--flood);margin-top:12px">Transfer ve Teknik Direktörlük</h3>
+    <p class="sub" style="line-height:1.6">Transfer pazarında pazarlık yapıp daha büyük kulüplere geçebilir, futbolcu kariyerinizi tamamladıktan sonra Teknik Direktör olarak kadro ve transfer kararlarıyla kulübü yönetmeye devam edebilirsiniz. Kariyeriniz cihazınıza otomatik kaydedilir.</p>
+    <div class="btngrid" style="margin-top:10px">
+      <button class="btn block" onclick="closeModal()">Kapat</button>
+    </div>`);
 }
 function openRestoreModal(){
   modal(`<h3 style="color:var(--flood)">📥 Yedekten yükle</h3>
@@ -2773,7 +2805,7 @@ function updateNavBadges(){
    Bu fonksiyon her render'da nav ve Kariyer alt sekmelerini role göre
    günceller — jübile öncesi/sonrası state'ini elle senkronize etmeye
    gerek kalmasın diye. */
-const MANAGER_HIDDEN_CAREER_PANES = ['c-train','c-health','c-room','c-shop','c-stad','c-sponsor'];
+const MANAGER_HIDDEN_CAREER_PANES = ['c-train','c-health','c-room','c-stad','c-sponsor'];
 function updateNavForRole(){
   if(!S) return;
   const isManager = S.p.role==='Teknik Direktör';
@@ -2785,6 +2817,8 @@ function updateNavForRole(){
   const navLife = $('nav-life');
   if(navLife) navLife.style.display = isManager ? 'none' : '';
   if(isManager && currentView==='v-life') go('v-match');
+  const tabShop = $('tab-c-shop');
+  if(tabShop) tabShop.textContent = isManager ? 'Yaşam Tarzı' : 'Mağaza';
 
   // Kariyer alt sekmeleri: oyuncuya özel olanlar gizlenir
   const tabsWrap = document.querySelector('.tabs[data-tabs="career"]');
@@ -2940,9 +2974,11 @@ function renderManagerProfile(){
       <div class="spread"><span class="sub">Lig sırası</span><b>${rank}. sıra</b></div>
       <div class="spread"><span class="sub">Puan</span><b>${pts}</b></div>
       <div class="spread"><span class="sub">Kulüp bütçesi</span><b>${TL(S.clubBudget||0)}</b></div>
+      <div class="spread"><span class="sub">Kişisel servetin</span><b>${TL(p.money)}</b></div>
       <div class="spread"><span class="sub">Ün</span><b>${Math.round(p.fame)}/100</b></div>
+      <div class="spread"><span class="sub">Mutluluk</span><b>${Math.round(p.happiness)}/100</b></div>
     </div>
-    <p class="sub" style="margin-top:8px">Kadro ve transferleri 📋 Kulüp sekmesinden yönetebilirsin.</p>
+    <p class="sub" style="margin-top:8px">Kadro ve transferleri 📋 Kulüp sekmesinden, kişisel servetini ise 💎 Yaşam Tarzı sekmesinden yönetebilirsin.</p>
   </div>
   <div class="card">
     <h3>Oyunculuk kariyeri <span class="sub" style="font-weight:600">(geride kaldı)</span></h3>
@@ -3289,7 +3325,36 @@ function physio(){
 }
 
 /* ---------- MAĞAZA ---------- */
+function renderManagerShop(){
+  // Teknik direktör modunda krampon/enerji içeceği/ilk yardım gibi oyunculuğa
+  // özgü bölümlerin hiçbir anlamı yok — burada yalnızca kişisel servetini
+  // (p.money) değerlendirebileceğin yaşam tarzı/statü alışverişini gösteriyoruz.
+  const p=S.p;
+  $('shopBox').innerHTML = `
+  <div class="card">
+    <h3>👔 Teknik direktör olarak kişisel servetin</h3>
+    <p class="sub">Kulüp bütçesi (${TL(S.clubBudget||0)}) yalnızca transferler için kullanılır. Kendi kasan (${TL(p.money)}) ise tamamen sana ait — burada yaşam tarzına, statüne ve pasif gelir getiren yatırımlara harcayabilirsin.</p>
+  </div>
+  <div class="card">
+    <h3>Özel hayat alışverişi</h3>
+    <p class="sub">Yatlar, katlar, fabrikalar... İşletmeler ve kiralık gayrimenkuller her hafta sana gelir getirir. Alışverişler mutluluğunu ve ününü artırır.</p>
+    <div class="statbox spread"><span class="sub">Sahip olduğun işletmelerin haftalık geliri</span><b style="color:var(--good)">${TL(businessWeekly())}</b></div>
+    ${LUX_CATS.map(cat=>`
+      <h3 style="margin-top:14px">${cat.n}</h3>
+      ${LUX.filter(l=>l.cat===cat.k).sort((a,b)=>a.cost-b.cost).map(l=>{
+        const has = p.luxury.includes(l.id);
+        return `<div class="statbox shoprow">
+          <span style="font-size:1.45rem;flex:none">${l.ic||'💠'}</span>
+          <div class="sinfo"><b>${l.n}</b><div class="sub">Mutluluk +${l.mut} • Ün +${l.un}${l.inc?` • <span style="color:var(--good)">+${TL(l.inc)}/hafta</span>`:''}</div></div>
+          ${has?'<span class="chip ovr">Sahipsin</span>':
+            `<button class="btn sm ${p.money>=l.cost?'primary':''}" onclick="buyLux('${l.id}')">${TL(l.cost)}</button>`}
+        </div>`;
+      }).join('')}
+    `).join('')}
+  </div>`;
+}
 function renderShop(){
+  if(S.p.role==='Teknik Direktör'){ renderManagerShop(); return; }
   const p=S.p;
   $('shopBox').innerHTML = `
   <div class="card">
