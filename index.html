@@ -821,61 +821,75 @@ body,.card,.modal .box,nav#bottom,.paper,.statbox{transition:background-color .3
   border:1px solid #caa42e;border-radius:999px;padding:2px 9px;white-space:nowrap;}
 .badge-card:not(.got) .breward{background:var(--chipbg);color:var(--dim);border-color:var(--line);}
 
-/* ---------- Kadro / Transfer Pazarı: dikey dikdörtgen oyuncu kartları ---------- */
-.squad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-.pcard{position:relative;overflow:hidden;background:var(--surf3);border:1px solid var(--line);border-radius:10px;
-  padding:9px 6px 8px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;
-  min-height:154px;transition:box-shadow .3s,border-color .3s,transform .15s;}
+/* ---------- Kadro / Transfer Pazarı: FUT tarzı kalkan-çerçeveli oyuncu kartları ---------- */
+:root{
+  --shield: polygon(50% 0%,64% 3%,78% 9%,89% 19%,96% 32%,100% 48%,100% 60%,95% 75%,86% 86%,72% 95%,50% 100%,28% 95%,14% 86%,5% 75%,0% 60%,0% 48%,4% 32%,11% 19%,22% 9%,36% 3%);
+}
+.squad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 8px;}
+.pcard-item{display:flex;flex-direction:column;gap:6px;}
+.pcard{position:relative;padding:3px;aspect-ratio:.7;clip-path:var(--shield);
+  transition:filter .3s,transform .15s;}
 .pcard:active{transform:scale(.97);}
+.pcard-body{position:relative;overflow:hidden;width:100%;height:100%;clip-path:var(--shield);
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:22px 8px 20px;box-sizing:border-box;}
 /* çapraz, büyük kademe yazısı (EFSANE/YILDIZ/...) — kartın arkaplanında, içeriğin altında */
-.pcard::before{content:attr(data-wm);position:absolute;inset:-10% -30%;display:flex;align-items:center;justify-content:center;
-  font-family:'Barlow Condensed';font-weight:800;font-size:1.55rem;letter-spacing:2px;white-space:nowrap;
-  transform:rotate(-26deg);color:var(--ink);opacity:.07;pointer-events:none;z-index:0;text-transform:uppercase;}
-.pcard>*{position:relative;z-index:1;}
-.pcard .ptier{position:absolute;top:4px;right:5px;font-size:.72rem;line-height:1;filter:drop-shadow(0 0 3px rgba(0,0,0,.5));}
-.pcard .pnum{font-family:'Barlow Condensed';font-size:1.05rem;font-weight:800;color:var(--dim);}
-.pcard .pname{font-size:.78rem;font-weight:700;line-height:1.15;min-height:2.2em;display:flex;align-items:center;justify-content:center;}
-.pcard .ppos{font-size:.66rem;color:var(--dim);}
-.pcard .povr{margin-top:auto;margin-bottom:2px;}
-.pcard .psell{width:100%;font-size:.72rem;padding:6px 4px;white-space:normal;line-height:1.2;}
-/* güç kademeleri: yüksek güç = parlak/altın çerçeve, orta = yeşil parıltı, düşük = sönük */
-.pcard.tier-elite{
-  background:linear-gradient(160deg,rgba(255,210,74,.24),var(--surf3) 62%);
-  border-color:#caa42e;
-  box-shadow:0 0 0 1px rgba(255,210,74,.35),0 0 16px rgba(255,210,74,.26);
-}
-.pcard.tier-elite::before{color:var(--flood);opacity:.20;}
-.pcard.tier-elite .povr{background:var(--flood);color:var(--flood-ink);border-color:#caa42e;font-weight:800;}
-.pcard.tier-elite .pname{color:var(--flood);}
-.pcard.tier-great{
-  background:linear-gradient(160deg,rgba(52,211,153,.18),var(--surf3) 62%);
-  border-color:#2e8a63;
-  box-shadow:0 0 0 1px rgba(52,211,153,.25),0 0 12px rgba(52,211,153,.18);
-}
-.pcard.tier-great::before{color:var(--good);opacity:.17;}
-.pcard.tier-good{border-color:var(--line);}
-.pcard.tier-good::before{opacity:.08;}
-.pcard.tier-pro{border-color:var(--line);}
-.pcard.tier-pro::before{opacity:.07;}
-.pcard.tier-youth{
-  background:linear-gradient(160deg,rgba(96,165,250,.17),var(--surf3) 62%);
-  border-color:#3b6fa8;
-  box-shadow:0 0 0 1px rgba(96,165,250,.22),0 0 10px rgba(96,165,250,.16);
-}
-.pcard.tier-youth::before{color:#60a5fa;opacity:.15;}
+.pcard-body::before{content:attr(data-wm);position:absolute;inset:-10% -30%;display:flex;align-items:center;justify-content:center;
+  font-family:'Barlow Condensed';font-weight:800;font-size:1.15rem;letter-spacing:2px;white-space:nowrap;
+  transform:rotate(-26deg);color:#fff;opacity:.09;pointer-events:none;z-index:0;text-transform:uppercase;}
+.pcard-body>*{position:relative;z-index:1;}
+.pcard-num{position:absolute;top:7px;left:10px;z-index:2;font-family:'Barlow Condensed';font-size:.68rem;font-weight:700;opacity:.65;}
+.pcard-head{display:flex;justify-content:space-between;align-items:flex-start;width:100%;padding:0 3px;}
+.pcard-head .ptier{font-size:.8rem;line-height:1;filter:drop-shadow(0 0 3px rgba(0,0,0,.5));}
+/* güç: sağ üstte */
+.pcard-ovr{display:flex;flex-direction:column;align-items:flex-end;line-height:1;margin-left:auto;}
+.pcard-ovr b{font-family:'Barlow Condensed';font-size:1.35rem;font-weight:800;}
+.pcard-ovr small{font-size:.58rem;font-weight:700;letter-spacing:.4px;opacity:.85;}
+/* isim: ortada */
+.pcard-name{font-size:.8rem;font-weight:800;line-height:1.15;min-height:2.1em;display:flex;align-items:center;
+  justify-content:center;margin-top:4px;}
+.pcard-role{font-size:.6rem;opacity:.7;margin-top:-4px;}
+/* özellikler: altta */
+.pcard-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:2px 6px;width:100%;margin-top:auto;
+  padding-top:5px;border-top:1px solid rgba(255,255,255,.18);}
+.pcard-stats div{display:flex;flex-direction:column;line-height:1.05;}
+.pcard-stats b{font-size:.74rem;font-weight:800;}
+.pcard-stats span{font-size:.52rem;opacity:.75;letter-spacing:.3px;}
+.pcard-item .psell{width:100%;font-size:.7rem;padding:6px 4px;white-space:normal;line-height:1.2;}
+/* güç kademeleri: FUT usulü bronz/gümüş/altın/özel renklendirme */
+.pcard.tier-elite{background:linear-gradient(160deg,#ff5ec4,#8b5cf6 45%,#22d47a 100%);}
+.pcard.tier-elite .pcard-body{background:linear-gradient(165deg,#2a1140,#140a24 75%);color:#fdf2ff;}
+.pcard.tier-elite .pcard-ovr b,.pcard.tier-elite .pcard-name{color:#ff8fe0;}
+
+.pcard.tier-great{background:linear-gradient(160deg,#ffe27a,#caa42e 60%,#8a6a12 100%);}
+.pcard.tier-great .pcard-body{background:linear-gradient(165deg,#2b2308,#1c1706 75%);color:#fff6da;}
+.pcard.tier-great .pcard-ovr b,.pcard.tier-great .pcard-name{color:#ffd75e;}
+
+.pcard.tier-good{background:linear-gradient(160deg,#eef2f7,#aab6c4 55%,#6b7887 100%);}
+.pcard.tier-good .pcard-body{background:linear-gradient(165deg,#20262d,#151a1f 75%);color:#eef2f6;}
+.pcard.tier-good .pcard-ovr b,.pcard.tier-good .pcard-name{color:#c9d3dc;}
+
+.pcard.tier-pro{background:linear-gradient(160deg,#e2a765,#b3703a 55%,#7a481f 100%);}
+.pcard.tier-pro .pcard-body{background:linear-gradient(165deg,#2a1c10,#1b120a 75%);color:#f7e6d3;}
+.pcard.tier-pro .pcard-ovr b,.pcard.tier-pro .pcard-name{color:#e2a765;}
+
+.pcard.tier-youth{background:linear-gradient(160deg,#7dd3fc,#3b82f6 55%,#1e3a8a 100%);}
+.pcard.tier-youth .pcard-body{background:linear-gradient(165deg,#0e1b33,#0a1424 75%);color:#e6f1ff;}
+.pcard.tier-youth .pcard-ovr b,.pcard.tier-youth .pcard-name{color:#7dd3fc;}
 .pcard.tier-youth .ptier{filter:none;}
-.pcard.bench{opacity:.72;}
-.pcard.bench.tier-elite,.pcard.bench.tier-great{opacity:.85;} /* yıldız oyuncu yedekte bile sönmesin */
+
+.pcard-item.bench .pcard{opacity:.72;}
+.pcard-item.bench .pcard.tier-elite,.pcard-item.bench .pcard.tier-great{opacity:.85;} /* yıldız oyuncu yedekte bile sönmesin */
 @media (prefers-reduced-motion:no-preference){
   .pcard.tier-elite{animation:pcardGlow 2.6s ease-in-out infinite;}
 }
 @keyframes pcardGlow{
-  0%,100%{box-shadow:0 0 0 1px rgba(255,210,74,.35),0 0 12px rgba(255,210,74,.22);}
-  50%{box-shadow:0 0 0 1px rgba(255,210,74,.6),0 0 22px rgba(255,210,74,.42);}
+  0%,100%{filter:drop-shadow(0 0 5px rgba(255,94,196,.4));}
+  50%{filter:drop-shadow(0 0 13px rgba(139,92,246,.6));}
 }
 @media (max-width:520px){
   .squad-grid{grid-template-columns:repeat(2,1fr);}
-  .pcard::before{font-size:1.2rem;}
+  .pcard-body::before{font-size:1rem;}
 }
 
 /* ---------- Takım rozeti (forma önizleme) ---------- */
@@ -1734,8 +1748,29 @@ const POSITIONS = [
 const posByKey = k => POSITIONS.find(p=>p.k===k) || POSITIONS[15];
 /* oyuncu kartı görsel kalite kademesi: güce göre parlaklık/çerçeve + arkaplan yazısı */
 function ovrTier(ovr){ return ovr>=87?'elite': ovr>=80?'great': ovr>=70?'good': ovr>=60?'pro':'youth'; }
-function ovrTierIcon(t){ return t==='elite'?'<span class="ptier">🌟</span>':t==='great'?'<span class="ptier">🔷</span>':t==='youth'?'<span class="ptier">🌱</span>':''; }
+function ovrTierIcon(t){ return t==='elite'?'<span class="ptier">🌟</span>':t==='great'?'<span class="ptier">🔷</span>':t==='youth'?'<span class="ptier">🌱</span>':'<span class="ptier">⚪</span>'; }
 function ovrTierWord(t){ return t==='elite'?'Dünya Klası':t==='great'?'Efsanevi':t==='good'?'Elit':t==='pro'?'Profesyonel':'Geleceğin Yıldızı'; }
+/* pazar oyuncularında gerçek yetenek verisi yoksa, mevkiye ve güce göre kart için görsel bir tahmin üretir */
+function displayAttrsFor(attrs, posKey, ovr){
+  if(attrs) return attrs;
+  const t = TEMPLATE[posKey] || TEMPLATE.CM;
+  const grp = (posByKey(posKey)||{}).grp || 'MID';
+  const base = overallOf(t, grp) || 1;
+  const ratio = ovr / base;
+  const out = {};
+  for(const k in t){ if(k==='klc') continue; out[k] = clamp(Math.round(t[k]*ratio), 1, 99); }
+  return out;
+}
+function pcardStatsHTML(a){
+  return `<div class="pcard-stats">
+    <div><b>${a.hiz}</b><span>HIZ</span></div>
+    <div><b>${a.sut}</b><span>ŞUT</span></div>
+    <div><b>${a.pas}</b><span>PAS</span></div>
+    <div><b>${a.drib}</b><span>DRİ</span></div>
+    <div><b>${a.def}</b><span>DEF</span></div>
+    <div><b>${a.fiz}</b><span>FİZ</span></div>
+  </div>`;
+}
 
 /* ---------- takım kısaltmaları (skor barı için) ---------- */
 const TEAM_ABBR = {
@@ -2355,7 +2390,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v5.8';
+const APP_VERSION = 'v5.9';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -3804,13 +3839,20 @@ function renderClubManagement(){
     <h3>Kadro <span class="sub">${rows.length} oyuncu</span></h3>
     ${sq.length<=MIN_SQUAD_SIZE?`<p class="sub" style="margin-bottom:8px">Kadron ${MIN_SQUAD_SIZE} kişiye indi — ilk 11'i doldurmak için daha fazla satamazsın, önce pazardan takviye al.</p>`:''}
     <div class="squad-grid">
-      ${rows.map(({pl,idx})=>{ const tier=ovrTier(pl.ovr); return `
-        <div class="pcard tier-${tier}${pl.on?'':' bench'}" data-wm="${ovrTierWord(tier)}">
-          ${ovrTierIcon(tier)}
-          <span class="pnum">#${pl.num}</span>
-          <div class="pname">${pl.name}</div>
-          <span class="ppos">${posByKey(pl.posKey).short} · ${pl.on?'İlk 11':'Yedek'}</span>
-          <span class="chip ovr povr">${pl.ovr}</span>
+      ${rows.map(({pl,idx})=>{ const tier=ovrTier(pl.ovr); const a=displayAttrsFor(pl.attrs,pl.posKey,pl.ovr); return `
+        <div class="pcard-item${pl.on?'':' bench'}">
+          <div class="pcard tier-${tier}">
+            <div class="pcard-body" data-wm="${ovrTierWord(tier)}">
+              <span class="pcard-num">#${pl.num}</span>
+              <div class="pcard-head">
+                ${ovrTierIcon(tier)}
+                <div class="pcard-ovr"><b>${pl.ovr}</b><small>${posByKey(pl.posKey).short}</small></div>
+              </div>
+              <div class="pcard-name">${pl.name}</div>
+              <span class="pcard-role">${pl.on?'İlk 11':'Yedek'}</span>
+              ${pcardStatsHTML(a)}
+            </div>
+          </div>
           <button class="btn sm red psell" ${sq.length<=MIN_SQUAD_SIZE?'disabled':''} onclick="sellClubPlayer(${idx})">Sat · ${TL(sellPriceFor(pl.ovr))}</button>
         </div>`;}).join('')}
     </div>
@@ -3821,13 +3863,20 @@ function renderClubManagement(){
       <button class="btn sm primary" ${marketVidBusy?'disabled':''} onclick="watchMarketRefreshVideo()">${marketVidBusy?'…':'📺 Reklam izle, yenile'}</button>
     </div>
     <p class="sub" style="margin:6px 0 8px">Bonservis fırsatları. Liste kendiliğinden ${MARKET_AUTO_REFRESH_WEEKS} haftada bir yenilenir${marketWeeksUntilRefresh()>0?` (otomatik yenilenmeye <b>${marketWeeksUntilRefresh()}</b> hafta kaldı)`:''} — hemen yenilemek için reklam izlemen gerekir.</p>
-    ${S.marketPool.length ? `<div class="squad-grid">${S.marketPool.map(mp=>{ const tier=ovrTier(mp.ovr); return `
-      <div class="pcard tier-${tier}" data-wm="${ovrTierWord(tier)}">
-        ${ovrTierIcon(tier)}
-        <span class="pnum">${posByKey(mp.posKey).short}</span>
-        <div class="pname">${mp.name}</div>
-        <span class="ppos">Bonservis</span>
-        <span class="chip ovr povr">${mp.ovr}</span>
+    ${S.marketPool.length ? `<div class="squad-grid">${S.marketPool.map(mp=>{ const tier=ovrTier(mp.ovr); const a=displayAttrsFor(mp.attrs,mp.posKey,mp.ovr); return `
+      <div class="pcard-item">
+        <div class="pcard tier-${tier}">
+          <div class="pcard-body" data-wm="${ovrTierWord(tier)}">
+            <span class="pcard-num">#${mp.num}</span>
+            <div class="pcard-head">
+              ${ovrTierIcon(tier)}
+              <div class="pcard-ovr"><b>${mp.ovr}</b><small>${posByKey(mp.posKey).short}</small></div>
+            </div>
+            <div class="pcard-name">${mp.name}</div>
+            <span class="pcard-role">Bonservis</span>
+            ${pcardStatsHTML(a)}
+          </div>
+        </div>
         <button class="btn sm ${(S.clubBudget||0)>=mp.price?'primary':''} psell" ${(S.clubBudget||0)<mp.price?'disabled':''} onclick="buyClubPlayer('${mp.id}')">${TL(mp.price)}</button>
       </div>`;}).join('')}</div>` : '<p class="sub">Pazarda kimse yok, gelecek hafta tekrar bak.</p>'}
   </div>`;
