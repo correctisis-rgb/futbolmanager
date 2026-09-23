@@ -202,6 +202,7 @@ td.num,th.num{text-align:center;width:26px;white-space:nowrap;}
   padding:10px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;margin-bottom:10px;
 }
 .scoreboard .tn{font-family:'Barlow Condensed';font-size:.95rem;font-weight:600;text-align:center;line-height:1.1;}
+.scoreboard .sb-cards{display:inline-block;margin-top:2px;font-size:.78rem;font-family:'Barlow',sans-serif;letter-spacing:.5px;min-height:1em;}
 .scoreboard .sc{font-family:'Barlow Condensed';font-size:2.1rem;font-weight:700;letter-spacing:1px;
   background:var(--surf5);border:1px solid var(--line);border-radius:8px;padding:2px 12px;}
 .clock{text-align:center;font-family:'Barlow Condensed';font-size:.85rem;color:var(--flood);letter-spacing:1px;grid-column:1/-1;}
@@ -336,8 +337,11 @@ td.num,th.num{text-align:center;width:26px;white-space:nowrap;}
 .ball.goal-flash{filter:drop-shadow(0 0 10px var(--flood)) drop-shadow(0 3px 4px rgba(0,0,0,.5));}
 .line{position:absolute;background:rgba(255,255,255,.55);}
 .overlay{position:absolute;inset:0;background:rgba(3,8,10,.88);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:8px;text-align:center;padding:14px;z-index:20;}
+  align-items:center;justify-content:center;justify-content:safe center;gap:8px;text-align:center;padding:14px;z-index:23;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .overlay .big{font-family:'Barlow Condensed';font-size:1.6rem;color:var(--flood);}
+.tactic-row{row-gap:6px;}
+.tactic-row .btn.tactic-btn{padding:6px 9px;font-size:.72rem;border-radius:8px;max-width:31%;white-space:normal;line-height:1.15;}
 /* ---- VAR ---- */
 .varbox{position:absolute;inset:0;z-index:25;display:flex;flex-direction:column;align-items:center;
   justify-content:center;gap:6px;background:rgba(2,8,14,.92);text-align:center;padding:10px;}
@@ -602,7 +606,13 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
 .rotatefab:active{background:rgba(255,255,255,.22);}
 
 .prompt{background:linear-gradient(180deg,#7c2d12,#9a3412);border:1px solid #c2410c;border-radius:10px;
-  padding:10px;text-align:center;font-weight:700;margin-bottom:8px;}
+  padding:10px;text-align:center;font-weight:700;margin-bottom:8px;
+  display:flex;align-items:center;justify-content:center;gap:8px;}
+.prompt-timer{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;
+  border-radius:999px;background:rgba(255,255,255,.92);color:#7c2d12;font-size:.82rem;font-weight:800;
+  flex:none;transition:transform .15s;}
+.prompt-timer.tick{animation:promptTick .35s ease;}
+@keyframes promptTick{0%{transform:scale(1.28)}100%{transform:scale(1)}}
 .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .acts button{padding:14px 8px;font-size:.88rem;}
 
@@ -1020,7 +1030,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
             <div class="crowd bot" id="crowdBot"></div>
             <div class="condstrip">
               <div class="cond-row">
-                <span id="me-label" class="cond-label">Sen — kondisyon</span>
+                <span id="me-label" class="cond-label">Sen</span>
                 <span class="bar energy thick" id="me-sta-wrap"><i id="me-sta-bar" style="width:100%"></i><em id="me-boost-txt"></em></span>
                 <b id="me-sta" class="cond-pct">100%</b>
                 <button class="btn sm" id="btn-drink">⚡ <span id="drinkN">0</span></button>
@@ -1171,6 +1181,15 @@ const rnd = (a,b) => Math.random()*(b-a)+a;
 const ri  = (a,b) => Math.floor(rnd(a,b+1));
 const pick = arr => arr[Math.floor(Math.random()*arr.length)];
 const clamp = (v,a=0,b=100) => Math.max(a,Math.min(b,v));
+// çeşitli "şart" kartlarında (kaptanlık, jübile vb.) kullanılan ortak ilerleme barı satırı
+function reqBar(label, cur, need, curTxt, needTxt){
+  const ok = cur>=need;
+  const pct = need>0 ? clamp(Math.round((cur/need)*100),0,100) : 100;
+  return `<div style="margin-top:9px">
+    <div class="barline"><span>${ok?'✅ ':''}${label}</span><b style="color:${ok?'var(--good)':'var(--ink)'}">${curTxt} <span class="sub">/ ${needTxt}</span></b></div>
+    <div class="bar ${ok?'mood':''}"><i style="width:${pct}%"></i></div>
+  </div>`;
+}
 const TL = n => Math.round(n).toLocaleString('tr-TR')+' ₺';
 const chance = p => Math.random() < p;
 // binlik ayraçlı (100.000 gibi) tutar gösterimi/çözümlemesi — pazarlık inputları için
@@ -1609,26 +1628,26 @@ const Sfx = {
 /* =========================================================
    VERİ
    ========================================================= */
-/* 2025/26 Trendyol Süper Lig'in gerçek 18 takımı; c=forma ana rengi, c2=forma ikinci rengi (gerçek kulüp renkleri) */
+/* Süper Lig'den esinlenilen 18 kurgusal takım (isimler hafif değiştirildi); c=forma ana rengi, c2=forma ikinci rengi */
 const TEAMS = [
-  {n:'Galatasaray',        s:88, c:'#a30234', c2:'#fdb913', kit:'halves'},  {n:'Fenerbahçe',       s:86, c:'#0a3161', c2:'#ffe000', kit:'solid'},
-  {n:'Trabzonspor',        s:82, c:'#7b1030', c2:'#7ec8e3', kit:'hoops'},   {n:'Beşiktaş',         s:80, c:'#141414', c2:'#ffffff', kit:'stripes'},
-  {n:'Başakşehir',         s:76, c:'#f36f21', c2:'#1c355e', kit:'solid'},   {n:'Göztepe',          s:75, c:'#fdd800', c2:'#e2001a', kit:'stripes'},
-  {n:'Samsunspor',         s:72, c:'#e2001a', c2:'#ffffff', kit:'stripes'}, {n:'Kocaelispor',      s:70, c:'#0f7a3d', c2:'#141414', kit:'stripes'},
-  {n:'Alanyaspor',         s:69, c:'#f47b20', c2:'#006233', kit:'solid'},   {n:'Rizespor',         s:69, c:'#00693e', c2:'#003a70', kit:'halves'},
-  {n:'Konyaspor',          s:68, c:'#0b6e3a', c2:'#ffffff', kit:'halves'},  {n:'Antalyaspor',      s:68, c:'#e2001a', c2:'#ffffff', kit:'stripes'},
-  {n:'Gençlerbirliği',     s:67, c:'#a6192e', c2:'#141414', kit:'stripes'}, {n:'Kasımpaşa',        s:67, c:'#0b2d6b', c2:'#ffffff', kit:'solid'},
-  {n:'Kayserispor',        s:66, c:'#e2001a', c2:'#fdd800', kit:'stripes'}, {n:'Eyüpspor',         s:66, c:'#5c2d91', c2:'#fdd800', kit:'stripes'},
-  {n:'Fatih Karagümrük',   s:65, c:'#d2001e', c2:'#141414', kit:'halves'},  {n:'Gaziantep FK',     s:65, c:'#c8102e', c2:'#141414', kit:'stripes'}
+  {n:'Galata SK',        s:88, c:'#a30234', c2:'#fdb913', kit:'halves'},  {n:'Fenerköy SK',       s:86, c:'#0a3161', c2:'#ffe000', kit:'solid'},
+  {n:'Trabzon FK',        s:82, c:'#7b1030', c2:'#7ec8e3', kit:'hoops'},   {n:'Beşiktepe SK',         s:80, c:'#141414', c2:'#ffffff', kit:'stripes'},
+  {n:'Başak SK',         s:76, c:'#f36f21', c2:'#1c355e', kit:'solid'},   {n:'Göztaş FK',          s:75, c:'#fdd800', c2:'#e2001a', kit:'stripes'},
+  {n:'Samsun FK',         s:72, c:'#e2001a', c2:'#ffffff', kit:'stripes'}, {n:'Kocaeli FK',      s:70, c:'#0f7a3d', c2:'#141414', kit:'stripes'},
+  {n:'Alanya FK',         s:69, c:'#f47b20', c2:'#006233', kit:'solid'},   {n:'Rize FK',         s:69, c:'#00693e', c2:'#003a70', kit:'halves'},
+  {n:'Konya FK',          s:68, c:'#0b6e3a', c2:'#ffffff', kit:'halves'},  {n:'Antalya FK',      s:68, c:'#e2001a', c2:'#ffffff', kit:'stripes'},
+  {n:'Gençler Gücü',     s:67, c:'#a6192e', c2:'#141414', kit:'stripes'}, {n:'Kasımköy FK',        s:67, c:'#0b2d6b', c2:'#ffffff', kit:'solid'},
+  {n:'Kayseri FK',        s:66, c:'#e2001a', c2:'#fdd800', kit:'stripes'}, {n:'Eyüp FK',         s:66, c:'#5c2d91', c2:'#fdd800', kit:'stripes'},
+  {n:'Karagümrük FK',   s:65, c:'#d2001e', c2:'#141414', kit:'halves'},  {n:'Gaziantep SK',     s:65, c:'#c8102e', c2:'#141414', kit:'stripes'}
 ];
-/* birkaç kulüpte gerçek, tanınabilir futbolcu isimleri (2025/26 kadrosu) — kalan mevkiler otomatik oyuncularla dolduruluyor */
+/* birkaç kulüpte gerçek kadrolardan esinlenilen (isimleri hafifçe değiştirilmiş) oyuncular — kalan mevkiler otomatik oyuncularla dolduruluyor */
 const STAR_PLAYERS = {
-  'Galatasaray':      [{name:'Mauro Icardi', posKey:'ST'},{name:'Victor Osimhen', posKey:'CF'},{name:'Leroy Sane', posKey:'RW'},{name:'Kerem Aktürkoğlu', posKey:'LW'}],
-  'Fenerbahçe':       [{name:'Edin Dzeko', posKey:'ST'},{name:'İrfan Can Kahveci', posKey:'AM'},{name:'Fred', posKey:'CM'},{name:'Milan Skriniar', posKey:'CB'}],
-  'Trabzonspor':      [{name:'Paul Onuachu', posKey:'ST'},{name:'Anthony Nwakaeme', posKey:'RW'},{name:'Edin Visca', posKey:'LW'}],
-  'Beşiktaş':         [{name:'Orkun Kökçü', posKey:'CM'},{name:'Tammy Abraham', posKey:'ST'},{name:'Rafa Silva', posKey:'AM'}],
-  'Başakşehir':       [{name:'Deniz Türüç', posKey:'AM'},{name:'Aleksandar Katai', posKey:'RW'}],
-  'Samsunspor':       [{name:'Marius Mouandilmadji', posKey:'ST'},{name:'Anthony Musaba', posKey:'RW'}]
+  'Galata SK':      [{name:'Mauro Icardo', posKey:'ST'},{name:'Viktor Osiman', posKey:'CF'},{name:'Leroy Sanne', posKey:'RW'},{name:'Kerem Aktürk', posKey:'LW'}],
+  'Fenerköy SK':       [{name:'Edin Dzeco', posKey:'ST'},{name:'İrfan Kahveciler', posKey:'AM'},{name:'Fredo', posKey:'CM'},{name:'Milan Skrinjar', posKey:'CB'}],
+  'Trabzon FK':      [{name:'Paul Onuachi', posKey:'ST'},{name:'Antony Nwakeme', posKey:'RW'},{name:'Edin Vişka', posKey:'LW'}],
+  'Beşiktepe SK':         [{name:'Orkun Köksal', posKey:'CM'},{name:'Tommy Abrahams', posKey:'ST'},{name:'Rafael Silvo', posKey:'AM'}],
+  'Başak SK':       [{name:'Deniz Türkeş', posKey:'AM'},{name:'Aleksandar Kataj', posKey:'RW'}],
+  'Samsun FK':       [{name:'Marius Mouandi', posKey:'ST'},{name:'Anton Musabi', posKey:'RW'}]
 };
 
 const AD = ['Kerem','Arda','Emre','Barış','Cenk','Hakan','Yusuf','Mert','Umut','Berkay','Ozan','Kaan','Serdar','Volkan','Onur','Burak','Taylan','Efe','Deniz','Ahmet','Mehmet','Salih','İsmail','Halil','Uğur','Doğan','Eren','Furkan','Batuhan','Sinan','Levent','Tolga','Alper','Cihan','Mustafa','Oğuz'];
@@ -1659,11 +1678,11 @@ const posByKey = k => POSITIONS.find(p=>p.k===k) || POSITIONS[15];
 
 /* ---------- takım kısaltmaları (skor barı için) ---------- */
 const TEAM_ABBR = {
-  'Galatasaray':'GS', 'Fenerbahçe':'FB', 'Beşiktaş':'BJK', 'Trabzonspor':'TS',
-  'Başakşehir':'IBB', 'Göztepe':'GÖZ', 'Samsunspor':'SAM', 'Kocaelispor':'KOC',
-  'Alanyaspor':'ALA', 'Rizespor':'RİZ', 'Konyaspor':'KON', 'Antalyaspor':'ANT',
-  'Gençlerbirliği':'GB', 'Kasımpaşa':'KSM', 'Kayserispor':'KAY', 'Eyüpspor':'EYÜ',
-  'Fatih Karagümrük':'FKG', 'Gaziantep FK':'GFK',
+  'Galata SK':'GAL', 'Fenerköy SK':'FNK', 'Beşiktepe SK':'BTP', 'Trabzon FK':'TZF',
+  'Başak SK':'BAS', 'Göztaş FK':'GTS', 'Samsun FK':'SMS', 'Kocaeli FK':'KCF',
+  'Alanya FK':'ALF', 'Rize FK':'RZF', 'Konya FK':'KNF', 'Antalya FK':'ANF',
+  'Gençler Gücü':'GLG', 'Kasımköy FK':'KSF', 'Kayseri FK':'KYF', 'Eyüp FK':'EYF',
+  'Karagümrük FK':'KGF', 'Gaziantep SK':'GZS',
   'Türkiye A Milli':'TUR', 'Türkiye':'TUR',
   'Madrid Kraliyet':'MAD', 'Bavyera Münih':'MÜN', 'Manchester Kırmızı':'MAN',
   'Milano Rossoneri':'MİL', 'Paris Başkent':'PAR', 'Londra Mavileri':'LON',
@@ -1721,72 +1740,72 @@ const SLOTS = [
 const SLOT_POS = ['GK','RB','CB','CB','LB','DM','CM','AM','RW','ST','LW'];
 
 /* =========================================================
-   GERÇEK KADROLAR (2026/27 başı)
+   KADROLAR (gerçek 2026/27 kadrolarından esinlenilmiş, isimleri
+   hafifçe değiştirilmiş kurgusal oyuncular)
    xi    : SLOT_POS sırasıyla ilk 11 → GK, RB, CB, CB, LB, DM, CM, AM, RW, ST, LW
            her eleman [isim, forma no]; forma no yoksa slot numarası kullanılır; null → rastgele isim
    bench : [isim, mevki, forma no] — boş bırakılırsa yedekler rastgele üretilir
-   Bir oyuncu transfer olduysa sadece buradaki ismi değiştirmen yeterli.
    ========================================================= */
 const REAL_SQUADS_VER = 1;
 const REAL_SQUADS = {
-  'Galatasaray': {
-    xi:[['Uğurcan Çakır',1],['Wilfried Singo',90],['Abdülkerim Bardakcı',42],['Davinson Sánchez',6],['Eren Elmalı',17],
-        ['Lucas Torreira',34],['İlkay Gündoğan',20],['Gabriel Sara',8],['Leroy Sané',10],['Victor Osimhen',45],['Rafael Leão',27]],
-    bench:[['Günay Güvenç','GK',19],['Ismail Jakobs','LB',4],['Kaan Ayhan','CB',23],['Mario Lemina','DM',99],
-           ['Aleksey Batrakov','AM',83],['Yunus Akgün','RW',11],['Deniz Gül','ST',21]]
+  'Galata SK': {
+    xi:[['Uğurcan Çakan',1],['Wilfrid Singu',90],['Abdülkerim Bardakoğlu',42],['Davison Sanchez',6],['Eren Elmacı',17],
+        ['Lucas Torreiro',34],['İlkay Gündoğdu',20],['Gabriel Sarra',8],['Leroy Sanne',10],['Viktor Osiman',45],['Rafael Leon',27]],
+    bench:[['Günay Güvence','GK',19],['Ismail Jakop','LB',4],['Kaan Aydan','CB',23],['Mario Lemine','DM',99],
+           ['Aleksey Batrakoff','AM',83],['Yunus Akgüney','RW',11],['Deniz Gülsoy','ST',21]]
   },
-  'Fenerbahçe': {
-    xi:[['Ederson',31],['Nélson Semedo',27],['Milan Škriniar',37],['Nathan Aké',15],['Levent Mercan'],
-        ["N'Golo Kanté",17],['Mattéo Guendouzi',6],['Anderson Talisca',94],['Mason Greenwood',11],['Vedat Muriqi',19],['Marco Asensio',21]],
-    bench:[['Mert Günok','GK'],['Çağlar Söyüncü','CB'],['Archie Brown','LB'],['İsmail Yüksek','DM'],
-           ['Mert Hakan Yandaş','CM'],['Dorgeles Nene','LW',45],['Romelu Lukaku','ST']]
+  'Fenerköy SK': {
+    xi:[['Edersonn',31],['Nelson Semeda',27],['Milan Skrinjar',37],['Nathan Aker',15],['Levent Merkan'],
+        ["N'Golo Kantu",17],['Matteo Guendouz',6],['Anderson Talisco',94],['Mason Greenwold',11],['Vedat Muriqu',19],['Marco Asenzio',21]],
+    bench:[['Mert Günoğlu','GK'],['Çağlar Söyünce','CB'],['Archie Browne','LB'],['İsmail Yükseloğlu','DM'],
+           ['Mert Hakan Yandaç','CM'],['Dorgeles Neno','LW',45],['Romelu Lukako','ST']]
   },
-  'Trabzonspor': {
-    xi:[['André Onana'],['Mustafa Eskihellaç'],['Stefan Savić'],['Arseniy Batagov'],['Wagner Pina'],
-        ['Okay Yokuşlu'],['Christ Inao Oulaï'],['Ozan Tufan'],['Anthony Nwakaeme'],['Paul Onuachu'],['Ernest Muçi']],
-    bench:[['Onuralp Çevikkan','GK'],['Chibuike Nwaiwu','CB'],['Mathias Løvik','LB'],['Benjamin Bouchouari','CM'],
-           ['Edin Višća','LW'],['Oleksandr Zubkov','RW'],['Umut Nayır','ST']]
+  'Trabzon FK': {
+    xi:[['Andre Onona'],['Mustafa Eskihellioğlu'],['Stefan Savov'],['Arseniy Batagoff'],['Wagner Pinha'],
+        ['Okay Yokuşoğlu'],['Krist Inao Oulaye'],['Ozan Tufanoğlu'],['Antony Nwakeme'],['Paul Onuachi'],['Ernest Muçoğlu']],
+    bench:[['Onuralp Çevikkaya','GK'],['Chibuike Nwaiwo','CB'],['Mathias Lovek','LB'],['Benjamin Bouchouare','CM'],
+           ['Edin Vişka','LW'],['Oleksandr Zubkoff','RW'],['Umut Nayıroğlu','ST']]
   },
-  'Beşiktaş': {
-    xi:[['Ersin Destanoğlu'],['Amir Murillo'],['Emmanuel Agbadou'],['Felix Uduokhai'],['Rıdvan Yılmaz'],
-        ['Wilfred Ndidi'],['Orkun Kökçü'],['Rafa Silva'],['Cengiz Ünder'],['Tammy Abraham'],['Leandro Trossard']],
-    bench:[[null,'GK'],['Tiago Djaló','CB'],['Jonas Svensson','RB'],['Necip Uysal','DM'],
-           ['Gedson Fernandes','CM'],['Václav Černý','RW'],['El Bilal Touré','ST']]
+  'Beşiktepe SK': {
+    xi:[['Ersin Destanlı'],['Amir Murilo'],['Emmanuel Agbado'],['Felix Uduokhi'],['Rıdvan Yılmazoğlu'],
+        ['Wilfred Ndidu'],['Orkun Köksal'],['Rafael Silva'],['Cengiz Ünsal'],['Tommy Abrahams'],['Leandro Trosard']],
+    bench:[[null,'GK'],['Tiago Djalu','CB'],['Jonas Svenson','RB'],['Necip Uysaloğlu','DM'],
+           ['Gedson Fernandez','CM'],['Vasil Cerny','RW'],['Al Bilal Toure','ST']]
   },
-  'Kayserispor': {
-    xi:[['Onurcan Piri',1],['Jadel Katongo',2],['Stefano Denswil',4],['Majid Hosseini',5],['Lionel Carole',23],
-        ['Youssef Aït Bennasser'],['László Bénes',8],['João Mendes',10],['Miguel Cardoso',7],['Fedor Chalov'],['Carlos Mané']],
+  'Kayseri FK': {
+    xi:[['Onurcan Piroğlu',1],['Jadel Katongu',2],['Stefano Denzil',4],['Majid Hosseiny',5],['Lionel Karol',23],
+        ['Yusuf Ait Benaser'],['Laszlo Beness',8],['Joao Mendez',10],['Miguel Cardozo',7],['Fedor Chalof'],['Carlos Manne']],
     bench:[['Deniz Dönmezer','GK'],['Gideon Jung','CB'],['Joshua Brenet','LB'],['Ali Karimi','DM'],
            ['Dorukhan Toköz','CM'],['Denis Makarov','AM'],['Indrit Tuci','ST']]
   },
-  'Samsunspor': {
-    xi:[['Okan Kocuk',1],['Yunus Emre Çift',55],['Rick van Drongelen',4],['Toni Borevković',24],['Logi Tómasson',17],
-        ['Antoine Makoumbou'],['Celil Yüksel',5],['Afonso Sousa'],['Carlo Holse'],['Marius Mouandilmadji'],['Elayis Tavşan']],
-    bench:[['İrfan Can Eğribayat','GK',71],['Josafat Mendes','CB',2],['Melih Altıkulaç','RB'],['Yalçın Kayan','CM'],
-           ['Emre Kılınç','AM'],['Tanguy Coulibaly','LW'],['Cherif Ndiaye','ST']]
+  'Samsun FK': {
+    xi:[['Okan Kocuoğlu',1],['Yunus Emre Çifter',55],['Rick van Drongelin',4],['Toni Borevski',24],['Logi Tomason',17],
+        ['Antoine Makumbo'],['Celil Yükseloğlu',5],['Afonso Souza'],['Carlo Holze'],['Marius Mouandi'],['Elayis Tavşanoğlu']],
+    bench:[['İrfan Eğribayat','GK',71],['Josafat Mendez','CB',2],['Melih Altıkulakoğlu','RB'],['Yalçın Kayaoğlu','CM'],
+           ['Emre Kılıçoğlu','AM'],['Tanguy Kulibali','LW'],['Cherif Ndiay','ST']]
   },
-  'Göztepe': {
-    xi:[['Mateusz Lis'],['Allan Godói'],['Heliton'],['Malcom Bokele'],['İsmail Köybaşı'],
-        ['Juan'],['Novatus Miroshi'],['David Tijanić'],['Rômulo'],['Janderson'],['Ogün Bayrak']],
-    bench:[['Luka Gugeshashvili','GK'],['Arda Okan Kurtulan','CB'],[null,'LB'],['Amin Cherni','DM'],
-           ['Efkan Bekiroğlu','CM'],['Mehmet Öztürk','LW'],['Emrecan Bulut','ST']]
+  'Göztaş FK': {
+    xi:[['Mateusz Liso'],['Alan Godoy'],['Helitton'],['Malcom Bokelo'],['İsmail Köybaşoğlu'],
+        ['Juann'],['Novatus Miroshu'],['David Tijani'],['Romulu'],['Jandersen'],['Ogün Bayraktar']],
+    bench:[['Luka Gugeshvili','GK'],['Arda Kurtulan','CB'],[null,'LB'],['Amin Cherny','DM'],
+           ['Efkan Bekirsoy','CM'],['Mehmet Öztürel','LW'],['Emrecan Bulutoğlu','ST']]
   },
-  'Başakşehir': {
-    xi:[['Volkan Babacan'],null,['Léo Duarte'],['Ousseynou Ba'],['Christopher Opéri'],
-        ['Olivier Kemen'],['Miguel Crespo'],['Deniz Türüç'],null,['Eldor Shomurodov'],['Ömer Ali Şahiner']],
+  'Başak SK': {
+    xi:[['Volkan Babacanoğlu'],null,['Leo Duart'],['Ousseynou Bah'],['Kristofer Operi'],
+        ['Olivier Kemeni'],['Miguel Crispo'],['Deniz Türkeş'],null,['Eldor Shomurodo'],['Ömer Şahiner']],
     bench:[]
   },
-  'Kocaelispor':   { xi:[null,null,['Ahmet Oğuz'],null,null,null,null,null,['Darko Churlinov'],['Daniel Agyei'],null], bench:[] },
-  'Alanyaspor':    { xi:[['Ertuğrul Taşkıran'],null,null,null,null,['Nicolas Janvier'],null,null,null,null,['Efecan Karaca']], bench:[] },
-  'Rizespor':      { xi:[null,null,['Umut Erdem'],null,null,null,null,null,null,['Ahmed Kutucu'],null], bench:[] },
-  'Konyaspor':     { xi:[['Deniz Ertaş'],null,null,null,null,null,['Uğurcan Yazgılı'],null,['Kazeem Olaigbe'],['Blaž Kramer'],null], bench:[] },
-  'Gençlerbirliği':{ xi:[null,null,['Metehan Baltacı'],null,null,null,['Cihan Çanak'],null,null,null,null], bench:[] },
-  'Kasımpaşa':     { xi:[['Andreas Gianniotis'],null,null,null,null,null,null,null,null,null,null], bench:[] },
-  'Gaziantep FK':  { xi:[['Zafer Görgen'],null,null,null,null,null,null,null,null,['Halil Dervişoğlu'],null], bench:[] },
-  'Fatih Karagümrük':{ xi:[['Batuhan Şen'],null,null,null,null,null,null,null,null,null,null], bench:[] },
+  'Kocaeli FK':   { xi:[null,null,['Ahmet Oğuzhan'],null,null,null,null,null,['Darko Curlinov'],['Daniel Agyai'],null], bench:[] },
+  'Alanya FK':    { xi:[['Ertuğrul Taşkıranoğlu'],null,null,null,null,['Nicolas Janvieri'],null,null,null,null,['Efecan Karacaoğlu']], bench:[] },
+  'Rize FK':      { xi:[null,null,['Umut Erdemoğlu'],null,null,null,null,null,null,['Ahmed Kutucuoğlu'],null], bench:[] },
+  'Konya FK':     { xi:[['Deniz Ertaşoğlu'],null,null,null,null,null,['Uğur Yazgılı'],null,['Kazeem Olaigbi'],['Blaz Kraner'],null], bench:[] },
+  'Gençler Gücü':{ xi:[null,null,['Metehan Baltacıoğlu'],null,null,null,['Cihan Çanakoğlu'],null,null,null,null], bench:[] },
+  'Kasımköy FK':     { xi:[['Andreas Yanniotis'],null,null,null,null,null,null,null,null,null,null], bench:[] },
+  'Gaziantep SK':  { xi:[['Zafer Görgenoğlu'],null,null,null,null,null,null,null,null,['Halil Derviş'],null], bench:[] },
+  'Karagümrük FK':{ xi:[['Batuhan Şenoğlu'],null,null,null,null,null,null,null,null,null,null], bench:[] },
   'Türkiye A Milli': {
-    xi:[['Uğurcan Çakır'],['Mert Müldür'],['Abdülkerim Bardakcı'],['Merih Demiral'],['Ferdi Kadıoğlu'],
-        ['Hakan Çalhanoğlu'],['Orkun Kökçü'],['Arda Güler'],['Kenan Yıldız'],['Barış Alper Yılmaz'],['Kerem Aktürkoğlu']],
+    xi:[['Uğurcan Çakan'],['Mert Müldürel'],['Abdülkerim Bardakoğlu'],['Merih Demiralp'],['Ferdi Kadıhan'],
+        ['Hakan Çalhan'],['Orkun Köksal'],['Arda Günel'],['Kenan Yıldızoğlu'],['Barış Yılmaz'],['Kerem Aktürk']],
     bench:[]
   }
 };
@@ -2254,7 +2273,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v4.3';
+const APP_VERSION = 'v4.9';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2556,7 +2575,7 @@ function updateNavBadges(){
   let careerN = (p.badgesEligible||[]).length;
   if(p.role!=='Teknik Direktör'){
     careerN += SPONSORS.filter(s=>p.fame>=s.req && !p.sponsors.includes(s.id)).length;
-    if(p.age>=32) careerN += 1;
+    if(canJubilee(p)) careerN += 1;
   }
   setNavDot('dot-career', careerN);
   // Yaşam: kullanılmayı bekleyen gün hakkı
@@ -2564,10 +2583,13 @@ function updateNavBadges(){
   setNavDot('dot-transfer', (p.role!=='Teknik Direktör' && !p.transferRequested && interestedClubs().some(c=>c.interest>=0.72)) ? 1 : 0);
   // Kariyer alt sekmeleri: hangisinde yeni bir gelişme var?
   const isPlayer = p.role!=='Teknik Direktör';
-  setNavDot('dot-train', isPlayer ? (p.trainPoints||0) : 0);
+  // tüm özellikler zaten 99/MAKS ise elde kalan seans olsa bile antrenmanda yapacak bir şey kalmaz, rozet gösterme
+  const trainKeys = Object.keys(ATTR_LABEL).filter(k=> k!=='klc' || posByKey(p.posKey).grp==='GK');
+  const canStillTrain = trainKeys.some(k=> p.attrs[k]<99);
+  setNavDot('dot-train', (isPlayer && canStillTrain) ? (p.trainPoints||0) : 0);
   setNavDot('dot-health', isPlayer && p.injuryWeeks>0 ? 1 : 0);
   setNavDot('dot-sponsor-tab', isPlayer ? SPONSORS.filter(s=>p.fame>=s.req && !p.sponsors.includes(s.id)).length : 0);
-  setNavDot('dot-contract-tab', isPlayer && p.age>=32 ? 1 : 0);
+  setNavDot('dot-contract-tab', isPlayer && canJubilee(p) ? 1 : 0);
   setNavDot('dot-badges-tab', (p.badgesEligible||[]).length);
 }
 
@@ -2944,6 +2966,16 @@ function rest(){
   toast('Dinlendin. Kondisyon +18'); save(); render();
 }
 const PHYSIO_COST = 25000;
+// Jübile (oyunculuktan teknik direktörlüğe geçiş) artık sabit bir yaşa değil,
+// oynanan tam sezon sayısına bağlı: kariyere hangi yaşta başlanırsa başlansın
+// (17-21) aynı sayıda sezon sonra jübile hakkı doğar, "32 yaşına kadar bekleme"
+// sıkıntısı ortadan kalkar. Ayrıca çok erken jübileyi anlamsızlaştırmamak için
+// makul bir minimum yaş tutuluyor (aşılması kolay, sadece bir güvenlik payı).
+const JUBILEE_SEASONS = 4;
+const JUBILEE_MIN_AGE = 22;
+function canJubilee(p){
+  return (p.career.seasons.length >= JUBILEE_SEASONS) && p.age >= JUBILEE_MIN_AGE;
+}
 function physio(){
   const p=S.p;
   if(p.lifePoints<1) return toast('Bu hafta günün kalmadı.');
@@ -3205,7 +3237,11 @@ function renderRoom(){
     <h3>Kaptanlık ${p.captain?'<span class="chip ovr">Kaptansın</span>':''}</h3>
     <p class="sub">Hocanın güveni ve tecrüben yeterliyse pazubandı isteyebilirsin.</p>
     ${p.captain?'':`<button class="btn sm ${canCaptain?'primary':''}" style="margin-top:8px" ${canCaptain?'':'disabled'} onclick="askCaptain()">Kaptanlığı iste</button>`}
-    ${!canCaptain && !p.captain?`<p class="mini" style="margin-top:6px">Gerekli: hoca güveni ≥72, yaş ≥22, sezonda ≥6 maç.</p>`:''}
+    ${!canCaptain && !p.captain?`<div class="statbox" style="margin-top:8px">
+      ${reqBar('Hoca güveni', p.trust, 72, Math.round(p.trust), '≥72')}
+      ${reqBar('Yaş', p.age, 22, p.age, '≥22')}
+      ${reqBar('Sezondaki maç', p.season.apps, 6, p.season.apps, '≥6')}
+    </div>`:''}
   </div>
   <div class="card">
     <h3>Takım arkadaşların</h3>
@@ -3342,10 +3378,20 @@ function clubOfferSeed(t){
   for(let i=0;i<str.length;i++) h = (h*31 + str.charCodeAt(i)) | 0;
   return (Math.abs(h) % 1000) / 1000;
 }
-// Sezonluk transfer tekliflerini yeniler: pazarlık haklarını/notlarını sıfırlar ve
+// Sezonluk transfer tekliflerini yeniler: pazarlık haklarını tazeler ve
 // tekliflerin (maaş/yıl varyasyonu) yeni bir "period" ile yeniden hesaplanmasını sağlar.
+// ÖNEMLİ: daha önce kulüple üzerinde ANLAŞILMIŞ (neg.wage dolu) bir teklif varsa,
+// bu anlaşma sıfırlanmaz — sadece yeni pazarlıklar için hak sayısı 3'e döner.
 function renewSeasonOffers(){
-  S.p.clubNegotiations = {};
+  const old = S.p.clubNegotiations || {};
+  const next = {};
+  Object.keys(old).forEach(team=>{
+    const n = old[team];
+    if(n && n.wage!=null){
+      next[team] = {rights:3, wage:n.wage, note:{c:'var(--good)', t:`Önceki anlaşman (${TL(n.wage)}) geçerliliğini koruyor.`}};
+    }
+  });
+  S.p.clubNegotiations = next;
   S.offerRenewalCount = (S.offerRenewalCount||0) + 1;
   addNews('İlgilenen kulüplerin teklifleri yenilendi.','transfer');
   S.pendingOfferRenewalPopup = true;
@@ -3560,8 +3606,12 @@ function renderContract(){
   </div>
   <div class="card">
     <h3>Kariyer kararı</h3>
-    <p class="sub">${p.age>=32?'Kramponları asıp teknik direktörlüğe geçebilirsin.':'32 yaşından sonra kramponları asıp teknik direktör olabileceksin.'}</p>
-    <button class="btn red sm" style="margin-top:8px" ${p.age>=32?'':'disabled'} onclick="confirmJubilee()">👔 Jübile yap, Teknik Direktör ol</button>
+    <p class="sub">${canJubilee(p)?'Kramponları asıp teknik direktörlüğe geçebilirsin.':'Yeterince sezon oynayıp yaş şartını doldurunca kramponları asıp teknik direktör olabilirsin.'}</p>
+    ${canJubilee(p)?'':`<div class="statbox" style="margin-top:8px">
+      ${reqBar('Oynanan sezon', p.career.seasons.length, JUBILEE_SEASONS, p.career.seasons.length, `≥${JUBILEE_SEASONS}`)}
+      ${reqBar('Yaş', p.age, JUBILEE_MIN_AGE, p.age, `≥${JUBILEE_MIN_AGE}`)}
+    </div>`}
+    <button class="btn red sm" style="margin-top:8px" ${canJubilee(p)?'':'disabled'} onclick="confirmJubilee()">👔 Jübile yap, Teknik Direktör ol</button>
   </div>`;
 }
 function doJubilee(){
@@ -4095,8 +4145,8 @@ function launchMatch(wantFullscreen){
   M = {
     comp, fx, tie, cupIdx, euroRef:extra, usHome, oppName:opp,
     minute:0, half:1, extraTime:ri(1,4), stoppage:0,
-    us:{name:comp==='milli'?'Türkiye A Milli':p.team, score:0, squad:usSquad, subs:0},
-    them:{name:opp, score:0, squad:themSquad, subs:0},
+    us:{name:comp==='milli'?'Türkiye A Milli':p.team, score:0, squad:usSquad, subs:0, cY:0, cR:0},
+    them:{name:opp, score:0, squad:themSquad, subs:0, cY:0, cR:0},
     ballX:50, ballY:50, momentum:0,
     userOn:true, drinkUsed:false, boost:0, effort:1, tactic:'dengeli',
     atkLevel:0, defLevel:0,
@@ -4125,8 +4175,8 @@ function launchMatch(wantFullscreen){
                 : comp==='milli'?`${COMP_LABEL[comp]} • ${S.national.friendly?'Hazırlık maçı':'Eleme maçı'}`
                 : `${COMP_LABEL[comp]} • ${S.week}. hafta`;
   $('live-comp').textContent = compTxt;
-  $('sb-home').innerHTML = `<span id="kit-home">${kitDot(fx.h,true)}</span><br>${fx.h}`;
-  $('sb-away').innerHTML = `<span id="kit-away">${kitDot(fx.a,true)}</span><br>${fx.a}`;
+  $('sb-home').innerHTML = `<span id="kit-home">${kitDot(fx.h,true)}</span><br>${fx.h}<br><span id="sb-cards-home" class="sb-cards"></span>`;
+  $('sb-away').innerHTML = `<span id="kit-away">${kitDot(fx.a,true)}</span><br>${fx.a}<br><span id="sb-cards-away" class="sb-cards"></span>`;
   $('pc-kit-h').innerHTML = kitDot(fx.h);
   $('pc-kit-a').innerHTML = kitDot(fx.a);
   $('pc-ab-h').textContent = abbr(fx.h);
@@ -4149,6 +4199,7 @@ function launchMatch(wantFullscreen){
   $('btn-med').disabled = false;
   dressStadium();
   updateLiveStats();
+  updateClock(); // kondisyon barını maç başlamadan hemen düzelt, önceki maçtaki eski değer görünmesin
   buildPitch();
   updateSpeedButtons();
   updateEffortUI();
@@ -4191,8 +4242,8 @@ function chooseTactic(){
   $('ov').style.display='flex';
   $('ov-txt').textContent = 'MAÇ ÖNCESİ TAKTİK';
   $('ov-sub').innerHTML = `<div class="sub">${kitDot(M.fx.h,true)} ${M.fx.h} — ${M.fx.a} ${kitDot(M.fx.a,true)} • ${M.weather.ic} ${M.weather.n}</div>
-    <div class="row wrap" style="margin-top:10px;justify-content:center;gap:8px">
-      ${Object.entries(TACTICS).map(([k,t])=>`<button class="btn" onclick="pickTactic('${k}')">${t.n}</button>`).join('')}
+    <div class="row wrap tactic-row" style="margin-top:10px;justify-content:center;gap:6px">
+      ${Object.entries(TACTICS).map(([k,t])=>`<button class="btn sm tactic-btn" onclick="pickTactic('${k}')">${t.n}</button>`).join('')}
     </div>`;
 }
 function pickTactic(k){
@@ -4548,7 +4599,7 @@ function updateClock(){
   const lineParts = [];
   if(!M.userOn) lineParts.push('kenardasın');
   $('me-line').textContent = lineParts.join(' • ');
-  $('me-label').textContent = M.userOn ? `${S.p.name} — kondisyon` : `${S.p.name} — oyundan çıktı`;
+  $('me-label').textContent = M.userOn ? S.p.name : `${S.p.name} — oyundan çıktı`;
 }
 function schedule(){
   if(!M || M.ended || M.varBusy || M.userPaused) return;
@@ -4850,6 +4901,27 @@ function pulseCrowd(){
   });
 }
 
+// takımın gördüğü sarı/kırmızı kartları ilgili takım isminin altına yazar
+function updateCardBadges(){
+  if(!M) return;
+  const homeT = M.usHome ? M.us : M.them;
+  const awayT = M.usHome ? M.them : M.us;
+  const fmt = T => {
+    const y = T.cY||0, r = T.cR||0;
+    const parts = [];
+    if(y) parts.push(`🟨${y>1?'×'+y:''}`);
+    if(r) parts.push(`🟥${r>1?'×'+r:''}`);
+    return parts.join(' ');
+  };
+  const eh = $('sb-cards-home'); if(eh) eh.textContent = fmt(homeT);
+  const ea = $('sb-cards-away'); if(ea) ea.textContent = fmt(awayT);
+}
+// bir takıma (T = M.us veya M.them) sarı ('y') ya da kırmızı ('r') kart ekler ve tabloyu günceller
+function addTeamCard(T, type){
+  if(type==='r') T.cR++; else T.cY++;
+  updateCardBadges();
+}
+
 function foulEvent(){
   const usFouls = chance(0.5);
   const T = usFouls ? M.us : M.them;
@@ -4891,10 +4963,12 @@ function foulEvent(){
     Sfx.card();
     if(offender.mYellow>=2){
       offender.on = false;
+      addTeamCard(T, 'r');
       say(`🟥 <b>İkinci sarıdan kırmızı!</b> ${offender.name} oyun dışı.`, 'bd');
       if(offender.isUser){ M.userOn=false; addRating(-1.6,'kırmızı kart'); S.p.season.red++; endUserOnPitch('kırmızı kart'); }
       buildPitch();
     } else {
+      addTeamCard(T, 'y');
       say(`🟨 ${offender.name} sarı kart gördü.`);
       if(offender.isUser){ addRating(-0.3,'sarı kart'); S.p.season.yellow++; }
     }
@@ -5060,16 +5134,45 @@ function filler(){
 }
 
 /* ---------- oyuncu kararları ---------- */
+let askCountdownTimer = null;
+// süre dolduğunda otomatik seçilecek "güvenli" seçeneği bulur; yoksa rastgele birini seçer
+function autoPickAction(options){
+  const preferred = ['safe','stand','gk-stay','wall'];
+  for(const key of preferred){ const found = options.find(o=>o[1]===key); if(found) return found[1]; }
+  return pick(options)[1];
+}
+function clearAskCountdown(){
+  if(askCountdownTimer){ clearInterval(askCountdownTimer); askCountdownTimer = null; }
+}
+function startAskCountdown(options){
+  clearAskCountdown();
+  let left = 5;
+  const setTxt = n => { const el = $('promptTimer'); if(!el) return; el.textContent = n;
+    el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick'); };
+  setTxt(left);
+  askCountdownTimer = setInterval(()=>{
+    left--;
+    if(left<=0){
+      clearAskCountdown();
+      if(M && !M.ended && $('acts').style.display!=='none') userChoice(autoPickAction(options));
+      return;
+    }
+    setTxt(left);
+  }, 1000);
+}
 function askUser(text, options){
   M.paused = true; clearTimeout(M.timer);
-  $('prompt').style.display='block'; $('prompt').textContent = text;
+  $('prompt').style.display='flex';
+  $('prompt').innerHTML = `<span>${text}</span><span class="prompt-timer" id="promptTimer">5</span>`;
   const box = $('acts'); box.style.display='grid';
   box.innerHTML = options.map(o=>`<button class="btn" onclick="userChoice('${o[1]}')">${o[0]}</button>`).join('');
   $('actionsheet').classList.add('show');
   $('actionbackdrop').style.display='block';
   Sfx.swell(0.1,0.8);
+  startAskCountdown(options);
 }
 function clearAsk(){
+  clearAskCountdown();
   $('prompt').style.display='none';
   $('acts').style.display='none'; $('acts').innerHTML='';
   $('actionsheet').classList.remove('show');
@@ -5199,8 +5302,8 @@ function userChoice(a){
     case 'slide': {
       if(chance(0.34+sk('def')*0.42)){ say(`🦶 Harika kayarak müdahale! ${S.p.name} tehlikeyi sildi.`,'hi'); addRating(0.3,'müdahale'); }
       else { Sfx.foul(); say(`Müdahalede geç kaldın, hakem faul verdi.`); addRating(-0.25);
-        if(chance(0.35)){ Sfx.card(); me.mYellow++; S.p.season.yellow++; say(`🟨 ${S.p.name} sarı kart gördü.`);
-          if(me.mYellow>=2){ me.on=false; M.userOn=false; S.p.season.red++; say(`🟥 İkinci sarıdan kırmızı!`,'bd'); addRating(-1.5); endUserOnPitch('kırmızı kart'); buildPitch(); } }
+        if(chance(0.35)){ Sfx.card(); me.mYellow++; S.p.season.yellow++; addTeamCard(M.us,'y'); say(`🟨 ${S.p.name} sarı kart gördü.`);
+          if(me.mYellow>=2){ me.on=false; M.userOn=false; S.p.season.red++; addTeamCard(M.us,'r'); say(`🟥 İkinci sarıdan kırmızı!`,'bd'); addRating(-1.5); endUserOnPitch('kırmızı kart'); buildPitch(); } }
         else if(chance(0.25)) scoreGoal(false, pickAttacker(M.them), null); }
       break;
     }
@@ -5865,7 +5968,7 @@ function afterHeadlineClosed(){
 }
 function showOfferRenewalPopup(){
   modal(`<h3 style="color:var(--flood)">🔄 Sezon teklifleri yenilendi</h3>
-    <p class="sub">İlgilenen kulüplerin maç başı teklifleri ve pazarlık hakların güncellendi. Transfer sekmesinde görmek ister misin?</p>
+    <p class="sub">İlgilenen kulüplerin maç başı teklifleri ve pazarlık hakların güncellendi. Daha önce bir kulüple üzerinde anlaştığın teklif varsa o anlaşma korunuyor. Transfer sekmesinde görmek ister misin?</p>
     <div class="btngrid" style="margin-top:10px">
       <button class="btn" onclick="closeModal()">Daha sonra</button>
       <button class="btn primary" onclick="closeModal();go('v-transfers')">Evet, göster</button>
