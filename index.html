@@ -2077,6 +2077,7 @@ function newPlayerObj(name, age, posKey, team, foot, num){
   return {
     name, age, posKey, foot, num, team,
     attrs: base,
+    startAttrs: {...base}, // kariyer başındaki değerler — antrenman grafiğinde gelişimi göstermek için
     potential: ri(78, 94),
     fitness: 100, morale: 70, trust: 55, happiness: 70, fame: 8,
     money: 45000, wage: 60000, contractYears: 3, goalBonus: 25000,
@@ -2273,7 +2274,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v4.9';
+const APP_VERSION = 'v5';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2364,6 +2365,7 @@ function load(){
     if(!S.p.dr){ S.p.dr = {e1:(S.p.drinks||0), e2:0, e3:0}; }
     if(S.p.medQ==null) S.p.medQ = 0.55;
     if(!S.p.badgesEligible) S.p.badgesEligible = [];
+    if(!S.p.startAttrs) S.p.startAttrs = {...S.p.attrs}; // eski kayıt: kariyer başı verisi yok, şu andan başlat
     if(S.p.transferRequested && !S.p.transferTarget){ S.p.transferRequested = false; S.p.transferTarget = null; } // eski bozuk kayıt onarımı
 
     if(S.squads && S.squadsRealV !== REAL_SQUADS_VER){   // eski kayıt: rastgele isimli kadroları gerçek kadrolarla değiştir
@@ -2870,11 +2872,56 @@ function openBodyHistory(partId){
 }
 
 /* ---------- ANTRENMAN ---------- */
+function attrRadarSVG(keys, curVals, labels){
+  const n = keys.length, size = 440, cx = size/2, cy = size/2, R = 118, maxVal = 99;
+  const angleFor = i => -Math.PI/2 + i*(2*Math.PI/n); // 12 hizasından başlayıp saat yönünde
+  const ptAt = (val, i) => {
+    const r = (clamp(val,0,maxVal)/maxVal) * R;
+    const a = angleFor(i);
+    return [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+  };
+  const polyPts = vals => vals.map((v,i)=>ptAt(v,i).join(',')).join(' ');
+  // iç yardımcı ızgara halkaları (%25/%50/%75) — dış sınır (99/maks) artık ayrı, yeşil çizilecek
+  const rings = [0.25,0.5,0.75].map(f=>{
+    const pts = keys.map((_,i)=>{ const [x,y]=ptAt(maxVal*f,i); return x+','+y; }).join(' ');
+    return `<polygon points="${pts}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+  }).join('');
+  const axes = keys.map((_,i)=>{ const [x,y]=ptAt(maxVal,i); return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`; }).join('');
+  const labelR = R + 34;
+  const texts = keys.map((k,i)=>{
+    const a = angleFor(i);
+    const x = cx + labelR*Math.cos(a), y = cy + labelR*Math.sin(a);
+    let anchor='middle';
+    if(Math.cos(a) > 0.25) anchor='start'; else if(Math.cos(a) < -0.25) anchor='end';
+    return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="10.5" font-weight="700" fill="var(--dim)">
+      <tspan x="${x}" dy="-5">${labels[k].toUpperCase()}</tspan>
+      <tspan x="${x}" dy="14" fill="var(--ink)" font-weight="800" font-size="11">(${curVals[i]})</tspan>
+    </text>`;
+  }).join('');
+  // dış sınır: 99 (potansiyel tavan) — SABİT, oyuncudan bağımsız, hep aynı yerde
+  const maxPoly = polyPts(keys.map(()=>maxVal));
+  // güncel değerler: kariyerin başında düşük başlar, antrenmanla büyüyüp bu yeşil tavana yaklaşır
+  const curPoly = polyPts(curVals);
+  return `<svg viewBox="0 0 ${size} ${size}" style="width:100%;max-width:420px;display:block;margin:4px auto;overflow:visible" xmlns="http://www.w3.org/2000/svg">
+    ${rings}${axes}
+    <polygon points="${maxPoly}" fill="var(--good)" fill-opacity=".08" stroke="var(--good)" stroke-width="2" stroke-dasharray="4 3"/>
+    <polygon points="${curPoly}" fill="#f59e0b" fill-opacity=".3" stroke="#f59e0b" stroke-width="2.5"/>
+    ${texts}
+  </svg>`;
+}
 function renderTrain(){
   const p = S.p, po = posByKey(p.posKey);
   const keys = Object.keys(ATTR_LABEL).filter(k=> k!=='klc' || po.grp==='GK');
+  const radar = attrRadarSVG(keys, keys.map(k=>p.attrs[k]), ATTR_LABEL);
   $('trainBox').innerHTML = `
   <div class="card">
+    <h3>Gelişim haritası</h3>
+    ${radar}
+    <div class="row wrap" style="gap:16px;justify-content:center;margin-top:4px">
+      <span class="sub"><i style="display:inline-block;width:14px;height:0;border-top:2px dashed var(--good);margin-right:5px;vertical-align:middle"></i>Potansiyel tavan (99)</span>
+      <span class="sub"><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f59e0b;margin-right:5px;vertical-align:middle"></i>Şu anki gelişimin</span>
+    </div>
+    <hr class="sep">
     <h3>Antrenman <span class="chip">${p.trainPoints} seans</span></h3>
     <p class="sub">Her seans kondisyondan 14 götürür. Yaşın arttıkça gelişim yavaşlar, potansiyel tavanına yaklaştıkça artış küçülür.</p>
     <div class="btngrid" style="margin-top:10px">
@@ -7113,16 +7160,44 @@ function registerSW(){
    "Güncelle"ye basıldığında zaten bekleyen bir SW olmayacağı için
    applyUpdate() otomatik olarak hardRefreshApp()'e düşer (tam önbellek
    temizliği + yeniden yükleme) — yani buradaki tespit için ekstra bir
-   "uygula" yolu yazmaya gerek yok, mevcut buton zaten doğru şeyi yapar. */
+   "uygula" yolu yazmaya gerek yok, mevcut buton zaten doğru şeyi yapar.
+
+   DÜZELTME (2026-09): İki ayrı hata "v4.9 → v4.3" gibi saçma, GERİYE
+   DÖNÜK banner'lara sebep oluyordu:
+   1) `cache:'no-store'` sadece TARAYICININ disk önbelleğini atlar;
+      GitHub Pages'in önündeki CDN (Fastly) kendi TTL'ine göre hâlâ eski
+      bir kopya döndürebiliyordu — özellikle art arda hızlı deploy
+      yapılan dakikalarda, farklı CDN node'ları farklı sürümleri
+      cache'lemiş olabiliyor. Şimdi URL'e her seferinde değişen bir
+      "cache buster" (?_=timestamp) ekleyip CDN'in de bunu her seferinde
+      YENİ bir istek sanmasını sağlıyoruz.
+   2) Kod sadece "farklı mı" bakıyordu, "gelen sürüm benimkinden BÜYÜK
+      mü" bakmıyordu. CDN'den (nadiren de olsa) eski bir sürüm sızarsa
+      bunu da "güncelleme var" sanıp banner basıyordu. Şimdi versiyonları
+      (vX.Y biçiminde) sayısal olarak karşılaştırıp SADECE gerçekten
+      daha yeni bir sürüm geldiğinde banner gösteriyoruz. */
+function parseAppVersion(v){
+  const m = String(v).match(/(\d+)(?:\.(\d+))?/);
+  return m ? [parseInt(m[1],10), parseInt(m[2]||'0',10)] : [0,0];
+}
+function isVersionNewer(candidate, current){
+  const [cMaj,cMin] = parseAppVersion(candidate);
+  const [curMaj,curMin] = parseAppVersion(current);
+  return cMaj !== curMaj ? cMaj > curMaj : cMin > curMin;
+}
 let htmlUpdateDetected = false;
 function checkHtmlVersionUpdate(){
   if(htmlUpdateDetected) return; // zaten bulundu, tekrar sormaya gerek yok
-  fetch('./index.html', {cache: 'no-store'})
+  // Sorgu string'i her çağrıda değişsin ki aradaki CDN de bunu cache'leyemesin
+  // (no-store sadece tarayıcı önbelleğini atlar, CDN'i atlamaz).
+  fetch('./index.html?_=' + Date.now(), {cache: 'no-store'})
     .then(res => res.ok ? res.text() : null)
     .then(html => {
       if(!html) return;
       const m = html.match(/APP_VERSION\s*=\s*'([^']+)'/);
-      if(m && m[1] && m[1] !== APP_VERSION){
+      // Sadece gerçekten DAHA YENİ bir sürüm geldiyse banner göster;
+      // CDN'den eski/yanlış bir kopya gelirse ("downgrade") sessizce yok say.
+      if(m && m[1] && m[1] !== APP_VERSION && isVersionNewer(m[1], APP_VERSION)){
         htmlUpdateDetected = true;
         showUpdateBanner(APP_VERSION, m[1]);
       }
