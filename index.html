@@ -202,7 +202,7 @@ td.num,th.num{text-align:center;width:26px;white-space:nowrap;}
   padding:10px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;margin-bottom:10px;
 }
 .scoreboard .tn{font-family:'Barlow Condensed';font-size:.95rem;font-weight:600;text-align:center;line-height:1.1;}
-.scoreboard .sb-cards{display:inline-block;margin-top:2px;font-size:.78rem;font-family:'Barlow',sans-serif;letter-spacing:.5px;min-height:1em;}
+.scoreboard .sb-cards{display:block;margin-top:2px;font-size:.72rem;font-family:'Barlow',sans-serif;letter-spacing:.2px;min-height:1em;line-height:1.35;color:var(--dim);white-space:normal;word-break:break-word;}
 .scoreboard .sc{font-family:'Barlow Condensed';font-size:2.1rem;font-weight:700;letter-spacing:1px;
   background:var(--surf5);border:1px solid var(--line);border-radius:8px;padding:2px 12px;}
 .clock{text-align:center;font-family:'Barlow Condensed';font-size:.85rem;color:var(--flood);letter-spacing:1px;grid-column:1/-1;}
@@ -487,7 +487,7 @@ td.num,th.num{text-align:center;width:26px;white-space:nowrap;}
 }
 
 /* ---- duraklat butonu + canlı anlatım şeridi: sahanın İÇİNDE ---- */
-.matchfab-row{position:absolute;left:8px;bottom:8px;z-index:22;display:flex;align-items:center;gap:6px;}
+.matchfab-row{position:absolute;left:8px;bottom:8px;z-index:24;display:flex;align-items:center;gap:6px;}
 .pausefab{display:flex;align-items:center;gap:5px;
   background:rgba(4,10,14,.82);border:1px solid rgba(255,255,255,.3);border-radius:999px;color:#fff;
   font-family:inherit;font-weight:700;font-size:.72rem;line-height:1.2;padding:6px 12px;cursor:pointer;
@@ -929,13 +929,8 @@ body,.card,.modal .box,nav#bottom,.paper,.statbox{transition:background-color .3
 .livefeed-head{display:none;justify-content:space-between;align-items:center;gap:8px;margin:8px 0 0;}
 .livefeed-head b{font-family:'Barlow Condensed','Barlow',sans-serif;font-size:1.02rem;letter-spacing:.3px;color:var(--flood);}
 body.match-feed .livefeed-head{display:flex;}
-body.match-feed .commentary{display:flex!important;flex-direction:column;justify-content:flex-start;height:206px;overflow:hidden;margin:6px 0 8px;
-  -webkit-mask-image:linear-gradient(to top,transparent 0,#000 26px);mask-image:linear-gradient(to top,transparent 0,#000 26px);}
-body.match-feed .commentary > div{flex:none;}
-body.match-feed .commentary > div:not(:nth-child(-n+5)){display:none;}
+body.match-feed .commentary{display:block!important;height:206px;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:6px 0 8px;}
 body.match-feed .commentary > div:first-child{animation:feedIn .3s ease-out;}
-body.match-feed .commentary.full{display:block!important;height:280px;overflow-y:auto;-webkit-mask-image:none;mask-image:none;}
-body.match-feed .commentary.full > div:not(:nth-child(-n+5)){display:block;}
 body.match-feed .pitchticker{display:none!important;}
 @keyframes feedIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 /* oyuncunun kendi adı: satırın içinde parlak etiket */
@@ -1153,7 +1148,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
             </div>
           </div>
           <div class="mini" id="me-line" style="margin:0 0 6px;text-align:center"></div>
-          <div class="livefeed-head"><b>📣 Canlı anlatım</b><button class="btn sm" id="btn-feedall" type="button" onclick="toggleFeedAll()">Tümünü göster</button></div>
+          <div class="livefeed-head"><b>📣 Canlı anlatım</b></div>
           <div class="commentary" id="log"></div>
           <div class="row wrap">
             <button class="btn sm" id="btn-med">🧰 İlk yardım (<span id="medN">0</span>)</button>
@@ -2270,7 +2265,7 @@ function newPlayerObj(name, age, posKey, team, foot, num){
     lifePoints: 3, trainPoints: 2,
     injuryWeeks: 0, injuryName: null, injuryHistory: [], banWeeks: 0, yellowStreak: 0,
     caps: 0, natGoals: 0, natCalled: false, captain: false, love: 55,
-    sponsors: [], badges: [], badgesEligible: [], teammateRel: {}, tacticPref: 'dengeli', transferRequested: false, transferTarget: null, clubNegotiations: {},
+    sponsors: [], badges: [], badgesEligible: [], teammateRel: {}, tacticPref: 'dengeli', transferRequested: false, transferTarget: null, clubNegotiations: {}, negotiatedClubsOut: [], currentClubPool: null,
     season:{apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,ratingSum:0,cleanSheet:0,saves:0},
     career:{apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,trophies:[],seasons:[]}
   };
@@ -2458,7 +2453,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v6.4';
+const APP_VERSION = 'v6.5';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2549,6 +2544,7 @@ function load(){
     if(!S.p.dr){ S.p.dr = {e1:(S.p.drinks||0), e2:0, e3:0}; }
     if(S.p.medQ==null) S.p.medQ = 0.55;
     if(!S.p.badgesEligible) S.p.badgesEligible = [];
+    if(!S.p.negotiatedClubsOut) S.p.negotiatedClubsOut = [];
     if(!S.p.startAttrs) S.p.startAttrs = {...S.p.attrs}; // eski kayıt: kariyer başı verisi yok, şu andan başlat
     if(S.p.transferRequested && !S.p.transferTarget){ S.p.transferRequested = false; S.p.transferTarget = null; } // eski bozuk kayıt onarımı
 
@@ -3391,6 +3387,7 @@ function renderShop(){
         </div>
       </div>`;
     }).join('')}
+    ${syncDrinks()===0 && REWARD_CONFIG.enabled ? `<button class="btn sm green block adcapbtn" style="margin-top:4px" onclick="watchAdForItem('drink')"><span class="adcap">${adCapBadge()}</span> 📺 Reklam izle, 1 tane kazan</button>` : ''}
   </div>
   <div class="card">
     <h3>🧰 Özel ilk yardım paketi <span class="chip">${p.medkits||0} adet</span></h3>
@@ -3400,6 +3397,7 @@ function renderShop(){
         <div class="sinfo"><b>${m.n}</b><div class="sub">${m.desc} • Başarı: %${Math.round(m.p*100)}</div></div>
         <button class="btn sm ${p.money>=m.cost?'primary':''}" onclick="buyMed('${m.id}')">${TL(m.cost)}</button>
       </div>`).join('')}
+    ${(p.medkits||0)===0 && REWARD_CONFIG.enabled ? `<button class="btn sm green block adcapbtn" style="margin-top:4px" onclick="watchAdForItem('medkit')"><span class="adcap">${adCapBadge()}</span> 📺 Reklam izle, 1 tane kazan</button>` : ''}
   </div>
   <div class="card">
     <h3>Özel hayat alışverişi</h3>
@@ -3749,22 +3747,20 @@ function clubOfferSeed(t){
   for(let i=0;i<str.length;i++) h = (h*31 + str.charCodeAt(i)) | 0;
   return (Math.abs(h) % 1000) / 1000;
 }
-// Sezonluk transfer tekliflerini yeniler: pazarlık haklarını tazeler ve
-// tekliflerin (maaş/yıl varyasyonu) yeni bir "period" ile yeniden hesaplanmasını sağlar.
-// ÖNEMLİ: daha önce kulüple üzerinde ANLAŞILMIŞ (neg.wage dolu) bir teklif varsa,
-// bu anlaşma sıfırlanmaz — sadece yeni pazarlıklar için hak sayısı 3'e döner.
+// Sezonluk transfer tekliflerini yeniler (15 haftada bir).
+// ÖNEMLİ: o periyotta gösterilen 6 kulüplük havuzun TAMAMI (pazarlık açılmış olsun
+// olmasın) listeden düşer ve bir daha geri gelmez; yerine, bu sezon daha önce hiç
+// gösterilmemiş kulüplerden yeni bir havuz kurulur (bkz. buildClubPool). Havuz bir kez
+// kurulunca "currentClubPool" içinde sabit kalır, sadece bir sonraki yenilemede değişir.
 function renewSeasonOffers(){
-  const old = S.p.clubNegotiations || {};
-  const next = {};
-  Object.keys(old).forEach(team=>{
-    const n = old[team];
-    if(n && n.wage!=null){
-      next[team] = {rights:3, wage:n.wage, note:{c:'var(--good)', t:`Önceki anlaşman (${TL(n.wage)}) geçerliliğini koruyor.`}};
-    }
+  if(!S.p.negotiatedClubsOut) S.p.negotiatedClubsOut = [];
+  (S.p.currentClubPool||[]).forEach(name=>{
+    if(!S.p.negotiatedClubsOut.includes(name)) S.p.negotiatedClubsOut.push(name);
   });
-  S.p.clubNegotiations = next;
+  S.p.clubNegotiations = {};   // önceki havuza ait pazarlık kayıtları artık geçersiz
+  S.p.currentClubPool = null;  // interestedClubs() bir dahaki çağrıda yeni havuzu kuracak
   S.offerRenewalCount = (S.offerRenewalCount||0) + 1;
-  addNews('İlgilenen kulüplerin teklifleri yenilendi.','transfer');
+  addNews('İlgilenen kulüpler listesi tamamen yenilendi.','transfer');
   S.pendingOfferRenewalPopup = true;
 }
 // Kulübün teklif edeceği sözleşme süresi: yaşa, ilgiye ve kulübe özgü sabit sapmaya göre
@@ -3788,11 +3784,28 @@ function ensureClubNeg(teamName){
   if(!S.p.clubNegotiations[teamName]) S.p.clubNegotiations[teamName] = {rights:3, wage:null, note:null};
   return S.p.clubNegotiations[teamName];
 }
+// Görünen 6 kulüplük havuzu, henüz dışlanmamış (negotiatedClubsOut'ta olmayan) kulüpler
+// arasından en ilgili 6'sını seçerek kurar ve S.p.currentClubPool içinde sabitler.
+function buildClubPool(){
+  const p = S.p;
+  const myS = teamStrength(p.team);
+  const ovr = userOverall();
+  const excluded = S.p.negotiatedClubsOut || [];
+  const ranked = TEAMS.filter(t=>t.n!==p.team && !excluded.includes(t.n)).map(t=>{
+    const gap = t.s - myS;
+    const interest = clamp(0.5 + (ovr-(t.s-6))/40 + (p.fame||0)/220 - Math.max(gap,0)*0.03, 0.02, 0.97);
+    return {n:t.n, interest};
+  }).sort((a,b)=>b.interest-a.interest).slice(0,6);
+  S.p.currentClubPool = ranked.map(x=>x.n);
+}
 function interestedClubs(){
   const p = S.p;
   const myS = teamStrength(p.team);
   const ovr = userOverall();
-  return TEAMS.filter(t=>t.n!==p.team).map(t=>{
+  if(!S.p.currentClubPool || !S.p.currentClubPool.length) buildClubPool();
+  return S.p.currentClubPool.map(name=>{
+    const t = TEAMS.find(x=>x.n===name);
+    if(!t) return null;
     const gap = t.s - myS;
     const interest = clamp(0.5 + (ovr-(t.s-6))/40 + (p.fame||0)/220 - Math.max(gap,0)*0.03, 0.02, 0.97);
     const years = offerYearsFor(t, interest, p.age);
@@ -3804,7 +3817,7 @@ function interestedClubs(){
     const wage = neg.wage!=null ? neg.wage : baseWage;
     const totalValue = Math.round(wage*40*years/5000)*5000;
     return {t, gap, interest, years, baseWage, wage, totalValue, neg};
-  }).sort((a,b)=>b.interest-a.interest).slice(0,6);
+  }).filter(Boolean).sort((a,b)=>b.interest-a.interest);
 }
 function interestLabel(v){
   if(v>=0.72) return {t:'Seni yakından takip ediyor', c:'var(--good)'};
@@ -3880,25 +3893,41 @@ function marketWeeksUntilRefresh(){
 let marketVidBusy = false;
 async function watchMarketRefreshVideo(){
   if(!S || marketVidBusy) return;
-  if(S.inMatch) return toast('Maç sürerken video izlenemez.');
-  if(!navigator.onLine) return toast('📡 Çevrimdışıyken video oynatılamaz. Bağlantı gelince tekrar dene.');
-  if(!REWARD_CONFIG.enabled) return toast('Video ödülü şu an kapalı.');
   marketVidBusy = true; renderClubManagement();
-  let r;
-  try{
-    r = REWARD_CONFIG.provider==='h5' ? await h5Rewarded()
-      : REWARD_CONFIG.provider==='native' ? await nativeRewarded()
-      : await placeholderRewarded();
-  }catch(e){ r = {rewarded:false, reason:'unavailable'}; }
+  const r = await requestRewardedAd();
   marketVidBusy = false;
-  if(r && r.rewarded){
+  if(r.ok){
     generateMarketPool();
     closeModal();
     toast('📺 Transfer pazarı yenilendi!');
     save(); render();
   } else {
     renderClubManagement();
-    toast(r && r.reason==='unavailable' ? 'Şu an gösterilecek video yok, biraz sonra tekrar dene.' : 'Video tamamlanmadı, pazar yenilenmedi.');
+  }
+}
+/* ---- Teknik Direktör: reklam izleyip ekstra transfer bütçesi kazanma ----
+   Kulübün gücüne göre büyüyen bir bütçe ödülü verir; aynı paylaşılan
+   günlük video hakkını (requestRewardedAd) kullanır. */
+function clubBudgetRewardAmount(){
+  const t = TEAMS.find(x=>x.n===(S && S.p && S.p.team));
+  const f = t ? teamBudgetFactor(t) : 1;
+  return Math.max(150000, Math.round(f*350000/10000)*10000);
+}
+let clubBudgetVidBusy = false;
+async function watchClubBudgetVideo(){
+  if(!S || clubBudgetVidBusy) return;
+  clubBudgetVidBusy = true; renderClubManagement();
+  const r = await requestRewardedAd();
+  clubBudgetVidBusy = false;
+  if(r.ok){
+    const amt = clubBudgetRewardAmount();
+    S.clubBudget = (S.clubBudget||0) + amt;
+    closeModal();
+    coinPopup(`+${TL(amt)} 🪙`);
+    toast(`📺 +${TL(amt)} transfer bütçesi kazandın!`);
+    save(); render();
+  } else {
+    renderClubManagement();
   }
 }
 const MIN_SQUAD_SIZE = 11; // ilk 11'i doldurmak için gereken asgari kadro
@@ -4086,6 +4115,14 @@ function renderClubManagement(){
       <div class="spread"><span class="sub">Takım gücü</span><b>${eff}${diff!==0?` <span style="color:${diff>0?'var(--good)':'var(--bad)'}">(${diff>0?'+':''}${diff})</span>`:''}</b></div>
     </div>
     <p class="sub" style="margin-top:8px">Transferlerle kadronu güçlendirdikçe takımının maçlardaki gerçek gücü de değişir.</p>
+    <hr class="sep">
+    <div class="spread" style="align-items:center;gap:10px">
+      <div>
+        <b>📺 Reklam izle, transfer bütçesi kazan</b>
+        <div class="sub" style="margin-top:2px">+${TL(clubBudgetRewardAmount())} kulüp bütçene eklenir</div>
+      </div>
+      <button class="btn sm primary adcapbtn" ${clubBudgetVidBusy?'disabled':''} onclick="watchClubBudgetVideo()">${clubBudgetVidBusy?'…':`<span class="adcap">${adCapBadge()}</span> İzle`}</button>
+    </div>
   </div>
   <div class="card">
     <h3>Kadro <span class="sub">${rows.length} oyuncu</span></h3>
@@ -4113,7 +4150,7 @@ function renderClubManagement(){
   <div class="card">
     <div class="spread" style="align-items:center">
       <h3 style="margin:0">Transfer Pazarı</h3>
-      <button class="btn sm primary" ${marketVidBusy?'disabled':''} onclick="watchMarketRefreshVideo()">${marketVidBusy?'…':'📺 Reklam izle, yenile'}</button>
+      <button class="btn sm primary adcapbtn" ${marketVidBusy?'disabled':''} onclick="watchMarketRefreshVideo()">${marketVidBusy?'…':`<span class="adcap">${adCapBadge()}</span> 📺 Reklam izle, yenile`}</button>
     </div>
     <p class="sub" style="margin:6px 0 8px">Bonservis fırsatları. Liste kendiliğinden ${MARKET_AUTO_REFRESH_WEEKS} haftada bir yenilenir${marketWeeksUntilRefresh()>0?` (otomatik yenilenmeye <b>${marketWeeksUntilRefresh()}</b> hafta kaldı)`:''} — hemen yenilemek için reklam izlemen gerekir.</p>
     ${S.marketPool.length ? `<div class="squad-grid">${S.marketPool.map(mp=>{ const tier=ovrTier(mp.ovr); const a=displayAttrsFor(mp.attrs,mp.posKey,mp.ovr); return `
@@ -4852,8 +4889,14 @@ function releaseOrientationLock(){
   }catch(e){}
 }
 function toggleForceLandscape(){
-  const isOn = document.body.classList.contains('force-landscape');
-  landscapeManual = !isOn;
+  // NOT: "şu an yatay mıyım" sorusunu DOM'daki force-landscape sınıfına bakarak
+  // değil, kullanıcının en son bastığı yöne (landscapeManual) bakarak cevapla.
+  // Çünkü cihaz gerçek döndürmeyi (Fullscreen + orientation.lock) başarıyla
+  // uyguladığında force-landscape sınıfı (sadece SAHTE/CSS döndürme içindir)
+  // otomatik kapanıyor; DOM'a bakan eski kontrol bu durumda "henüz yatay
+  // değilim" sanıp ikinci basışta tekrar yatay moda geçmeye çalışıyor, kutu
+  // hiç dikey moda dönmüyordu.
+  landscapeManual = !(landscapeManual === true);
   if(landscapeManual) requestMatchFullscreen(); else releaseOrientationLock();
   document.body.classList.toggle('match-feed', !landscapeManual);
   updateForceLandscape();
@@ -4880,8 +4923,8 @@ function launchMatch(wantFullscreen){
   M = {
     comp, fx, tie, cupIdx, euroRef:extra, usHome, oppName:opp,
     minute:0, half:1, extraTime:ri(1,4), stoppage:0,
-    us:{name:comp==='milli'?'Türkiye A Milli':p.team, score:0, squad:usSquad, subs:0, cY:0, cR:0},
-    them:{name:opp, score:0, squad:themSquad, subs:0, cY:0, cR:0},
+    us:{name:comp==='milli'?'Türkiye A Milli':p.team, score:0, squad:usSquad, subs:0, cY:0, cR:0, cards:[]},
+    them:{name:opp, score:0, squad:themSquad, subs:0, cY:0, cR:0, cards:[]},
     ballX:50, ballY:50, momentum:0,
     userOn:true, drinkUsed:false, boost:0, effort:1, tactic:'dengeli',
     atkLevel:0, defLevel:0,
@@ -4896,13 +4939,30 @@ function launchMatch(wantFullscreen){
   M.us.squad.forEach(x=>{ if(!x.isUser) x.stamina = ri(86,100); });
   M.them.squad.forEach(x=> x.stamina = ri(86,100));
 
+  // ---- forma rengi çakışması kontrolü ----
+  // İki takımın forma renkleri (özellikle rastgele üretilen/ithal takımlarda)
+  // birbirine çok yakın olabiliyor ve sahada kimin kim olduğunu ayırt etmek
+  // zorlaşıyor. Gerçek futboldaki gibi: renkler çakışıyorsa DEPLASMAN takımı
+  // bu maça özel, ev sahibinden belirgin şekilde farklı bir alternatif forma
+  // giyer. Bu değişiklik sadece bu maç için geçerlidir (M ile birlikte kaybolur),
+  // takımın gerçek/kalıcı renklerini (tablo, transfer, vb.) etkilemez.
+  {
+    const homeName = fx.h, awayName = fx.a;
+    const homeKit = kitColors(homeName), awayKit = kitColors(awayName);
+    if(kitsClash(homeKit, awayKit)){
+      M.altAwayTeam = awayName;
+      M.altAwayKit = altAwayKit(homeKit || awayKit);
+      toast(`👕 Forma renkleri birbirine çok benziyordu, ${awayName} bu maça alternatif formayla çıkıyor.`);
+    }
+  }
+
   S.inMatch = true; lockNav(true);
   updateForceLandscape();
   setTimeout(updateForceLandscape, 400); // fullscreen/orientation API'lerinin oturması için ikinci deneme
   document.body.classList.add('match-active');
   // yatay/tam ekran seçilmediyse: anlatım maç ekranının altında, son 5 satır olarak akar
   document.body.classList.toggle('match-feed', !wantFullscreen);
-  { const _l = $('log'); if(_l) _l.classList.remove('full'); const _fb = $('btn-feedall'); if(_fb) _fb.textContent = 'Tümünü göster'; }
+  { const _l = $('log'); if(_l) _l.scrollTop = 0; }
   $('hub').style.display='none'; $('mgrhub').style.display='none'; $('live').style.display='block';
   const compTxt = comp==='kupa'?`${COMP_LABEL[comp]} • ${CUP_NAMES[cupIdx]}`
                 : comp==='euroko'?`${COMP_LABEL[comp]} • ${['Çeyrek Final','Yarı Final','Final'][cupIdx]}`
@@ -5026,11 +5086,50 @@ const NAT_KIT = {
   'Polonya':{c:'#dc2626',c2:'#ffffff',kit:'halves'}, 'Avusturya':{c:'#dc2626',c2:'#ffffff',kit:'hoops'}
 };
 function kitColors(teamName){
+  // Aktif maçta forma rengi çakışması yüzünden deplasman takımına bu maça
+  // özel bir alternatif forma atandıysa (bkz. launchMatch), önce onu döndür.
+  if(M && M.altAwayTeam===teamName && M.altAwayKit) return M.altAwayKit;
   const t = TEAMS.find(x=>x.n===teamName);
   if(t) return {c1:t.c, c2:t.c2||t.c, kit:t.kit||'solid'};
   const e = EURO_KIT[teamName]; if(e) return {c1:e.c, c2:e.c2, kit:e.kit};
   const n = NAT_KIT[teamName]; if(n) return {c1:n.c, c2:n.c2, kit:n.kit};
   return null;
+}
+/* ---------- Forma rengi çakışma tespiti ----------
+   İki takımın forma rengi (özellikle rastgele/ithal takımlarda) sahada
+   ayırt edilemeyecek kadar birbirine yakın olabiliyor. RGB uzayında
+   basit bir Öklid mesafesiyle "çakışıyor mu" diye bakıyoruz. */
+function hexToRgb(hex){
+  const h = (hex||'#888888').replace('#','');
+  const v = h.length===3 ? h.split('').map(c=>c+c).join('') : h;
+  const n = parseInt(v,16)||0;
+  return {r:(n>>16)&255, g:(n>>8)&255, b:n&255};
+}
+function colorDist(hexA, hexB){
+  const a=hexToRgb(hexA), b=hexToRgb(hexB);
+  return Math.sqrt((a.r-b.r)**2 + (a.g-b.g)**2 + (a.b-b.b)**2);
+}
+function kitsClash(home, away){
+  if(!home || !away) return false;
+  return colorDist(home.c1, away.c1) < 110; // 0 (aynı) – ~441 (siyah/beyaz) aralığında eşik
+}
+// Deplasman takımı için, ev sahibinden belirgin şekilde farklı, hazır bir
+// alternatif forma paleti. Ev sahibinin rengine en uzak olan seçilir.
+const ALT_KITS = [
+  {c1:'#ffffff', c2:'#111111', kit:'solid'},
+  {c1:'#111111', c2:'#ffffff', kit:'solid'},
+  {c1:'#fbbf24', c2:'#111111', kit:'solid'},
+  {c1:'#22c55e', c2:'#111111', kit:'solid'},
+  {c1:'#a855f7', c2:'#ffffff', kit:'solid'},
+  {c1:'#38bdf8', c2:'#111111', kit:'solid'}
+];
+function altAwayKit(homeKit){
+  let best=ALT_KITS[0], bestScore=-1;
+  ALT_KITS.forEach(k=>{
+    const d = colorDist(k.c1, (homeKit&&homeKit.c1)||'#888888');
+    if(d>bestScore){ bestScore=d; best=k; }
+  });
+  return best;
 }
 /* gerçek forma desenlerine yakın CSS gradyanları: halves (yarım-yarım),
    stripes (dikey çizgili), hoops (göğüs bandı), solid (düz + alt kenar rengi) */
@@ -5191,12 +5290,6 @@ function hiMyName(html){
   const nm = S && S.p && S.p.name; if(!nm) return html;
   const tag = `<span class="me-name">${nm}</span>`;
   return html.split(/(<[^>]+>)/).map(part => part.charAt(0)==='<' ? part : part.split(nm).join(tag)).join('');
-}
-function toggleFeedAll(){
-  const l = $('log'), b = $('btn-feedall'); if(!l||!b) return;
-  const full = l.classList.toggle('full');
-  b.textContent = full ? 'Son 5 satır' : 'Tümünü göster';
-  l.scrollTop = 0;
 }
 function say(txt, cls=''){
   const l = $('log');
@@ -5636,24 +5729,26 @@ function pulseCrowd(){
   });
 }
 
-// takımın gördüğü sarı/kırmızı kartları ilgili takım isminin altına yazar
+// takımın gördüğü sarı/kırmızı kartları, hangi oyuncunun gördüğünü ismiyle birlikte
+// ilgili takım isminin altına yazar (her kart kendi satırında: "🟨 Oyuncu Adı")
 function updateCardBadges(){
   if(!M) return;
   const homeT = M.usHome ? M.us : M.them;
   const awayT = M.usHome ? M.them : M.us;
   const fmt = T => {
-    const y = T.cY||0, r = T.cR||0;
-    const parts = [];
-    if(y) parts.push(`🟨${y>1?'×'+y:''}`);
-    if(r) parts.push(`🟥${r>1?'×'+r:''}`);
-    return parts.join(' ');
+    const list = T.cards||[];
+    if(!list.length) return '';
+    return list.map(c=>`${c.type==='r'?'🟥':'🟨'} ${escHtml(c.name)}`).join('<br>');
   };
-  const eh = $('sb-cards-home'); if(eh) eh.textContent = fmt(homeT);
-  const ea = $('sb-cards-away'); if(ea) ea.textContent = fmt(awayT);
+  const eh = $('sb-cards-home'); if(eh) eh.innerHTML = fmt(homeT);
+  const ea = $('sb-cards-away'); if(ea) ea.innerHTML = fmt(awayT);
 }
-// bir takıma (T = M.us veya M.them) sarı ('y') ya da kırmızı ('r') kart ekler ve tabloyu günceller
-function addTeamCard(T, type){
+// bir takıma (T = M.us veya M.them) sarı ('y') ya da kırmızı ('r') kart ekler,
+// hangi oyuncunun (name) gördüğünü kaydeder ve tabloyu günceller
+function addTeamCard(T, type, name){
   if(type==='r') T.cR++; else T.cY++;
+  if(!T.cards) T.cards = [];
+  T.cards.push({type, name: name || ''});
   updateCardBadges();
 }
 
@@ -5702,12 +5797,12 @@ function foulEvent(){
     Sfx.card();
     if(offender.mYellow>=2){
       offender.on = false;
-      addTeamCard(T, 'r');
+      addTeamCard(T, 'r', offender.name);
       say(`🟥 <b>İkinci sarıdan kırmızı!</b> ${offender.name} oyun dışı.`, 'bd');
       if(offender.isUser){ M.userOn=false; addRating(-1.6,'kırmızı kart'); S.p.season.red++; endUserOnPitch('kırmızı kart'); }
       buildPitch();
     } else {
-      addTeamCard(T, 'y');
+      addTeamCard(T, 'y', offender.name);
       say(`🟨 ${offender.name} sarı kart gördü.`);
       if(offender.isUser){ addRating(-0.3,'sarı kart'); S.p.season.yellow++; }
     }
@@ -5785,7 +5880,8 @@ function userInjury(T, v){
       <p>${p.name} yerde kaldı. Sağlık ekibi müdahale etti ama devam edebilecek durumda değilsin.</p>
       <div class="statbox"><div class="spread"><span class="sub">Ön teşhis</span><b>${t.n}</b></div></div>
       <p class="sub">Çantanda <b>özel ilk yardım paketi yok</b>. Mağazadan alırsan bir dahaki sefere sahada kalma şansın olur.</p>
-      <button class="btn primary block" style="margin-top:12px" onclick="closeModal();applyUserInjury()">Oyundan çık</button>`);
+      ${REWARD_CONFIG.enabled?`<button class="btn green block adcapbtn" style="margin-top:10px" onclick="watchAdForInjuryMedkit()"><span class="adcap">${adCapBadge()}</span> 📺 Reklam izle, ücretsiz paket kazan</button>`:''}
+      <button class="btn ${REWARD_CONFIG.enabled?'':'primary'} block" style="margin-top:8px" onclick="closeModal();applyUserInjury()">Oyundan çık</button>`);
   }
   const succ = medSuccess(weeks);
   modal(`<h3 style="color:var(--warn)">🧰 İlk yardım paketi kullanılsın mı?</h3>
@@ -6044,8 +6140,8 @@ function userChoice(a){
     case 'slide': {
       if(chance(0.34+sk('def')*0.42)){ say(`🦶 Harika kayarak müdahale! ${S.p.name} tehlikeyi sildi.`,'hi'); addRating(0.3,'müdahale'); }
       else { Sfx.foul(); say(`Müdahalede geç kaldın, hakem faul verdi.`); addRating(-0.25);
-        if(chance(0.35)){ Sfx.card(); me.mYellow++; S.p.season.yellow++; addTeamCard(M.us,'y'); say(`🟨 ${S.p.name} sarı kart gördü.`);
-          if(me.mYellow>=2){ me.on=false; M.userOn=false; S.p.season.red++; addTeamCard(M.us,'r'); say(`🟥 İkinci sarıdan kırmızı!`,'bd'); addRating(-1.5); endUserOnPitch('kırmızı kart'); buildPitch(); } }
+        if(chance(0.35)){ Sfx.card(); me.mYellow++; S.p.season.yellow++; addTeamCard(M.us,'y',S.p.name); say(`🟨 ${S.p.name} sarı kart gördü.`);
+          if(me.mYellow>=2){ me.on=false; M.userOn=false; S.p.season.red++; addTeamCard(M.us,'r',S.p.name); say(`🟥 İkinci sarıdan kırmızı!`,'bd'); addRating(-1.5); endUserOnPitch('kırmızı kart'); buildPitch(); } }
         else if(chance(0.25)) scoreGoal(false, pickAttacker(M.them), null); }
       break;
     }
@@ -6244,6 +6340,18 @@ function showStats(){
   const poss = clamp(Math.round(50+(M.stats.momSum/Math.max(1,M.stats.momN))*0.7),20,80);
   const cardsUs = M.us.squad.reduce((s,p)=>s+(p.mYellow||0),0);
   const cardsThem = M.them.squad.reduce((s,p)=>s+(p.mYellow||0),0);
+  const homeT = M.usHome ? M.us : M.them;
+  const awayT = M.usHome ? M.them : M.us;
+  // hangi oyuncunun sarı/kırmızı kart gördüğünü isim isim listeler
+  // (ikinci sarıdan kırmızı olanlar 🟥 ile, tek sarısı olanlar 🟨 ile gösterilir)
+  const cardNamesHTML = T => {
+    const list = T.squad.filter(p=>(p.mYellow||0)>0);
+    if(!list.length) return '<span class="sub">Kart yok</span>';
+    return list.map(p=>{
+      const icon = p.mYellow>=2 ? '🟥' : '🟨';
+      return `<div class="spread" style="margin-top:4px"><span>${p.name}${p.isUser?' <span class="sub">(Sen)</span>':''}</span><span>${icon}</span></div>`;
+    }).join('');
+  };
   modal(`<h3 style="color:var(--flood)">Maç istatistikleri</h3>
     <div class="statbox">
       <div class="spread"><span class="sub">Şut</span><b>${M.stats.shotsUs} — ${M.stats.shotsThem}</b></div>
@@ -6251,6 +6359,14 @@ function showStats(){
       <div class="spread"><span class="sub">Sarı kart</span><b>${cardsUs} — ${cardsThem}</b></div>
       <div class="spread"><span class="sub">Hava durumu</span><b>${M.weather.ic} ${M.weather.n}</b></div>
       <div class="spread"><span class="sub">Taktik</span><b>${TACTICS[M.tactic].n}</b></div>
+    </div>
+    <div class="statbox" style="margin-top:8px">
+      <b>${kitDot(homeT.name)}${homeT.name}</b>
+      ${cardNamesHTML(homeT)}
+    </div>
+    <div class="statbox" style="margin-top:8px">
+      <b>${kitDot(awayT.name)}${awayT.name}</b>
+      ${cardNamesHTML(awayT)}
     </div>
     <button class="btn primary block" style="margin-top:12px" onclick="closeModal()">Kapat</button>`);
 }
@@ -6351,6 +6467,7 @@ function finishMatch(){
     if(M.usHome) earn = Math.round(earn*SB().prim);   // stadyum geliri payı
   } else earn += me.mGoals*14000;
   p.money += earn;
+  lastMatchEarn = earn; lastMatchEarnDoubled = false;
 
   // moral / güven / kondisyon
   p.fitness = clamp(M.userOn ? me.stamina : Math.max(me.stamina, 25));
@@ -6389,8 +6506,9 @@ function finishMatch(){
       <div class="spread"><span class="sub">Bitiş kondisyonu</span><b>${Math.round(p.fitness)}%</b></div>
       ${motm?'<div class="spread"><span class="sub">Ödül</span><b style="color:var(--good)">⭐ Maçın adamı</b></div>':''}
     </div>
-    <div class="statbox">
-      <div class="spread"><span class="sub">${isMilli?'Milli maç primi':'Maç ücreti + primler'}</span><b style="color:var(--good)">${TL(earn)}</b></div>
+    <div class="statbox" id="pm-earn">
+      <div class="spread"><span class="sub">${isMilli?'Milli maç primi':'Maç ücreti + primler'}</span><b id="pm-earn-amt" style="color:var(--good)">${TL(earn)}</b></div>
+      ${REWARD_CONFIG.enabled?`<button class="btn sm primary block adcapbtn" style="margin-top:8px" id="pm-double-btn" onclick="doubleMatchEarn()"><span class="adcap">${adCapBadge()}</span> 📺 Reklam İzle Ekstra Kazan → ${TL(earn*2)}</button>`:''}
     </div>
     <div class="statbox">
       <div class="spread"><span class="sub">Şut (biz/rakip)</span><b>${M.stats.shotsUs} / ${M.stats.shotsThem}</b></div>
@@ -6404,6 +6522,19 @@ function finishMatch(){
   $('btn-finish').style.display='inline-block';
   save();
 }
+let lastMatchEarn = 0, lastMatchEarnDoubled = false;
+async function doubleMatchEarn(){
+  if(lastMatchEarnDoubled || !lastMatchEarn) return;
+  const btn = $('pm-double-btn'); if(btn){ btn.disabled = true; btn.innerHTML = '…'; }
+  const r = await requestRewardedAd();
+  if(r.ok){
+    S.p.money += lastMatchEarn; lastMatchEarnDoubled = true;
+    const amtEl = $('pm-earn-amt'); if(amtEl) amtEl.textContent = TL(lastMatchEarn*2);
+    if(btn) btn.outerHTML = '<p class="sub" style="margin-top:8px;color:var(--good)">✅ Kazancın 2 katına çıkarıldı</p>';
+    toast(`📺 +${TL(lastMatchEarn)} ekstra kazandın!`);
+    save(); render();
+  } else if(btn){ btn.disabled = false; btn.innerHTML = `<span class="adcap">${adCapBadge()}</span> 📺 Reklam İzle Ekstra Kazan → ${TL(lastMatchEarn*2)}`; }
+}
 function renderPmDrink(){
   const box = $('pm-drink'); if(!box) return;
   const p = S.p;
@@ -6415,7 +6546,8 @@ function renderPmDrink(){
         return `<button class="btn sm ${ok?'green':''}" ${ok?'':'disabled'} onclick="recoveryDrink('${e.id}')">
           ${e.ic} +${Math.round(e.gain*0.55)} (${n})</button>`;
       }).join('')}
-    </div>`;
+    </div>
+    ${drinksTotal()===0 && REWARD_CONFIG.enabled ? `<button class="btn sm green block adcapbtn" style="margin-top:8px" onclick="watchAdForItem('drink')"><span class="adcap">${adCapBadge()}</span> 📺 Enerji içeceğin bitti — izle, 1 tane kazan</button>` : ''}`;
 }
 function recoveryDrink(id){
   const p = S.p, d = drInv();
@@ -6716,7 +6848,7 @@ function afterHeadlineClosed(){
 }
 function showOfferRenewalPopup(){
   modal(`<h3 style="color:var(--flood)">🔄 Sezon teklifleri yenilendi</h3>
-    <p class="sub">İlgilenen kulüplerin maç başı teklifleri ve pazarlık hakların güncellendi. Daha önce bir kulüple üzerinde anlaştığın teklif varsa o anlaşma korunuyor. Transfer sekmesinde görmek ister misin?</p>
+    <p class="sub">İlgilenen kulüpler listesi tamamen yenilendi — önceki 6 kulübün hepsi (pazarlık açtığın ya da açmadığın fark etmez) listeden çıktı, yerlerine bu sezon daha önce hiç görmediğin yeni kulüpler geldi. Transfer sekmesinde görmek ister misin?</p>
     <div class="btngrid" style="margin-top:10px">
       <button class="btn" onclick="closeModal()">Daha sonra</button>
       <button class="btn primary" onclick="closeModal();go('v-transfers')">Evet, göster</button>
@@ -7170,7 +7302,7 @@ function nextSeason(newTeam, newWage, newYears){
   });
   p.season = {apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,ratingSum:0,cleanSheet:0,saves:0};
   p.fitness=100; p.injuryWeeks=0; p.injuryName=null; p.banWeeks=0; p.yellowStreak=0; p.lifePoints=3; p.trainPoints=2;
-  p.transferRequested=false; p.transferTarget=null; p.clubNegotiations={}; p.captain=false; p._hattrick = p._hattrick||false;
+  p.transferRequested=false; p.transferTarget=null; p.clubNegotiations={}; p.negotiatedClubsOut=[]; p.currentClubPool=null; p.captain=false; p._hattrick = p._hattrick||false;
   p._weeklyMotm=false;
 
   // yeni sezon
@@ -7441,7 +7573,7 @@ const REWARD_CONFIG = {
   h5Client: 'ca-pub-9854310952239850',   // provider 'h5' iken AdSense yayıncı kimliğin
   h5Test: false,                          // false: gerçek reklam. Onay gelene kadar reklam boşsa video sadece atlanır.
   cooldownSec: 45,                        // iki video arası bekleme
-  dailyCap: 12,                           // günlük en fazla video
+  dailyCap: 30,                           // günlük en fazla video
   minReward: 50000,
   testDurationSec: 5                      // provider 'placeholder' iken sahte test reklamının süresi (sn)
 };
@@ -7461,20 +7593,25 @@ function videoInfo(){
   return {n:st.n, left:Math.max(0, REWARD_CONFIG.dailyCap-st.n),
           wait:Math.max(0, Math.ceil((st.last + REWARD_CONFIG.cooldownSec*1000 - Date.now())/1000)), reward:rewardAmount()};
 }
+/* Tüm ödüllü reklam butonlarında aynı paylaşılan günlük hakkı göstermek için:
+   "(kalan/toplam)" rozeti. Buton her render edildiğinde başlangıç değeri bu ile
+   yazılır; sonrasında updateVideoButtons() her saniye günceller. */
+function adCapBadge(){ const v = videoInfo(); return `(${v.left}/${REWARD_CONFIG.dailyCap})`; }
 function videoBlockHTML(){
   const v = videoInfo();
   return `<div class="packcard vid">
     <span class="pic">📺</span>
-    <div class="pinfo"><b>Video izle ${REWARD_CONFIG.provider==='placeholder'?'<span class="testflag" style="margin-left:4px">TEST</span>':''}</b>
+    <div class="pinfo"><b><span class="adcap" style="font-weight:400;color:var(--dim);font-size:.8rem">${adCapBadge()}</span> Video izle ${REWARD_CONFIG.provider==='placeholder'?'<span class="testflag" style="margin-left:4px">TEST</span>':''}</b>
       <span class="pamt">+${TL(v.reward)}</span>
       <span class="vidsub sub"></span></div>
-    <button class="btn sm primary vidbtn" onclick="watchVideo()">İzle</button>
+    <button class="btn sm primary vidbtn adcapbtn" onclick="watchVideo()">İzle</button>
   </div>`;
 }
 let vidBusy = false;
 function updateVideoButtons(){
-  const btns = document.querySelectorAll('.vidbtn'); if(!btns.length || !S) return;
+  if(!S) return;
   const v = videoInfo();
+  const btns = document.querySelectorAll('.vidbtn');
   btns.forEach(b=>{
     b.disabled = vidBusy || v.left<=0 || v.wait>0;
     b.textContent = vidBusy ? '…' : v.left<=0 ? 'Yarın' : v.wait>0 ? `⏳ ${v.wait} sn` : 'İzle';
@@ -7482,6 +7619,8 @@ function updateVideoButtons(){
   document.querySelectorAll('.vidsub').forEach(e=>{
     e.textContent = v.left>0 ? `Bugün ${v.left}/${REWARD_CONFIG.dailyCap} hak kaldı` : 'Bugünkü haklarını kullandın';
   });
+  document.querySelectorAll('.adcap').forEach(e=>{ e.textContent = `(${v.left}/${REWARD_CONFIG.dailyCap})`; });
+  document.querySelectorAll('.adcapbtn').forEach(b=>{ b.disabled = vidBusy || v.left<=0 || v.wait>0; });
 }
 setInterval(updateVideoButtons, 1000);
 
@@ -7538,13 +7677,17 @@ function initRewardedProvider(){
   window.adConfig({preloadAdBreaks:'on', sound:'on'});
 }
 
-async function watchVideo(){
-  if(!S || vidBusy || !REWARD_CONFIG.enabled) return;
-  if(S.inMatch) return toast('Maç sürerken video izlenemez.');
-  if(!navigator.onLine) return toast('📡 Çevrimdışıyken video oynatılamaz. Bağlantı gelince tekrar dene.');
+/* ---- tüm ödüllü reklam kullanım noktalarının ortak kapısı ----
+   Günlük limit + bekleme süresi burada tek yerden uygulanır, hangi
+   özellik çağırırsa çağırsın (para videosu, pazar yenileme, maç sonu
+   2x, içecek/ilk yardım paketi kazanma) aynı havuzu paylaşır. */
+async function requestRewardedAd(){
+  if(!S || vidBusy || !REWARD_CONFIG.enabled) return {ok:false};
+  if(S.inMatch && !(M && (M.ended || M.paused))) { toast('Maç sürerken video izlenemez.'); return {ok:false}; }
+  if(!navigator.onLine){ toast('📡 Çevrimdışıyken video oynatılamaz. Bağlantı gelince tekrar dene.'); return {ok:false}; }
   const v = videoInfo();
-  if(v.left<=0) return toast('Bugünkü video hakkın bitti, yarın tekrar gel.');
-  if(v.wait>0)  return toast(`Sonraki video ${v.wait} sn sonra.`);
+  if(v.left<=0){ toast('Bugünkü video hakkın bitti, yarın tekrar gel.'); return {ok:false}; }
+  if(v.wait>0){ toast(`Sonraki video ${v.wait} sn sonra.`); return {ok:false}; }
   vidBusy = true; updateVideoButtons();
   let r;
   try{
@@ -7552,21 +7695,50 @@ async function watchVideo(){
       : REWARD_CONFIG.provider==='native' ? await nativeRewarded()
       : await placeholderRewarded();
   }catch(e){ r = {rewarded:false, reason:'unavailable'}; }
-  vidBusy = false;
-  if(r && r.rewarded){ grantVideoReward(); }
-  else{
-    updateVideoButtons();
-    toast(r && r.reason==='unavailable' ? 'Şu an gösterilecek video yok, biraz sonra tekrar dene.' : 'Video tamamlanmadı, ödül verilmedi.');
+  vidBusy = false; updateVideoButtons();
+  if(r && r.rewarded){
+    const st = videoState(); st.n++; st.last = Date.now(); saveVideoState(st);
+    return {ok:true};
   }
+  toast(r && r.reason==='unavailable' ? 'Şu an gösterilecek video yok, biraz sonra tekrar dene.' : 'Video tamamlanmadı, ödül verilmedi.');
+  return {ok:false};
+}
+async function watchVideo(){
+  const r = await requestRewardedAd();
+  if(r.ok) grantVideoReward();
 }
 function grantVideoReward(){
-  const amt = rewardAmount(), st = videoState();
+  const amt = rewardAmount();
   S.p.money += amt; S.p.videosWatched = (S.p.videosWatched||0) + 1;
-  st.n++; st.last = Date.now(); saveVideoState(st);
   closeModal();
   coinPopup(`+${TL(amt)} 🪙`);
   toast(`📺 +${TL(amt)} kazandın!`);
   save(); render();
+}
+/* ---- video karşılığı 1 adet ürün (enerji içeceği / ilk yardım paketi) ---- */
+async function watchAdForItem(kind){
+  const r = await requestRewardedAd();
+  if(!r.ok) return;
+  if(kind==='drink'){
+    const d = drInv(); d.e1 = (d.e1||0)+1; syncDrinks();
+    toast('📺 +1 enerji içeceği kazandın!');
+  } else if(kind==='medkit'){
+    S.p.medkits = (S.p.medkits||0)+1;
+    const el = $('medN'); if(el) el.textContent = S.p.medkits;
+    toast('📺 +1 ilk yardım paketi kazandın!');
+  }
+  save(); render();
+  if($('shopBox') && $('shopBox').innerHTML) renderShop();
+  if($('pm-drink')) renderPmDrink();
+}
+/* ---- maç içi sakatlıkta, çanta bittiğinde: reklamla 1 paket kazanıp hemen kullan ---- */
+async function watchAdForInjuryMedkit(){
+  if(!M || !M._inj) return;
+  const r = await requestRewardedAd();
+  if(!r.ok) return;
+  S.p.medkits = (S.p.medkits||0) + 1;
+  closeModal();
+  useMedkit();
 }
 
 /* ---------- Oyun parası mağazası ---------- */
