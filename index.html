@@ -513,16 +513,22 @@ td.num,th.num{text-align:center;width:26px;white-space:nowrap;}
   body.match-active #v-match{padding:4px 6px;}
   body.match-active #live > .card{padding:6px 8px;border-radius:0;border:0;}
   body.match-active #live > .card > h3{display:none;}
-  body.match-active .scoreboard{padding:4px 8px;margin-bottom:4px;}
-  body.match-active .scoreboard .sc{font-size:1.4rem;padding:0 8px;}
-  body.match-active .scoreboard .tn{font-size:.78rem;}
+  body.match-active .scoreboard{padding:3px 6px;margin-bottom:2px;}
+  body.match-active .scoreboard .sc{font-size:1.1rem;padding:0 6px;}
+  body.match-active .scoreboard .tn{font-size:.7rem;line-height:1.05;}
+  body.match-active .scoreboard .clock{font-size:.62rem;}
+  body.match-active .scoreboard .mini{font-size:.6rem;line-height:1.1;}
   body.match-active .stadium{margin-bottom:0;}
-  body.match-active .pitch{max-height:min(72vh,420px);}
+  /* saha + skor şeridi + alt buton satırı toplamı ekranın kısa kenarını (yükseklik)
+     aşmasın diye küçültüldü; aksi halde yatay modda içerik ekrana sığmıyordu. */
+  body.match-active .pitch{max-height:min(42vh,235px);}
+  body.match-active .crowd{min-height:6px;}
+  body.match-active .crowd.bot{min-height:20px;}
   body.match-active #me-line,
   body.match-active #stad-line,
   body.match-active .commentary{display:none;}
-  body.match-active .row.wrap{gap:5px;padding-bottom:2px;}
-  body.match-active .row.wrap .btn.sm{padding:5px 8px;font-size:.72rem;}
+  body.match-active .row.wrap{gap:4px;padding-bottom:2px;}
+  body.match-active .row.wrap .btn.sm{padding:2px 6px;font-size:.64rem;}
   body.match-active .matchfab-row{left:8px;bottom:8px;}
   body.match-active .pausefab{padding:6px 11px;font-size:.75rem;}
   body.match-active .pitchticker{left:112px;right:190px;bottom:8px;}
@@ -581,22 +587,30 @@ body.match-active.force-landscape #app{padding-bottom:0;}
 body.match-active.force-landscape #v-match{padding:4px 6px;}
 body.match-active.force-landscape #live > .card{padding:6px 8px;border-radius:0;border:0;}
 body.match-active.force-landscape #live > .card > h3{display:none;}
-body.match-active.force-landscape .scoreboard{padding:4px 8px;margin-bottom:4px;}
-body.match-active.force-landscape .scoreboard .sc{font-size:1.4rem;padding:0 8px;}
-body.match-active.force-landscape .scoreboard .tn{font-size:.78rem;}
+body.match-active.force-landscape .scoreboard{padding:3px 6px;margin-bottom:2px;}
+body.match-active.force-landscape .scoreboard .sc{font-size:1.1rem;padding:0 6px;}
+body.match-active.force-landscape .scoreboard .tn{font-size:.66rem;line-height:1.05;}
+body.match-active.force-landscape .scoreboard .clock{font-size:.62rem;}
+body.match-active.force-landscape .scoreboard .mini{font-size:.58rem;line-height:1.1;}
 body.match-active.force-landscape .stadium{
   margin-bottom:0; position:sticky; top:0; z-index:2; background:var(--night);
 }
 /* NOT: bu sahte-yatay modda vh her zaman GERÇEK (dikey) ekran yüksekliğini gösterir,
    döndürülmüş görünümdeki kısa kenarı değil — o yüzden sahanın boyutu vw'ye göre
-   hesaplanmalı, yoksa saha kutuya sığmayıp kaydırma gerektiriyor ve oyuncular kayboluyor. */
-body.match-active.force-landscape .pitch{max-height:min(60vw,280px);max-height:min(60dvw,280px);}
+   hesaplanmalı, yoksa saha kutuya sığmayıp kaydırma gerektiriyor ve oyuncular kayboluyor.
+   Skor şeridi, taç boşlukları ve alt buton satırı da vw'ye göre değil sabit
+   yükseklikte olduğundan, saha oranı bunlarla birlikte toplamda cihaz genişliğini
+   (kullanılabilir "yükseklik") aşmayacak kadar küçültüldü — aksi halde ekrana
+   sığmıyor ve aşağı kaydırma gerekiyordu (döndürülmüş görünümde bu çok sezgisiz). */
+body.match-active.force-landscape .pitch{max-height:min(42vw,195px);max-height:min(42dvw,195px);}
+body.match-active.force-landscape .crowd{min-height:6px;}
+body.match-active.force-landscape .crowd.bot{min-height:20px;}
 body.match-active.force-landscape .livefeed-head{display:none;}
 body.match-active.force-landscape #me-line,
 body.match-active.force-landscape #stad-line,
 body.match-active.force-landscape .commentary{display:none;}
-body.match-active.force-landscape .row.wrap{gap:5px;padding-bottom:2px;}
-body.match-active.force-landscape .row.wrap .btn.sm{padding:5px 8px;font-size:.72rem;}
+body.match-active.force-landscape .row.wrap{gap:4px;padding-bottom:2px;}
+body.match-active.force-landscape .row.wrap .btn.sm{padding:2px 6px;font-size:.62rem;}
 body.match-active.force-landscape .matchfab-row{left:8px;bottom:8px;}
 body.match-active.force-landscape .pausefab{padding:6px 11px;font-size:.75rem;}
 body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px;}
@@ -614,7 +628,7 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
 .prompt-timer.tick{animation:promptTick .35s ease;}
 @keyframes promptTick{0%{transform:scale(1.28)}100%{transform:scale(1)}}
 .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-.acts button{padding:14px 8px;font-size:.88rem;}
+.acts button{padding:14px 8px;font-size:.88rem;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.25;}
 
 .mini{font-size:.76rem;color:var(--dim);}
 .squadrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line2);font-size:.8rem;}
@@ -2453,7 +2467,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v6.5';
+const APP_VERSION = 'v6.6';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -6246,7 +6260,6 @@ function renderHalfTime(){
   const me = M.us.squad.find(x=>x.isUser);
   const canDrink = M.userOn && !M.drinkUsed && drinksTotal()>0;
   $('ov-sub').innerHTML = `${M.htTalk}
-    <div class="sub" style="margin-top:8px">Kondisyonun: <b>${Math.round(me.stamina)}%</b></div>
     <div class="sub">Puan ${M.rating.toFixed(1)} • ${me.mGoals} gol, ${me.mAssists} asist</div>
     ${M.userOn?`<div class="row wrap" style="margin-top:10px;justify-content:center;gap:8px">
       <button class="btn ${canDrink?'green':''}" ${canDrink?'':'disabled'} onclick="openDrinkPicker(true)">
