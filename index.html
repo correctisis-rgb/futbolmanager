@@ -207,7 +207,7 @@ td.num,th.num{text-align:center;width:26px;white-space:nowrap;}
   background:var(--surf5);border:1px solid var(--line);border-radius:8px;padding:2px 12px;}
 .clock{text-align:center;font-family:'Barlow Condensed';font-size:.85rem;color:var(--flood);letter-spacing:1px;grid-column:1/-1;}
 /* ---- tek satır skor barı (sahanın sol üstü) ---- */
-.pitchclock{position:absolute;left:8px;top:8px;z-index:16;background:rgba(4,10,14,.78);
+.pitchclock{position:absolute;left:8px;top:3px;z-index:16;background:rgba(4,10,14,.78);
   border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:3px 10px;
   display:flex;flex-direction:row;align-items:center;gap:6px;max-width:calc(100% - 120px);
   box-shadow:0 3px 10px rgba(0,0,0,.5);pointer-events:none;}
@@ -234,7 +234,7 @@ td.num,th.num{text-align:center;width:26px;white-space:nowrap;}
 .condstrip .cond-label{font-size:.78rem;}
 
 /* ---- hız tuşları (sahanın sağ üstü) ---- */
-.speedfab{position:absolute;right:8px;top:8px;z-index:17;display:flex;gap:3px;
+.speedfab{position:absolute;right:8px;top:3px;z-index:17;display:flex;gap:3px;
   background:rgba(4,10,14,.78);border:1px solid rgba(255,255,255,.25);border-radius:999px;
   padding:3px;box-shadow:0 3px 10px rgba(0,0,0,.5);}
 .speedfab .spd{font-family:'Barlow Condensed';font-size:.82rem;font-weight:700;letter-spacing:.5px;
@@ -1313,12 +1313,16 @@ const ri  = (a,b) => Math.floor(rnd(a,b+1));
 const pick = arr => arr[Math.floor(Math.random()*arr.length)];
 const clamp = (v,a=0,b=100) => Math.max(a,Math.min(b,v));
 // çeşitli "şart" kartlarında (kaptanlık, jübile vb.) kullanılan ortak ilerleme barı satırı
-function reqBar(label, cur, need, curTxt, needTxt){
+function reqBar(label, cur, need, curTxt, needTxt, real){
   const ok = cur>=need;
-  const pct = need>0 ? clamp(Math.round((cur/need)*100),0,100) : 100;
+  // real=true: çubuk gerçek değeri (0-100) gösterir, eşik sarı çizgiyle işaretlenir;
+  // böylece değer eşiğin üstündeyken de artış/düşüş çubukta görünür.
+  const pct = real ? clamp(Math.round(cur),0,100)
+                   : (need>0 ? clamp(Math.round((cur/need)*100),0,100) : 100);
+  const mark = real ? `<span style="position:absolute;left:${clamp(need)}%;top:0;bottom:0;width:2px;background:var(--flood);opacity:.85"></span>` : '';
   return `<div style="margin-top:9px">
     <div class="barline"><span>${ok?'✅ ':''}${label}</span><b style="color:${ok?'var(--good)':'var(--ink)'}">${curTxt} <span class="sub">/ ${needTxt}</span></b></div>
-    <div class="bar ${ok?'mood':''}"><i style="width:${pct}%"></i></div>
+    <div class="bar ${ok?'mood':''}"><i style="width:${pct}%"></i>${mark}</div>
   </div>`;
 }
 const TL = n => Math.round(n).toLocaleString('tr-TR')+' ₺';
@@ -2467,7 +2471,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v6.6';
+const APP_VERSION = 'v6.7';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -3617,12 +3621,12 @@ function renderRoom(){
     <h3>Kaptanlık ${p.captain?'<span class="chip ovr">Kaptansın</span>':''}</h3>
     <p class="sub">Hocanın güveni, tecrüben ve takım arkadaşlarının sana olan güveni (ortalama ilişki) yeterliyse pazubandı isteyebilirsin.</p>
     ${p.captain?'':`<button class="btn sm ${canCaptain?'primary':''}" style="margin-top:8px" ${canCaptain?'':'disabled'} onclick="askCaptain()">Kaptanlığı iste</button>`}
-    ${!canCaptain && !p.captain?`<div class="statbox" style="margin-top:8px">
-      ${reqBar('Hoca güveni', p.trust, 72, Math.round(p.trust), '≥72')}
-      ${reqBar('Yaş', p.age, 22, p.age, '≥22')}
+    <div class="statbox" style="margin-top:8px">
+      ${reqBar('Hoca güveni', p.trust, 72, Math.round(p.trust)+'%', '≥72%', true)}
+      ${p.captain?'':`${reqBar('Yaş', p.age, 22, p.age, '≥22')}
       ${reqBar('Sezondaki maç', p.season.apps, 6, p.season.apps, '≥6')}
-      ${reqBar('Takım arkadaşlarınla olan ortalama ilişki', avgRel, 60, avgRel+'%', '≥60%')}
-    </div>`:''}
+      ${reqBar('Takım arkadaşlarınla olan ortalama ilişki', avgRel, 60, avgRel+'%', '≥60%')}`}
+    </div>
   </div>
   <div class="card">
     <h3>Takım arkadaşların <span class="chip ${avgRel>=60?'ovr':''}" style="font-weight:600">Kimya %${avgRel}</span></h3>
@@ -5123,9 +5127,31 @@ function colorDist(hexA, hexB){
   const a=hexToRgb(hexA), b=hexToRgb(hexB);
   return Math.sqrt((a.r-b.r)**2 + (a.g-b.g)**2 + (a.b-b.b)**2);
 }
+// sRGB → CIE Lab (algısal renk uzayı): koyu tonlar (lacivert/siyah/koyu yeşil) RGB'de
+// olduğundan çok yakın görünür, Lab'da ise gözün gördüğü farkı yansıtır.
+function hexToLab(hex){
+  const {r,g,b} = hexToRgb(hex);
+  const lin = c => { c/=255; return c>0.04045 ? Math.pow((c+0.055)/1.055,2.4) : c/12.92; };
+  const R=lin(r), G=lin(g), B=lin(b);
+  const X=(R*0.4124+G*0.3576+B*0.1805)/0.95047, Y=R*0.2126+G*0.7152+B*0.0722, Z=(R*0.0193+G*0.1192+B*0.9505)/1.08883;
+  const f = t => t>0.008856 ? Math.cbrt(t) : 7.787*t+16/116;
+  const fx=f(X), fy=f(Y), fz=f(Z);
+  return [116*fy-16, 500*(fx-fy), 200*(fy-fz)];
+}
+function labDist(hexA, hexB){
+  const a=hexToLab(hexA), b=hexToLab(hexB);
+  return Math.hypot(a[0]-b[0], a[1]-b[1], a[2]-b[2]);
+}
+// Formanın ana renginin görünen alan payı: düz formada ikinci renk sadece detay,
+// çizgili/yarım formada ise formanın yarısını kaplar.
+const KIT_PRIMARY_SHARE = {solid:.85, hoops:.65, halves:.5, stripes:.5};
 function kitsClash(home, away){
   if(!home || !away) return false;
-  return colorDist(home.c1, away.c1) < 110; // 0 (aynı) – ~441 (siyah/beyaz) aralığında eşik
+  const pa = KIT_PRIMARY_SHARE[home.kit] ?? .7, pb = KIT_PRIMARY_SHARE[away.kit] ?? .7;
+  const share = (pa+pb)/2;
+  // iki formanın "genel görünüm" farkı: ana renk farkı + ikinci renk farkı (alan payına göre ağırlıklı)
+  const look = share*labDist(home.c1, away.c1) + (1-share)*labDist(home.c2, away.c2);
+  return look < 25;   // ~0 = aynı forma, 25 altı = sahada karışabilecek kadar benzer
 }
 // Deplasman takımı için, ev sahibinden belirgin şekilde farklı, hazır bir
 // alternatif forma paleti. Ev sahibinin rengine en uzak olan seçilir.
