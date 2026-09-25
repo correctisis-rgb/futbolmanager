@@ -2471,7 +2471,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v6.7';
+const APP_VERSION = 'v6.8';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -6124,11 +6124,39 @@ function userChoice(a){
     }
     case 'drib': {
       if(chance(0.25+sk('drib')*0.45)){
-        say(`⚡ <b>${S.p.name}</b> iki rakibi çalımla geçti, tribün ayakta!`,'hi');
+        say(`⚡ <b>${S.p.name}</b> iki rakibi çalımla geçti, kaleciyle karşı karşıya kaldı!`,'hi');
         Sfx.chant('ole'); addRating(0.25,'çalım');
-        M.ballX = clamp(M.ballX+12,6,94);
-        if(goalFrom(0.12+sk('sut')*0.18)) {}
+        M.ballX = clamp(M.ballX+12,6,94); movePitch();
+        setTimeout(()=>{
+          if(!M || M.ended) return;
+          askUser('Kaleciyle karşı karşıyasın! Ne yapıyorsun?',
+            [['🎯 Şut çek','solo-sut'],['📐 Köşeye sert vur','solo-corner'],['✨ Klas vur','solo-chip'],['🤝 Boştaki arkadaşa çek','solo-pass']]);
+        }, 2000);
+        return;
       } else { say(`${S.p.name} çalım denedi, topu kaptırdı.`); addRating(-0.22); M.momentum=-18; }
+      break;
+    }
+    /* --- çalımdan sonra kaleciyle karşı karşıya --- */
+    case 'solo-sut': case 'solo-corner': case 'solo-chip': {
+      M.stats.shotsUs++;
+      const gk = gkOf(M.them);
+      let p0;
+      if(a==='solo-corner') p0 = 0.40+sk('sut')*0.32;
+      else if(a==='solo-chip') p0 = 0.34+sk('sut')*0.16+sk('drib')*0.18;
+      else p0 = 0.30+sk('sut')*0.28;
+      if(!goalFrom(clamp(p0,0.15,0.85))){
+        if(a==='solo-chip' && chance(0.35)){ Sfx.ooh(); say(`Klas vuruş kaleciyi geçti ama üstten auta gitti.`); addRating(-0.12); }
+        else if(chance(0.5)){ Sfx.save(); say(`${S.p.name} vurdu, ${gk?gk.name:'kaleci'} inanılmaz bir refleksle çıkardı!`); addRating(0.18); }
+        else if(chance(0.35)){ Sfx.post(); say(`${S.p.name}'ın vuruşu direkten döndü! Çok yakındı...`,'hi'); addRating(0.22); }
+        else { Sfx.ooh(); say(`${S.p.name} net pozisyonu değerlendiremedi, top auta gitti.`); addRating(-0.22); }
+      } else addRating(0.2,'net pozisyon golü');
+      break;
+    }
+    case 'solo-pass': {
+      if(chance(0.55+sk('pas')*0.3)){
+        if(goalFrom(0.5, true)) {}
+        else { say(`Pas boştaki arkadaşına ulaştı ama vuruşu kaleciye çeldirdi.`); addRating(0.18); }
+      } else { say(`Pasın ayarı kaçtı, top kornere çıktı.`); addRating(-0.12); }
       break;
     }
     case 'cross': {
