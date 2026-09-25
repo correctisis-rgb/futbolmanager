@@ -960,8 +960,10 @@ body.match-feed .pitchticker{display:none!important;}
 :root{--adh:0px;}
 body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
 #adBanner{position:fixed;left:0;right:0;bottom:calc(var(--navh,58px) + 6px);z-index:58;display:none;
-  max-width:760px;margin:0 auto;padding:0 12px;}
+  max-width:760px;margin:0 auto;padding:0 12px;
+  opacity:0;transform:translateY(6px);transition:opacity .25s ease,transform .25s ease;}
 #adBanner.on{display:block;}
+#adBanner.on.show{opacity:1;transform:translateY(0);}
 #adBanner .adbox{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;
   min-height:50px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
 #adBanner .adtag{position:absolute;top:0;left:0;font-size:.55rem;letter-spacing:.4px;color:var(--dim);
@@ -2471,7 +2473,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v6.8';
+const APP_VERSION = 'v6.9';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2758,9 +2760,8 @@ function render(){
   $('t-ovr').textContent = 'GÜÇ ' + userOverall();
   updateNavBadges();
   updateNavForRole();
-  updateAdBanner();
 
-  if(S.inMatch) return;   // maç ekranı kendi kendini günceller
+  if(S.inMatch){ updateAdBanner(); return; }   // maç ekranı kendi kendini günceller; reklamı da gizle
 
   switch(currentView){
     case 'v-match':  renderHub(); break;
@@ -2771,6 +2772,7 @@ function render(){
     case 'v-transfers': renderTransfers(); break;
     case 'v-settings': renderSettings(); break;
   }
+  updateAdBanner();   // hub içeriği artık basıldı — reklam kararını en son burada ver
   updateVideoButtons();
 }
 function setNavDot(id, count){
@@ -2887,7 +2889,7 @@ function nationalPending(){
 }
 
 function renderHub(){
-  if(S.p.role==='Teknik Direktör'){ renderManagerHub(); return; }
+  if(S.p.role==='Teknik Direktör'){ renderManagerHub(); hubContentReady = true; return; }
   $('hub').style.display='block'; $('mgrhub').style.display='none';
   const p = S.p;
   $('hub-week').textContent = S.week>34 ? 'Sezon sonu' : `${S.week}. Hafta`;
@@ -2967,6 +2969,8 @@ function renderHub(){
 
   $('hub-news').innerHTML = S.news.slice(0,6).map(n=>
     `<div class="newsitem">${n.text}<span>${n.s} • ${n.w}. hafta</span></div>`).join('') || '<p class="sub">Henüz haber yok.</p>';
+
+  hubContentReady = true;
 }
 
 /* ---------- PROFİL ---------- */
@@ -7585,8 +7589,13 @@ const fmtReal = n => n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFr
 
 /* ---------- Banner ---------- */
 let adState = {shown:false, built:false};
+/* Hub gerçek içerik (haftanın maçı/haberler/formstatları) basılana kadar false kalır.
+   Amaç: Google'ın "yayıncı içeriği olmayan ekranda reklam" ihlaline yol açan,
+   içerik daha yüklenmeden/oluşmadan reklamın görünmesi durumunu engellemek. */
+let hubContentReady = false;
 function adShouldShow(){
-  return AD_CONFIG.enabled && !!S && !S.inMatch && currentView==='v-match' && $('game').style.display!=='none';
+  return AD_CONFIG.enabled && !!S && !S.inMatch && currentView==='v-match'
+    && $('game').style.display!=='none' && hubContentReady;
 }
 function buildAd(){
   if(adState.built) return;
@@ -7615,9 +7624,13 @@ function updateAdBanner(){
     document.documentElement.style.setProperty('--navh', (nav?nav.offsetHeight:58)+'px');
     document.documentElement.style.setProperty('--adh', (AD_CONFIG.height + 16)+'px');
     bar.classList.add('on'); document.body.classList.add('has-ad');
+    if(!adState.shown){
+      // önce display:block, bir sonraki frame'de opacity — ani "zıplama" yerine yumuşak beliriş
+      requestAnimationFrame(()=>requestAnimationFrame(()=>bar.classList.add('show')));
+    }
     if(!adState.shown && AD_CONFIG.provider==='native' && window.SahaAds && SahaAds.showBanner) try{ SahaAds.showBanner(); }catch(e){}
   } else {
-    bar.classList.remove('on'); document.body.classList.remove('has-ad');
+    bar.classList.remove('on'); bar.classList.remove('show'); document.body.classList.remove('has-ad');
     document.documentElement.style.setProperty('--adh','0px');
     if(adState.shown && AD_CONFIG.provider==='native' && window.SahaAds && SahaAds.hideBanner) try{ SahaAds.hideBanner(); }catch(e){}
   }
