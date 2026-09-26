@@ -2051,6 +2051,18 @@ const BOOTS = [
   {id:'b3',n:'Puma Future Ultra',  cost:90000,  bonus:6, desc:'Kavrama ve dribling.'},
   {id:'b4',n:'Özel dikim krampon', cost:220000, bonus:9, desc:'Ayağına özel kalıp.'}
 ];
+// Kaleci kariyeri seçildiğinde kramponlar yerine eldiven listesi gösterilir — aynı id/ücret/bonus
+// yapısını korur, sadece kaleciye uygun isim ve açıklamalar kullanır.
+const GLOVES = [
+  {id:'b0',n:'Antrenman eldiveni', cost:0,      bonus:0, desc:'Standart.'},
+  {id:'b1',n:'Nike Vapor Grip',    cost:18000,  bonus:2, desc:'Hafif ve esnek kavrama.'},
+  {id:'b2',n:'Adidas Predator GL', cost:42000,  bonus:4, desc:'Reflekste ekstra kontrol.'},
+  {id:'b3',n:'Puma Ultra Latex',   cost:90000,  bonus:6, desc:'Islak zeminde üstün tutuş.'},
+  {id:'b4',n:'Özel dikim eldiven', cost:220000, bonus:9, desc:'Ellerine özel kalıp.'}
+];
+function isGK(p){ return posByKey((p||S.p).posKey).grp==='GK'; }
+function gearList(p){ return isGK(p) ? GLOVES : BOOTS; }
+function gearWord(p){ return isGK(p) ? 'Eldiven' : 'Krampon'; }
 const SPONSORS = [
   {id:'sp1',  n:'Yerel süt markası',            ic:'🥛', weekly:4000,    cost:0, req:0},
   {id:'sp2',  n:'Spor giyim mağazası',          ic:'👕', weekly:9000,   cost:0, req:8},
@@ -2104,7 +2116,7 @@ function bodyRiskAll(){
   const p = S.p; if(!p) return {};
   const a = p.attrs, fiz = a.fiz||50;
   const age = p.age||24, fit = p.fitness!=null?p.fitness:100;
-  const boot = BOOTS.find(x=>x.id===p.boot) || BOOTS[0];
+  const boot = gearList(p).find(x=>x.id===p.boot) || gearList(p)[0];
   const sb = SB();
   const hist = p.injuryHistory||[];
   const histCount = pid => hist.filter(h=>h.part===pid).length;
@@ -2155,6 +2167,14 @@ const BADGES = [
   {id:'bd21',n:'Çifte Asist',        d:'Bir maçta 2 asist yaptın.',                  chk:p=>ACH('doubleAssists')>=1, reward:18000},
   {id:'bd22',n:'Sezonun Bombacısı',  d:'Bir sezonda 20 gol attın.',                  chk:p=>p.season.goals>=20,   reward:108000},
   {id:'bd23',n:'Otuzluk Sezon',      d:'Bir sezonda 30 gol attın.',                  chk:p=>p.season.goals>=30,   reward:216000},
+  /* --- kalecilik --- */
+  {id:'bd67',n:'İlk Kurtarış',       d:'Kariyerinde ilk kurtarışını yaptın.',        chk:p=>p.career.saves>=1,    reward:9000},
+  {id:'bd68',n:'Elli Kurtarış',      d:'Kariyerinde 50 kurtarış yaptın.',            chk:p=>p.career.saves>=50,   reward:65000},
+  {id:'bd69',n:'Yüz Kurtarış',       d:'Kariyerinde 100 kurtarış yaptın.',           chk:p=>p.career.saves>=100,  reward:130000},
+  {id:'bd70',n:'İkiyüz Kurtarış',    d:'Kariyerinde 200 kurtarış yaptın.',           chk:p=>p.career.saves>=200,  reward:252000},
+  {id:'bd71',n:'Kalen Gole Kapalı',  d:'Kariyerinde ilk kez kalende gol görmeden maçı bitirdin.', chk:p=>p.career.cleanSheet>=1, reward:11000},
+  {id:'bd72',n:'Duvar',              d:'Kariyerinde 20 kez kalende gol görmedin.',   chk:p=>p.career.cleanSheet>=20, reward:86000},
+  {id:'bd73',n:'Demir Perde',        d:'Kariyerinde 50 kez kalende gol görmedin.',   chk:p=>p.career.cleanSheet>=50, reward:216000},
   /* --- maç & kariyer --- */
   {id:'bd24',n:'İlk Maç',            d:'Profesyonel ilk maçına çıktın.',             chk:p=>p.career.apps>=1,     reward:7000},
   {id:'bd25',n:'Elli Maç',           d:'Kariyerinde 50 maça çıktın.',                chk:p=>p.career.apps>=50,    reward:29000},
@@ -2199,7 +2219,7 @@ const BADGES = [
   {id:'bd55',n:'Aile Babası',        d:'Evlendin ve çocuğun oldu.',                  chk:p=>!!p.partner&&p.kids>=1, reward:86000},
   {id:'bd56',n:'Mücadeleci',         d:'İlk yardım paketiyle 5 kez sahada kaldın.',  chk:p=>ACH('medkitSaves')>=5, reward:94000},
   /* --- teknik direktörlük --- */
-  {id:'bd57',n:'Kramponları Astım',  d:'Teknik direktörlüğe geçtin.',                chk:p=>p.role==='Teknik Direktör', reward:29000},
+  {id:'bd57',n:'Kramponları Astım',  gkN:'Eldivenleri Astım', d:'Teknik direktörlüğe geçtin.',                chk:p=>p.role==='Teknik Direktör', reward:29000},
   {id:'bd58',n:'İlk Transfer',       d:'Teknik direktör olarak ilk transferini yaptın.', chk:p=>ACH('mgrBuys')>=1,   reward:36000},
   {id:'bd59',n:'Piyasa Ustası',      d:'Teknik direktör olarak 10 transfer tamamladın.', chk:p=>ACH('mgrBuys')>=10,  reward:158000},
   {id:'bd60',n:'Hoca Koltuğu',       d:'Teknik direktör olarak ilk maçını yönettin.', chk:p=>ACH('mgrMatches')>=1, reward:22000},
@@ -2210,6 +2230,9 @@ const BADGES = [
   {id:'bd65',n:'Şampiyon Hoca',      d:'Teknik direktör olarak lig şampiyonu oldun.', chk:p=>p.career.trophies.some(t=>t.includes('(TD)')), reward:360000},
   {id:'bd66',n:'Kasa Şişirdim',      d:'Kulüp bütçen 20.000.000 ₺ oldu.',            chk:p=>(S.clubBudget||0)>=20000000, reward:180000},
 ];
+/* başarım adı/açıklaması: bazı başarımların (örn. jübile) kaleciye özel metni (gkN/gkD) olabilir */
+function badgeName(b,p){ return (isGK(p) && b.gkN) ? b.gkN : b.n; }
+function badgeDesc(b,p){ return (isGK(p) && b.gkD) ? b.gkD : b.d; }
 /* Teknik direktör iken listede yalnızca bu başarımlar görünür (bkz. visibleBadges) */
 const MANAGER_BADGE_IDS = ['bd57','bd58','bd59','bd60','bd61','bd62','bd63','bd64','bd65','bd66'];
 function visibleBadges(p){
@@ -2230,7 +2253,7 @@ function checkBadges(){
     if(!p.badges.includes(b.id) && !(p.badgesEligible||(p.badgesEligible=[])).includes(b.id) && b.chk(p)){
       p.badgesEligible.push(b.id);
       n++;
-      toast(`🏅 Yeni başarım hazır: ${b.n}! Kariyer sekmesinden topla.`);
+      toast(`🏅 Yeni başarım hazır: ${badgeName(b,p)}! Kariyer sekmesinden topla.`);
     }
   });
   if(n) save();
@@ -2243,8 +2266,8 @@ function claimBadge(id){
   p.badges.push(id);
   p.badgesEligible = (p.badgesEligible||[]).filter(x=>x!==id);
   p.money += b.reward||0;
-  toast(`🏅 Toplandı: ${b.n} (+${TL(b.reward||0)})`);
-  addNews(`${p.name} "${b.n}" başarımını kazandı ve ${TL(b.reward||0)} prim aldı.`,'magazin');
+  toast(`🏅 Toplandı: ${badgeName(b,p)} (+${TL(b.reward||0)})`);
+  addNews(`${p.name} "${badgeName(b,p)}" başarımını kazandı ve ${TL(b.reward||0)} prim aldı.`,'magazin');
   save(); render();
 }
 function claimAllBadges(){
@@ -2340,7 +2363,7 @@ function newPlayerObj(name, age, posKey, team, foot, num){
     caps: 0, natGoals: 0, natCalled: false, captain: false, love: 55,
     sponsors: [], badges: [], badgesEligible: [], teammateRel: {}, tacticPref: 'dengeli', transferRequested: false, transferTarget: null, clubNegotiations: {}, negotiatedClubsOut: [], currentClubPool: null,
     season:{apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,ratingSum:0,cleanSheet:0,saves:0},
-    career:{apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,trophies:[],seasons:[]}
+    career:{apps:0,goals:0,assists:0,yellow:0,red:0,motm:0,saves:0,cleanSheet:0,trophies:[],seasons:[]}
   };
 }
 
@@ -2529,7 +2552,7 @@ function insertUserIntoSquad(){
 }
 function userOverall(){
   const grp = posByKey(S.p.posKey).grp;
-  const b = BOOTS.find(b=>b.id===S.p.boot);
+  const b = gearList(S.p).find(b=>b.id===S.p.boot);
   return clamp(overallOf(S.p.attrs, grp) + (b?b.bonus:0), 1, 99);
 }
 
@@ -2551,7 +2574,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v7.2';
+const APP_VERSION = 'v7.3';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2642,6 +2665,8 @@ function load(){
     if(!S.p.dr){ S.p.dr = {e1:(S.p.drinks||0), e2:0, e3:0}; }
     if(S.p.medQ==null) S.p.medQ = 0.55;
     if(!S.p.badgesEligible) S.p.badgesEligible = [];
+    if(S.p.career && S.p.career.saves==null) S.p.career.saves = 0;
+    if(S.p.career && S.p.career.cleanSheet==null) S.p.career.cleanSheet = 0;
     if(!S.p.negotiatedClubsOut) S.p.negotiatedClubsOut = [];
     if(S.leagueMode==null) S.leagueMode = 'tr'; // eski kayıt: her zaman Süper Lig'den geliyordu
     if(!S.p.startAttrs) S.p.startAttrs = {...S.p.attrs}; // eski kayıt: kariyer başı verisi yok, şu andan başlat
@@ -3100,7 +3125,7 @@ function renderManagerProfile(){
 function renderProfile(){
   if(S.p.role==='Teknik Direktör'){ renderManagerProfile(); return; }
   const p = S.p, po = posByKey(p.posKey);
-  const b = BOOTS.find(x=>x.id===p.boot);
+  const b = gearList(p).find(x=>x.id===p.boot);
   const avg = p.season.apps ? (p.season.ratingSum/p.season.apps).toFixed(2) : '—';
   const attrs = Object.keys(ATTR_LABEL).filter(k=> k!=='klc' || po.grp==='GK');
   let healthCard = '';
@@ -3138,7 +3163,7 @@ function renderProfile(){
       <div class="spread"><span class="sub">Takım</span><b>${p.team}</b></div>
       <div class="spread"><span class="sub">Mevki</span><b>${po.label} (${po.short})</b></div>
       <div class="spread"><span class="sub">Yaş / ayak</span><b>${p.age} • ${p.foot}</b></div>
-      <div class="spread"><span class="sub">Krampon</span><b>${b.n} (+${b.bonus})</b></div>
+      <div class="spread"><span class="sub">${gearWord(p)}</span><b>${b.n} (+${b.bonus})</b></div>
       <div class="spread"><span class="sub">Ün</span><b>${Math.round(p.fame)}/100</b></div>
       <div class="spread"><span class="sub">Mutluluk</span><b>${Math.round(p.happiness)}/100</b></div>
     </div>
@@ -3460,10 +3485,10 @@ function renderShop(){
   const p=S.p;
   $('shopBox').innerHTML = `
   <div class="card">
-    <h3>Kramponlar</h3>
-    ${BOOTS.slice().sort((a,b)=>a.cost-b.cost).map(b=>{
+    <h3>${isGK(p)?'Eldivenler':'Kramponlar'}</h3>
+    ${gearList(p).slice().sort((a,b)=>a.cost-b.cost).map(b=>{
       const owned = p.owned.includes(b.id), eq = p.boot===b.id;
-      const col = ['#9ca3af','#f97316','#38bdf8','#a855f7','#facc15'][BOOTS.indexOf(b)] || '#9ca3af';
+      const col = ['#9ca3af','#f97316','#38bdf8','#a855f7','#facc15'][gearList(p).indexOf(b)] || '#9ca3af';
       return `<div class="statbox shoprow">
         ${Icon.boot(col, '#ffffff')}
         <div class="sinfo"><b>${b.n}</b> <span class="chip">+${b.bonus} güç</span><div class="sub">${b.desc}</div></div>
@@ -3523,11 +3548,11 @@ function renderShop(){
     `).join('')}
   </div>`;
 }
-function buyBoot(id){ const b=BOOTS.find(x=>x.id===id),p=S.p;
+function buyBoot(id){ const p=S.p, b=gearList(p).find(x=>x.id===id);
   if(p.money<b.cost) return needMoney(b.cost);
   p.money-=b.cost; p.owned.push(id); p.boot=id; insertUserIntoSquad();
   toast(`${b.n} alındı ve giyildi.`); save(); render(); }
-function equip(id){ S.p.boot=id; insertUserIntoSquad(); toast('Krampon değişti.'); save(); render(); }
+function equip(id){ S.p.boot=id; insertUserIntoSquad(); toast(`${gearWord(S.p)} değişti.`); save(); render(); }
 /* üç çeşit enerji içeceği: kondisyon kazancı arttıkça fiyat da artar */
 const ENERGY = [
   {id:'e1', n:'Klasik enerji içeceği',   ic:'⚡', col:'#f59e0b', gain:15, boost:8,  cost:20000,
@@ -4394,7 +4419,7 @@ function renderBadges(){
       const ready = !got && (elig.includes(b.id) || b.chk(p));
       return `<div class="badge-card${got?' got':''}${ready?' ready':''}">
         <span class="bic">${got?'🏅':ready?'✨':'🔒'}</span>
-        <div class="btxt" style="flex:1"><b>${b.n}</b><div class="sub">${b.d}</div></div>
+        <div class="btxt" style="flex:1"><b>${badgeName(b,p)}</b><div class="sub">${badgeDesc(b,p)}</div></div>
         ${got?`<span class="breward">+${TL(b.reward||0)}</span>`
              :ready?`<button class="btn sm primary" onclick="claimBadge('${b.id}')">Topla (+${TL(b.reward||0)})</button>`
              :`<span class="breward">${TL(b.reward||0)}</span>`}
@@ -4460,7 +4485,7 @@ function renderContract(){
   <div class="card">
     <h3>Kariyer kararı</h3>
     ${p.role==='Teknik Direktör' ? `<p class="sub">Artık ${p.team} teknik direktörüsün. Oyunculuk kariyerin geride kaldı.</p>` : `
-    <p class="sub">${canJubilee(p)?'Kramponları asıp teknik direktörlüğe geçebilirsin.':'Yeterince sezon oynayıp yaş şartını doldurunca kramponları asıp teknik direktör olabilirsin.'}</p>
+    <p class="sub">${canJubilee(p)?`${isGK(p)?'Eldivenleri':'Kramponları'} asıp teknik direktörlüğe geçebilirsin.`:`Yeterince sezon oynayıp yaş şartını doldurunca ${isGK(p)?'eldivenleri':'kramponları'} asıp teknik direktör olabilirsin.`}</p>
     ${canJubilee(p)?'':`<div class="statbox" style="margin-top:8px">
       ${reqBar('Oynanan sezon', p.career.seasons.length, JUBILEE_SEASONS, p.career.seasons.length, `≥${JUBILEE_SEASONS}`)}
       ${reqBar('Yaş', p.age, JUBILEE_MIN_AGE, p.age, `≥${JUBILEE_MIN_AGE}`)}
@@ -4494,7 +4519,7 @@ function doJubilee(){
   const myClubT = clubMeta(p.team);
   S.clubBudget = Math.round((myClubT?teamBudgetFactor(myClubT):1) * 9000000/50000)*50000;
   S.marketPool = []; S.marketPoolSeason = null; S.marketPoolWeek = null;
-  addNews(`${p.name} kramponlarını astı ve ${p.team} teknik direktörlüğüne getirildi.`,'genel');
+  addNews(`${p.name} ${isGK(p)?'eldivenlerini':'kramponlarını'} astı ve ${p.team} teknik direktörlüğüne getirildi.`,'genel');
   toast('Artık teknik direktörsün. Hafta hafta takımını yönet.');
   save(); go('v-match');
 }
@@ -5777,7 +5802,7 @@ function autoPhase(atk, def, usAttack){
     const goalX = atkSide==='us' ? 97 : 3;
     if(r<0.34){
       if(gk) ballToPlayer(defSide, gk, 2); else { M.ballX=goalX; movePitch(); }
-      Sfx.save(); say(`${shooter.name} vurdu, ${gk?gk.name:'kaleci'} <b>kurtardı!</b>`); if(gk && gk.isUser) addRating(0.25, 'kurtarış'); if(gk&&gk.isUser) S.p.season.saves++;
+      Sfx.save(); say(`${shooter.name} vurdu, ${gk?gk.name:'kaleci'} <b>kurtardı!</b>`); if(gk && gk.isUser) addRating(0.25, 'kurtarış'); if(gk&&gk.isUser){ S.p.season.saves++; S.p.career.saves++; }
     }
     else if(r<0.46){
       M.ballX = goalX; M.ballY = clamp(M.ballY,32,68); movePitch();
@@ -5985,7 +6010,7 @@ function penalty(forUs){
   const gk = gkOf(def);
   const p = clamp(0.78 + (effOvr(taker)-(gk?effOvr(gk):60))/300, 0.5, 0.92);
   if(chance(p)) scoreGoal(atk===M.us, taker, null, true);
-  else { Sfx.save(); say(`${gk?gk.name:'Kaleci'} penaltıyı <b>kurtardı!</b>`,'hi'); if(gk&&gk.isUser){addRating(1.2,'penaltı kurtardı'); S.p.season.saves++;} }
+  else { Sfx.save(); say(`${gk?gk.name:'Kaleci'} penaltıyı <b>kurtardı!</b>`,'hi'); if(gk&&gk.isUser){addRating(1.2,'penaltı kurtardı'); S.p.season.saves++; S.p.career.saves++;} }
   M.paused=false; schedule();
 }
 
@@ -6349,7 +6374,7 @@ function userChoice(a){
       let p0 = a==='gk-stay'?0.34 : a==='gk-rush'?0.30 : 0.36;
       const prob = clamp(p0 + sk('klc')*0.45, 0.2, 0.9);
       if(chance(prob)){ Sfx.save(); say(`🧤 <b>MÜTHİŞ KURTARIŞ!</b> ${S.p.name} takımını ayakta tuttu.`,'hi');
-        addRating(0.35,'kurtarış'); S.p.season.saves++; Sfx.swell(0.16); }
+        addRating(0.35,'kurtarış'); S.p.season.saves++; S.p.career.saves++; Sfx.swell(0.16); }
       else { say(`Şut ağlarla buluştu, ${S.p.name} çaresiz kaldı.`); scoreGoal(false, pickAttacker(M.them), null); }
       break;
     }
@@ -6364,7 +6389,7 @@ function userChoice(a){
     }
     case 'gk-left': case 'gk-right': case 'gk-mid': {
       const prob = clamp(0.24 + sk('klc')*0.35, 0.15, 0.7);
-      if(chance(prob)){ Sfx.save(); say(`🧤 <b>PENALTIYI KURTARDIN!</b> Stat yıkılıyor.`,'hi'); addRating(1.3,'penaltı kurtardı'); S.p.season.saves++; }
+      if(chance(prob)){ Sfx.save(); say(`🧤 <b>PENALTIYI KURTARDIN!</b> Stat yıkılıyor.`,'hi'); addRating(1.3,'penaltı kurtardı'); S.p.season.saves++; S.p.career.saves++; }
       else { say(`Penaltıda ters köşeye gitti, gol.`); scoreGoal(false, pickAttacker(M.them), null, true); }
       break;
     }
@@ -6605,7 +6630,7 @@ function finishMatch(){
   // puan düzeltmeleri
   if(M.us.score>M.them.score) addRating(0.3);
   else if(M.us.score<M.them.score) addRating(-0.2);
-  if(posByKey(p.posKey).grp==='GK' && M.them.score===0){ addRating(0.5,'gol yemedi'); if(!isMilli) p.season.cleanSheet++; }
+  if(posByKey(p.posKey).grp==='GK' && M.them.score===0){ addRating(0.5,'gol yemedi'); if(!isMilli){ p.season.cleanSheet++; p.career.cleanSheet++; } }
   const rating = clamp(M.rating, 3, 10);
   if(me.mGoals>=3) p._hattrick = true;
   // başarım sayaçları
