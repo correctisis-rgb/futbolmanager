@@ -1974,6 +1974,7 @@ const SLOT_POS = ['GK','RB','CB','CB','LB','DM','CM','AM','RW','ST','LW'];
    bench : [isim, mevki, forma no] — boş bırakılırsa yedekler rastgele üretilir
    ========================================================= */
 const REAL_SQUADS_VER = 1;
+const NAMES_LOCALE_VER = 1; // yabancı kulüplere milliyete uygun isim havuzu eklendiğinde artırıldı
 const REAL_SQUADS = {
   'Galata SK': {
     xi:[['Uğurcan Çakan',1],['Wilfrid Singu',90],['Abdülkerim Bardakoğlu',42],['Davison Sanchez',6],['Eren Elmacı',17],
@@ -2550,7 +2551,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v7.1';
+const APP_VERSION = 'v7.2';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2650,6 +2651,11 @@ function load(){
       curPool().forEach(t => { S.squads[t.n] = makeSquad(t.n, t.s); });
       if(S.p && S.squads[S.p.team]) insertUserIntoSquad();
       S.squadsRealV = REAL_SQUADS_VER;
+    }
+    if(S.squads && S.namesLocaleV !== NAMES_LOCALE_VER){   // eski kayıt: yabancı kulüpler Türkçe isim havuzuyla kurulmuştu, yeniden kur
+      curPool().forEach(t => { S.squads[t.n] = makeSquad(t.n, t.s); });
+      if(S.p && S.squads[S.p.team]) insertUserIntoSquad();
+      S.namesLocaleV = NAMES_LOCALE_VER;
     }
     return true;
   }catch(e){ return false; }
