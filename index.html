@@ -1802,7 +1802,59 @@ const STAR_PLAYERS = {
 
 const AD = ['Kerem','Arda','Emre','Barış','Cenk','Hakan','Yusuf','Mert','Umut','Berkay','Ozan','Kaan','Serdar','Volkan','Onur','Burak','Taylan','Efe','Deniz','Ahmet','Mehmet','Salih','İsmail','Halil','Uğur','Doğan','Eren','Furkan','Batuhan','Sinan','Levent','Tolga','Alper','Cihan','Mustafa','Oğuz'];
 const SOY = ['Yıldız','Demir','Kaya','Şahin','Çelik','Yılmaz','Arslan','Doğan','Aydın','Korkmaz','Polat','Güler','Aktaş','Tekin','Bulut','Sarı','Koç','Erdem','Ünal','Taş','Kurt','Özdemir','Aksoy','Şen','Bilgin','Turan','Kılıç','Avcı','Sezer','Balcı','Öztürk','Çakır'];
-const randName = () => pick(AD)+' '+pick(SOY);
+// Yabancı kulüplerin kadroları artık kendi ülkelerine uygun (kurgusal, gerçek oyunculardan
+// bağımsız) isim havuzlarından geliyor — "tr" havuzu Süper Lig kulüpleri için ayrılan varsayılan.
+const NAME_POOLS = {
+  tr: {ad:AD, soy:SOY},
+  es: {ad:['Alvaro','Sergio','Pablo','Diego','Rodrigo','Iker','Marco','Hugo','Adrian','Nico','Javi','Bruno','Mateo','Rafa','Gonzalo'],
+       soy:['Fernandez','Navarro','Serrano','Molina','Vidal','Cazorla','Herrera','Roman','Del Bosque','Aranda','Cortez','Pelayo','Mestre','Salazar']},
+  de:  {ad:['Lukas','Jonas','Finn','Niklas','Tobias','Maximilian','Leon','Julian','Fabian','Moritz','Sven','Tim','Marcel','Kevin'],
+        soy:['Krause','Fischer','Becker','Hoffmann','Braun','Wolff','Neumann','Schuster','Vogel','Lang','Kramer','Zimmer','Baumann','Richter']},
+  en:  {ad:['Harry','Jack','Oliver','George','Charlie','James','Callum','Ryan','Ben','Tom','Jamie','Connor','Aaron','Lewis'],
+        soy:['Whitfield','Carter','Foster','Hargreaves','Sinclair','Walsh','Barrett','Doyle','Holloway','Maddox','Prescott','Sutton','Vaughn','Lockhart']},
+  it:  {ad:['Matteo','Andrea','Luca','Federico','Marco','Alessandro','Davide','Riccardo','Gianluca','Simone','Nicolo','Lorenzo','Paolo','Emanuele'],
+        soy:['Ferretti','Bianchi','Gallo','Moretti','Rinaldi','Bruno','Fontana','Marino','Greco','Rizzo','Villa','Conti','Barone','Testa']},
+  fr:  {ad:['Antoine','Hugo','Lucas','Mathis','Theo','Nathan','Enzo','Kylian','Maxime','Baptiste','Leo','Adrien','Romain','Julien'],
+        soy:['Girard','Moreau','Fabre','Lambert','Rousseau','Perrin','Marchand','Renaud','Guerin','Barbier','Colin','Dumas','Faure','Roche']},
+  nl:  {ad:['Daan','Sem','Bram','Thijs','Ruben','Jesse','Stijn','Tim','Lars','Joris','Niek','Kees','Guus','Wout'],
+        soy:['de Groot','Bakker','Visser','Smit','Mulder','de Boer','Dekker','Brouwer','Hendriks','Verhoeven','Kuiper','Terpstra','Smeets','Willems']},
+  pt:  {ad:['Rui','Bruno','Tiago','Andre','Diogo','Goncalo','Nuno','Ricardo','Pedro','Joao','Fabio','Miguel','Vasco','Duarte'],
+        soy:['Cardoso','Pinheiro','Tavares','Correia','Nogueira','Machado','Abreu','Teles','Braga','Coutinho','Freitas','Guerreiro','Leitao','Vieira']},
+  br:  {ad:['Wesley','Everton','Gabriel','Kaike','Renan','Anderson','Douglas','Marcelo','Vinicius','Thiago','Igor','Robson','Caio','Jhonatan'],
+        soy:['Barbosa','Nascimento','Farias','Moraes','Pereira','Cavalcante','Ramalho','Azevedo','Siqueira','Guimaraes','Tavora','Miranda','Aguiar','Peixoto']},
+  ar:  {ad:['Franco','Nahuel','Ezequiel','Lautaro','Ramiro','Ivan','Joaquin','Tomas','Agustin','Facundo','Gaston','Emiliano','Bruno','Santino'],
+        soy:['Ferrero','Basualdo','Cardozo','Acosta','Montero','Sosa','Villalba','Bracamonte','Escobar','Peralta','Quiroga','Segovia','Toledo','Zarate']},
+  mx:  {ad:['Jesus','Alan','Erick','Uriel','Kevin','Jonathan','Cesar','Raul','Israel','Omar','Gael','Iker','Santiago','Emiliano'],
+        soy:['Reyes','Delgado','Cardenas','Villagomez','Solano','Zaragoza','Barajas','Mancilla','Orozco','Salcedo','Chavez','Farias','Nunez','Rincon']},
+  us:  {ad:['Tyler','Brandon','Jordan','Cole','Dylan','Ethan','Mason','Trevor','Austin','Jaylen','Marcus','Derek','Sean','Wesley'],
+        soy:['Anderson','Coleman','Hayes','Dawson','Reeves','Bishop','Mercer','Callahan','Whitmore','Novak','Lambert','Griggs','Prewitt','Sandoval']},
+  jp:  {ad:['Ryo','Kenta','Sho','Taiga','Yuma','Hayato','Sota','Kaito','Riku','Daiki','Ren','Yuki','Kaoru','Ibuki'],
+        soy:['Nakamura','Kobayashi','Yoshida','Matsumoto','Hasegawa','Fujiwara','Okamoto','Sakai','Kubo','Terada','Uchida','Ogawa','Nishida','Takagi']},
+  ar_gulf: {ad:['Faisal','Khalid','Yousef','Omar','Bandar','Talal','Nasser','Rakan','Sultan','Majed','Adel','Fahad','Hamad','Saeed'],
+        soy:['Al-Otaibi','Al-Harbi','Al-Amri','Al-Ghamdi','Al-Qahtani','Al-Zahrani','Al-Shammari','Al-Mutairi','Al-Dossari','Al-Balawi','Al-Jaber','Al-Hassan']},
+  eg:  {ad:['Amr','Ahmed','Mahmoud','Youssef','Karim','Hossam','Ziad','Sherif','Tamer','Islam','Ayman','Mostafa','Adel','Basel'],
+        soy:['El-Sayed','Fathy','Gaber','Hamdy','Ashour','Metwally','Rabie','Zaki','Saleh','Khalifa','Farouk','Nabil','Sabry','Awad']}
+};
+// Kulüp adı -> milliyet havuzu eşleşmesi (yalnızca yabancı kulüpler; TR takımları varsayılan 'tr' kalır)
+const CLUB_LOCALE = {
+  'Madrid Kraliyet':'es', 'Sevilla Kızılları':'es',
+  'Bavyera Münih':'de', 'Dortmund Sarıları':'de', 'Leipzig Boğaları':'de',
+  'Manchester Kırmızı':'en', 'Londra Mavileri':'en', 'Glasgow Yoncaları':'en',
+  'Milano Rossoneri':'it', 'Milano Nerazzurri':'it', 'Napoli Volkanı':'it', 'Roma Kurtları':'it',
+  'Torino Zebraları':'it', 'Bergamo Atmacaları':'it',
+  'Paris Başkent':'fr', 'Lyon Aslanları':'fr',
+  'Amsterdam Aslanları':'nl',
+  'Lizbon Yeşilleri':'pt',
+  'Rio Karnavalı':'br', 'São Paulo Yıldızları':'br',
+  'Buenos Aires Ateşi':'ar',
+  'Mexico Aztek':'mx',
+  'Boston Yıldızları':'us',
+  'Tokyo Samuray':'jp',
+  'Riyad Çölü':'ar_gulf',
+  'Kahire Firavunları':'eg'
+};
+function poolFor(teamName){ return NAME_POOLS[CLUB_LOCALE[teamName]] || NAME_POOLS.tr; }
+const randName = (teamName) => { const pl = poolFor(teamName); return pick(pl.ad)+' '+pick(pl.soy); };
 
 /* mevkiler — slot: 4-3-3 dizilişindeki yer */
 const POSITIONS = [
@@ -2298,7 +2350,7 @@ function makeSquad(teamName, strength){
   const nameFor = key => {
     const i = stars.findIndex(s=>s.posKey===key);
     if(i>=0) return stars.splice(i,1)[0].name;
-    return randName();
+    return randName(teamName);
   };
   for(let i=0;i<11;i++){
     const key = SLOT_POS[i];
@@ -2316,7 +2368,7 @@ function makeSquad(teamName, strength){
     const a = {...TEMPLATE[key]};
     const diff = strength - 72;
     for(const k in a) a[k] = clamp(Math.round(a[k] + diff*0.7 + ri(-6,5)), 25, 92);
-    list.push({name:(rb&&rb[0])||randName(), posKey:key, slot:posByKey(key).slot, attrs:a, ovr:overallOf(a,posByKey(key).grp),
+    list.push({name:(rb&&rb[0])||randName(teamName), posKey:key, slot:posByKey(key).slot, attrs:a, ovr:overallOf(a,posByKey(key).grp),
                stamina:100, on:false, goals:0, assists:0, yellow:0, sub:false, num:(rb&&rb[2])||12+i, _ex:!!(rb&&rb[2])});
   }
   // gerçek forma numaralarıyla çakışan yedek/varsayılan numaraları kaydır
@@ -2498,7 +2550,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v7';
+const APP_VERSION = 'v7.1';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -3913,18 +3965,17 @@ function weekIndex(season, week){ return (season||1)*1000 + (week||1); } // sezo
 function generateMarketPool(){
   const myOvr = Math.round(squadAvgOvr(S.p.team));
   S.marketPool = [];
-  for(let i=0;i<4;i++){
+  for(let i=0;i<8;i++){
     const posKey = pick(POSITIONS).k;
     const grp = posByKey(posKey).grp;
     const ovr = clamp(Math.round(myOvr + ri(-10,14)), 40, 92);
     // oyuncunun "şu an" başka bir kulüpte oynadığını göstermek için ona
-    // rastgele bir menşe kulüp atıyoruz (kendi takımı hariç) — gücüne yakın
-    // takımlardan seçmeye çalışıyoruz ki '90 OVR, 65 güçlük takımdan'
-    // gibi tuhaf eşleşmeler nadir olsun.
-    const otherTeams = TEAMS.filter(t=>t.n!==S.p.team);
+    // rastgele bir menşe kulüp atıyoruz (kendi takımı hariç, kendi ligin havuzundan) — gücüne
+    // yakın takımlardan seçmeye çalışıyoruz ki '90 OVR, 65 güçlük takımdan' gibi tuhaf eşleşmeler nadir olsun.
+    const otherTeams = curPool().filter(t=>t.n!==S.p.team);
     const near = otherTeams.filter(t=>Math.abs(t.s-ovr)<=12);
     const fromTeam = pick(near.length?near:otherTeams);
-    S.marketPool.push({id:'m'+S.season+'_'+S.week+'_'+Date.now()+'_'+i, name:randName(), posKey, grp, ovr, num:ri(2,29), price:playerValue(ovr), fromTeam:fromTeam.n});
+    S.marketPool.push({id:'m'+S.season+'_'+S.week+'_'+Date.now()+'_'+i, name:randName(fromTeam.n), posKey, grp, ovr, num:ri(2,29), price:playerValue(ovr), fromTeam:fromTeam.n});
   }
   S.marketPoolSeason = S.season; S.marketPoolWeek = S.week;
 }
@@ -3938,7 +3989,7 @@ function ensureMarketPool(){
   let patched = false;
   S.marketPool.forEach(mp=>{
     if(!mp.fromTeam){
-      const otherTeams = TEAMS.filter(t=>t.n!==S.p.team);
+      const otherTeams = curPool().filter(t=>t.n!==S.p.team);
       const near = otherTeams.filter(t=>Math.abs(t.s-mp.ovr)<=12);
       mp.fromTeam = pick(near.length?near:otherTeams).n;
       patched = true;
@@ -4421,7 +4472,7 @@ function doJubilee(){
   if(idx>=0){
     const slot = sq[idx].slot, key = SLOT_POS[slot]||'CM';
     const a = {...TEMPLATE[key]}; for(const k in a) a[k]=clamp(a[k]+ri(-5,5),30,85);
-    sq.splice(idx,1,{name:randName(), posKey:key, slot, attrs:a, ovr:overallOf(a,posByKey(key).grp),
+    sq.splice(idx,1,{name:randName(p.team), posKey:key, slot, attrs:a, ovr:overallOf(a,posByKey(key).grp),
       stamina:100, on:true, goals:0, assists:0, yellow:0, sub:false, team:p.team, num:ri(2,29)});
   }
   p.role = 'Teknik Direktör';
@@ -7205,7 +7256,7 @@ function endSeason(){
   const avg = p.season.apps ? p.season.ratingSum/p.season.apps : 6;
   const isMoty = p.season.apps>=20 && avg>=7.4;
   const isYoung = p.age<=21 && p.season.apps>=15 && (p.season.goals+p.season.assists)>=8;
-  const rivalMoty = pick(STAR_PLAYERS[champ.n]||STAR_PLAYERS[pick(tbl.slice(0,4).map(t=>t.n))]||[{name:randName()}]);
+  const rivalMoty = pick(STAR_PLAYERS[champ.n]||STAR_PLAYERS[pick(tbl.slice(0,4).map(t=>t.n))]||[{name:randName(champ.n)}]);
   const stages = buildAwardStages(tbl, champ, scorer, p, {
     moty: isMoty ? p.name : rivalMoty.name,
     young: isYoung ? p.name : null
@@ -7536,7 +7587,7 @@ function endSeasonManager(){
       <div class="spread"><span class="sub">${p.team} sırası</span><b>${tbl.findIndex(t=>t.n===p.team)+1}.</b></div></div>
       ${champ.n===p.team?'<p style="color:var(--good)"><b>🏆 Teknik direktörlüğünde şampiyon oldunuz!</b></p>':''}
       <button class="btn primary block" style="margin-top:12px" onclick="managerNextSeason()">Yeni sezona başla</button>`;
-    if(champ.n===p.team) p.career.trophies.push(`${S.seasonLabel} Süper Lig (TD)`);
+    if(champ.n===p.team) p.career.trophies.push(`${S.seasonLabel} ${leagueName()} (TD)`);
     bumpAch('mgrSeasons');
     checkBadges();
     save();
@@ -7550,15 +7601,19 @@ function managerNextSeason(){
   const y = 2026 + S.season - 1;
   S.seasonLabel = `${y}/${String((y+1)%100).padStart(2,'0')}`;
   S.week = 1; S.weekDone = false;
-  S.table = TEAMS.map(t=>({n:t.n,o:0,g:0,b:0,m:0,ag:0,yg:0,p:0}));
-  S.fixtures = buildFixtures(TEAMS.map(t=>t.n));
-  S.cup = buildCup(p.team);
+  const pool = curPool();
+  const clPool = pool===TEAMS ? EURO_CLUBS : ELITE_CLUBS;
+  S.table = pool.map(t=>({n:t.n,o:0,g:0,b:0,m:0,ag:0,yg:0,p:0}));
+  S.fixtures = buildFixtures(pool.map(t=>t.n));
+  S.cup = buildCup(p.team, pool);
   S.results = []; S.scorers = {}; S.weekGoals = [];
-  S.euro = null; S.national = buildNational();
+  S.euro = buildEuro(p.team, (S._qualEuroTeams||[]).includes(p.team), clPool);
+  S.national = buildNational();
   // Rakip kadroları tazelenir; kendi kulübümüzün kadrosu (yaptığımız
   // transferlerle) korunur — yoksa her sezon başı sıfırlanırdı.
-  TEAMS.forEach(t => { if(t.n!==p.team) S.squads[t.n] = makeSquad(t.n, t.s); });
-  addNews(`${S.seasonLabel} sezonu başladı. ${p.name} ${p.team} teknik direktörlüğüne devam ediyor.`,'lig');
+  pool.forEach(t => { if(t.n!==p.team) S.squads[t.n] = makeSquad(t.n, t.s); });
+  addNews(`${S.seasonLabel} ${leagueName()} sezonu başladı. ${p.name} ${p.team} teknik direktörlüğüne devam ediyor.`,'lig');
+  if(S.euro) addNews(`${p.team} bu sezon Şampiyonlar Ligi'nde mücadele edecek!`,'kupa');
   save(); go('v-match');
   toast('Yeni sezon başladı!');
 }
