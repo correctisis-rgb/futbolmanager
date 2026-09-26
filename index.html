@@ -2114,13 +2114,13 @@ const BADGES = [
   {id:'bd34',n:'Yüz Galibiyet',      d:'100 maç kazandın.',                          chk:p=>ACH('wins')>=100,     reward:180000},
   {id:'bd35',n:'Deplasman Kabusu',   d:'25 deplasman galibiyeti aldın.',             chk:p=>ACH('awayWins')>=25,  reward:115000},
   /* --- kupalar --- */
-  {id:'bd5', n:'Şampiyon',           d:'Süper Lig şampiyonu oldun.',                 chk:p=>TRP(p,'Süper Lig'),   reward:144000},
+  {id:'bd5', n:'Şampiyon',           d:'Lig şampiyonu oldun.',                 chk:p=>TRP(p,'Süper Lig')||TRP(p,'Avrupa Elit Ligi'),   reward:144000},
   {id:'bd6', n:'Kupa Kahramanı',     d:'Türkiye Kupası kazandın.',                   chk:p=>TRP(p,'Türkiye Kupası'), reward:108000},
   {id:'bd7', n:'Gol Kralı',          d:'Bir sezonu gol krallığıyla kapattın.',       chk:p=>TRP(p,'Gol Kralı'),   reward:130000},
   {id:'bd11',n:'Avrupa Fatihi',      d:'Şampiyonlar Ligi kazandın.',                 chk:p=>TRP(p,'Şampiyonlar Ligi'), reward:288000},
   {id:'bd37',n:'Yılın Oyuncusu',     d:'Sezonun en iyi oyuncusu seçildin.',          chk:p=>TRP(p,'Yılın Oyuncusu'), reward:216000},
   {id:'bd38',n:'Genç Yetenek',       d:'Yılın genç yeteneği seçildin.',              chk:p=>TRP(p,'Yılın Genç Yeteneği'), reward:108000},
-  {id:'bd39',n:'Üçleme',             d:'Lig, kupa ve Avrupa kupasını kazandın.',     chk:p=>TRP(p,'Süper Lig')&&TRP(p,'Türkiye Kupası')&&TRP(p,'Şampiyonlar Ligi'), reward:648000},
+  {id:'bd39',n:'Üçleme',             d:'Lig, kupa ve Avrupa kupasını kazandın.',     chk:p=>(TRP(p,'Süper Lig')||TRP(p,'Avrupa Elit Ligi'))&&TRP(p,'Türkiye Kupası')&&TRP(p,'Şampiyonlar Ligi'), reward:648000},
   {id:'bd40',n:'Kupa Koleksiyoncusu',d:'Toplam 10 kupa kazandın.',                   chk:p=>p.career.trophies.length>=10, reward:360000},
   {id:'bd41',n:'Avrupa Gecesi',      d:'Avrupa kupalarında 20 maça çıktın.',         chk:p=>ACH('euroApps')>=20,  reward:122000},
   {id:'bd42',n:'Avrupa Bombacısı',   d:'Avrupa kupalarında 15 gol attın.',           chk:p=>ACH('euroGoals')>=15, reward:166000},
@@ -2355,8 +2355,8 @@ function buildFixtures(names){
 const CUP_WEEKS = [6,13,21,29];
 const CUP_NAMES = ['Son 16','Çeyrek Final','Yarı Final','Final'];
 
-function buildCup(myTeam){
-  const pool = TEAMS.slice().sort((a,b)=>b.s-a.s).slice(0,16).map(t=>t.n);
+function buildCup(myTeam, teamsPool){
+  const pool = (teamsPool||TEAMS).slice().sort((a,b)=>b.s-a.s).slice(0,16).map(t=>t.n);
   if(!pool.includes(myTeam)){ pool[15] = myTeam; }
   const sh = pool.sort(()=>Math.random()-0.5);
   const ties = [];
@@ -2368,6 +2368,7 @@ function newGame(cfg){
   const teamObj = TEAMS.find(t=>t.n===cfg.team);
   S = {
     v: 3,
+    leagueMode: 'tr',     // 'tr' = Süper Lig, 'euro' = Avrupa Elit Ligi (yurt dışı transferi sonrası)
     season: 1, seasonLabel: '2026/27', week: 1,
     p: newPlayerObj(cfg.name, cfg.age, cfg.posKey, cfg.team, cfg.foot, cfg.num),
     table: TEAMS.map(t=>({n:t.n, o:0,g:0,b:0,m:0,ag:0,yg:0,p:0})),
@@ -2417,23 +2418,47 @@ function checkNationalCallUp(){
 }
 
 /* ---------- Avrupa kupası (Şampiyonlar Ligi) ---------- */
+// EURO_CLUBS artık tam teşekküllü, 18 kulüplük bağımsız bir "Avrupa Elit Ligi" oluşturur:
+// hem Süper Lig şampiyonlarının Şampiyonlar Ligi'nde karşılaştığı rakip havuzu olarak,
+// hem de bir oyuncu yurt dışına transfer olduğunda oynayacağı gerçek lig olarak kullanılır.
 const EURO_CLUBS = [
   {n:'Madrid Kraliyet', s:90}, {n:'Bavyera Münih', s:89}, {n:'Manchester Kırmızı', s:86},
   {n:'Milano Rossoneri', s:85}, {n:'Paris Başkent', s:87}, {n:'Londra Mavileri', s:85},
   {n:'Amsterdam Aslanları', s:80}, {n:'Lizbon Yeşilleri', s:79}, {n:'Torino Zebraları', s:83},
-  {n:'Dortmund Sarıları', s:82}
+  {n:'Dortmund Sarıları', s:82}, {n:'Milano Nerazzurri', s:84}, {n:'Sevilla Kızılları', s:78},
+  {n:'Napoli Volkanı', s:77}, {n:'Roma Kurtları', s:76}, {n:'Leipzig Boğaları', s:75},
+  {n:'Glasgow Yoncaları', s:72}, {n:'Bergamo Atmacaları', s:71}, {n:'Lyon Aslanları', s:69}
+];
+// ELITE_CLUBS: bir oyuncu Avrupa Elit Ligi'ne transfer olup kendi ligini yaşamaya başladığında,
+// o ligin Şampiyonlar Ligi'nde karşılaşacağı, ligin dışından gelen dünya devleri.
+const ELITE_CLUBS = [
+  {n:'Riyad Çölü', s:89}, {n:'Rio Karnavalı', s:88}, {n:'Buenos Aires Ateşi', s:87},
+  {n:'São Paulo Yıldızları', s:85}, {n:'Mexico Aztek', s:79}, {n:'Boston Yıldızları', s:80},
+  {n:'Tokyo Samuray', s:78}, {n:'Kahire Firavunları', s:77}
 ];
 const EURO_GROUP_WEEKS = [2,5,8,11,15,18,22];
 const EURO_KO_WEEKS = [26,31,34];
 const EURO_KO_NAMES = ['Çeyrek Final','Yarı Final','Final'];
-function buildEuro(myTeam, qualified){
+function buildEuro(myTeam, qualified, pool){
   if(!qualified) return null;
-  const others = EURO_CLUBS.slice().sort(()=>Math.random()-0.5).slice(0,7).map(c=>c.n);
-  const pool = [myTeam, ...others].sort(()=>Math.random()-0.5);
-  const group = pool.map(n=>({n, o:0,g:0,b:0,m:0,p:0,ag:0,yg:0}));
-  const fixtures = buildRoundRobinSingle(pool).map(rd=>rd.map(m=>({...m, played:false})));
+  pool = pool || EURO_CLUBS;
+  const others = pool.filter(c=>c.n!==myTeam).slice().sort(()=>Math.random()-0.5).slice(0,7).map(c=>c.n);
+  const group0 = [myTeam, ...others].sort(()=>Math.random()-0.5);
+  const group = group0.map(n=>({n, o:0,g:0,b:0,m:0,p:0,ag:0,yg:0}));
+  const fixtures = buildRoundRobinSingle(group0).map(rd=>rd.map(m=>({...m, played:false})));
   return {stage:'group', group, fixtures, weekIdx:0, knockout:[], winner:null, myOut:false};
 }
+// Bir kulübün ait olduğu havuzu (n,s ve varsa renk/forma bilgisiyle) bulur — TR kulübü, Avrupa
+// Elit Ligi kulübü ya da o ligin Şampiyonlar Ligi rakibi (ELITE_CLUBS) olabilir.
+function clubMeta(name){
+  return TEAMS.find(x=>x.n===name) || EURO_CLUBS.find(x=>x.n===name) || ELITE_CLUBS.find(x=>x.n===name) || null;
+}
+// Oyuncunun şu an içinde bulunduğu lig havuzu: S.leagueMode 'euro' ise Avrupa Elit Ligi (18 kulüp),
+// değilse (varsayılan/eski kayıtlar) Süper Lig.
+function curPool(){
+  return (typeof S!=='undefined' && S && S.leagueMode==='euro') ? EURO_CLUBS : TEAMS;
+}
+function leagueName(mode){ return (mode||(S&&S.leagueMode))==='euro' ? 'Avrupa Elit Ligi' : 'Süper Lig'; }
 
 function insertUserIntoSquad(){
   const sq = S.squads[S.p.team];
@@ -2473,7 +2498,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v6.9';
+const APP_VERSION = 'v6.8';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -2565,11 +2590,12 @@ function load(){
     if(S.p.medQ==null) S.p.medQ = 0.55;
     if(!S.p.badgesEligible) S.p.badgesEligible = [];
     if(!S.p.negotiatedClubsOut) S.p.negotiatedClubsOut = [];
+    if(S.leagueMode==null) S.leagueMode = 'tr'; // eski kayıt: her zaman Süper Lig'den geliyordu
     if(!S.p.startAttrs) S.p.startAttrs = {...S.p.attrs}; // eski kayıt: kariyer başı verisi yok, şu andan başlat
     if(S.p.transferRequested && !S.p.transferTarget){ S.p.transferRequested = false; S.p.transferTarget = null; } // eski bozuk kayıt onarımı
 
     if(S.squads && S.squadsRealV !== REAL_SQUADS_VER){   // eski kayıt: rastgele isimli kadroları gerçek kadrolarla değiştir
-      TEAMS.forEach(t => { S.squads[t.n] = makeSquad(t.n, t.s); });
+      curPool().forEach(t => { S.squads[t.n] = makeSquad(t.n, t.s); });
       if(S.p && S.squads[S.p.team]) insertUserIntoSquad();
       S.squadsRealV = REAL_SQUADS_VER;
     }
@@ -2908,7 +2934,7 @@ function renderHub(){
     if(!S.weekDone && lf){
       const opp = lf.h===p.team ? lf.a : lf.h;
       const home = lf.h===p.team;
-      html += `<div class="statbox"><div class="spread"><b>Süper Lig • ${S.week}. hafta</b><span class="sub">${home?'İç saha':'Deplasman'}</span></div>
+      html += `<div class="statbox"><div class="spread"><b>${leagueName()} • ${S.week}. hafta</b><span class="sub">${home?'İç saha':'Deplasman'}</span></div>
         <div style="font-family:'Barlow Condensed';font-size:1.35rem;margin-top:4px">${kitDot(lf.h,true)} ${lf.h} <span style="color:var(--dim)">—</span> ${lf.a} ${kitDot(lf.a,true)}</div>
         <div class="sub">Rakip gücü: ${teamStrength(opp)}</div></div>`;
     } else if(S.weekDone && !ct && !ef && !ek && !nat){
@@ -3523,7 +3549,7 @@ const STAD_UPG = [
   {id:'akademi',n:'Altyapı akademisi',    ic:'🎓', max:3, base:750000,  desc:'Modern tesis: haftalık antrenman puanı ve gelişim hızı artar.'}
 ];
 function newStadium(team){
-  const t = TEAMS.find(x=>x.n===team);
+  const t = clubMeta(team);
   return {name:(team||'Takım')+' Arena', cap: 18000 + ((t?t.s:70)-60)*900, lv:{tribun:0,cim:0,isik:0,fizyo:0,var:0,akademi:0}};
 }
 function stad(){ if(S && !S.stadium) S.stadium = newStadium(S.p.team); return S ? S.stadium : null; }
@@ -3808,12 +3834,24 @@ function ensureClubNeg(teamName){
 }
 // Görünen 6 kulüplük havuzu, henüz dışlanmamış (negotiatedClubsOut'ta olmayan) kulüpler
 // arasından en ilgili 6'sını seçerek kurar ve S.p.currentClubPool içinde sabitler.
+// Şu an oynadığın ligin kulüpleri + (ün/güç yeterliyse) karşı ligden gelen ilgi.
+// Süper Lig'deysen ve yeterince ünlüysen Avrupa Elit Ligi kulüpleri de seni izler;
+// Avrupa'daysan Türkiye'den de "dönüş" ilgisi gelebilir.
+function scoutingPool(){
+  const p = S.p, ovr = userOverall();
+  const home = curPool();
+  const away = S.leagueMode==='euro' ? TEAMS : EURO_CLUBS;
+  let pool = home.slice();
+  const eligible = S.leagueMode==='euro' ? true : ((p.fame||0)>=45 && ovr>=72);
+  if(eligible) pool = pool.concat(away);
+  return pool;
+}
 function buildClubPool(){
   const p = S.p;
   const myS = teamStrength(p.team);
   const ovr = userOverall();
   const excluded = S.p.negotiatedClubsOut || [];
-  const ranked = TEAMS.filter(t=>t.n!==p.team && !excluded.includes(t.n)).map(t=>{
+  const ranked = scoutingPool().filter(t=>t.n!==p.team && !excluded.includes(t.n)).map(t=>{
     const gap = t.s - myS;
     const interest = clamp(0.5 + (ovr-(t.s-6))/40 + (p.fame||0)/220 - Math.max(gap,0)*0.03, 0.02, 0.97);
     return {n:t.n, interest};
@@ -3826,7 +3864,7 @@ function interestedClubs(){
   const ovr = userOverall();
   if(!S.p.currentClubPool || !S.p.currentClubPool.length) buildClubPool();
   return S.p.currentClubPool.map(name=>{
-    const t = TEAMS.find(x=>x.n===name);
+    const t = clubMeta(name);
     if(!t) return null;
     const gap = t.s - myS;
     const interest = clamp(0.5 + (ovr-(t.s-6))/40 + (p.fame||0)/220 - Math.max(gap,0)*0.03, 0.02, 0.97);
@@ -3931,7 +3969,7 @@ async function watchMarketRefreshVideo(){
    Kulübün gücüne göre büyüyen bir bütçe ödülü verir; aynı paylaşılan
    günlük video hakkını (requestRewardedAd) kullanır. */
 function clubBudgetRewardAmount(){
-  const t = TEAMS.find(x=>x.n===(S && S.p && S.p.team));
+  const t = clubMeta(S && S.p && S.p.team);
   const f = t ? teamBudgetFactor(t) : 1;
   return Math.max(150000, Math.round(f*350000/10000)*10000);
 }
@@ -4119,7 +4157,7 @@ function renderClubManagement(){
   const box = $('transferBox'); if(!box) return;
   ensureMarketPool();
   const sq = S.squads[p.team]||[];
-  const baseT = TEAMS.find(x=>x.n===p.team);
+  const baseT = clubMeta(p.team);
   const avgOvr = Math.round(squadAvgOvr(p.team));
   const eff = teamStrength(p.team);
   const diff = baseT ? eff-baseT.s : 0;
@@ -4198,7 +4236,7 @@ function renderTransfers(){
   const p = S.p;
   const box = $('transferBox'); if(!box) return;
   if(p.role==='Teknik Direktör'){ renderClubManagement(); return; }
-  const myTeam = TEAMS.find(t=>t.n===p.team);
+  const myTeam = clubMeta(p.team);
   const ovr = userOverall();
   const annualEst = Math.round(p.wage * 40 / 5000) * 5000;
   const mv = marketValue();
@@ -4312,7 +4350,7 @@ function renderEuro(){
   const e = S.euro;
   if(!e){
     $('euroBox').innerHTML = `<div class="card"><h3>Avrupa</h3>
-      <p class="sub">Süper Lig'de ilk 2'ye girersen gelecek sezon Şampiyonlar Ligi'nde mücadele edersin.</p></div>`;
+      <p class="sub">${leagueName()}'de ilk 2'ye girersen gelecek sezon Şampiyonlar Ligi'nde mücadele edersin.</p></div>`;
     return;
   }
   const sorted = e.group.slice().sort((a,b)=>b.p-a.p||(b.ag-b.yg)-(a.ag-a.yg));
@@ -4395,7 +4433,7 @@ function doJubilee(){
     const list0 = starters0.length ? starters0 : S.squads[p.team];
     S.squadBaseline[p.team] = list0.reduce((s,x)=>s+x.ovr,0)/list0.length;
   }
-  const myClubT = TEAMS.find(x=>x.n===p.team);
+  const myClubT = clubMeta(p.team);
   S.clubBudget = Math.round((myClubT?teamBudgetFactor(myClubT):1) * 9000000/50000)*50000;
   S.marketPool = []; S.marketPoolSeason = null; S.marketPoolWeek = null;
   addNews(`${p.name} kramponlarını astı ve ${p.team} teknik direktörlüğüne getirildi.`,'genel');
@@ -4414,7 +4452,7 @@ function renderTable(){
       <td class="num">${t.o}</td><td class="num">${t.g}</td><td class="num">${t.b}</td><td class="num">${t.m}</td>
       <td class="num">${t.ag-t.yg>0?'+':''}${t.ag-t.yg}</td><td class="num"><b>${t.p}</b></td>
     </tr>`).join('');
-  $('tableBox').innerHTML = `<div class="card"><h3>Süper Lig ${S.seasonLabel}</h3>
+  $('tableBox').innerHTML = `<div class="card"><h3>${leagueName()} ${S.seasonLabel}</h3>
     <div class="scroll"><table>
       <thead><tr><th class="num">#</th><th>Takım</th><th class="num">O</th><th class="num">G</th><th class="num">B</th><th class="num">M</th><th class="num">AV</th><th class="num">P</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
@@ -4794,14 +4832,15 @@ function updateStanceUI(){
 }
 
 const COMP_LABEL = {lig:'Süper Lig', kupa:'Türkiye Kupası', euro:'Şampiyonlar Ligi', euroko:'Şampiyonlar Ligi', milli:'A Milli Takım'};
+function compLabel(comp){ return comp==='lig' ? leagueName() : COMP_LABEL[comp]; }
 const TACTICS = {
   hucum:  {n:'Hücum ağırlıklı', bias:7,  atk:0.04,  def:-0.02, note:'Daha çok gol pozisyonu ama savunma açık kalır.'},
   dengeli:{n:'Dengeli',         bias:0,  atk:0,     def:0,     note:'Standart yaklaşım.'},
   defans: {n:'Defansif ağırlıklı', bias:-7, atk:-0.03, def:0.05, note:'Az riskli, gol yeme ihtimali düşer.'}
 };
 function teamStrength(name){
-  const t = TEAMS.find(x=>x.n===name);
-  const base = t ? t.s : ((EURO_CLUBS.find(x=>x.n===name)||{}).s ?? 76);
+  const t = clubMeta(name);
+  const base = t ? t.s : 76;
   // Teknik direktörlük: kadroda transferle yapılan değişiklikler artık maç
   // gücüne gerçekten yansısın. Sadece jübile anında "başlangıç" ortalaması
   // kaydedilen kulüp için devreye girer (yani sadece kullanıcının kendi
@@ -4986,11 +5025,11 @@ function launchMatch(wantFullscreen){
   document.body.classList.toggle('match-feed', !wantFullscreen);
   { const _l = $('log'); if(_l) _l.scrollTop = 0; }
   $('hub').style.display='none'; $('mgrhub').style.display='none'; $('live').style.display='block';
-  const compTxt = comp==='kupa'?`${COMP_LABEL[comp]} • ${CUP_NAMES[cupIdx]}`
-                : comp==='euroko'?`${COMP_LABEL[comp]} • ${['Çeyrek Final','Yarı Final','Final'][cupIdx]}`
-                : comp==='euro'?`${COMP_LABEL[comp]} • Grup aşaması`
-                : comp==='milli'?`${COMP_LABEL[comp]} • ${S.national.friendly?'Hazırlık maçı':'Eleme maçı'}`
-                : `${COMP_LABEL[comp]} • ${S.week}. hafta`;
+  const compTxt = comp==='kupa'?`${compLabel(comp)} • ${CUP_NAMES[cupIdx]}`
+                : comp==='euroko'?`${compLabel(comp)} • ${['Çeyrek Final','Yarı Final','Final'][cupIdx]}`
+                : comp==='euro'?`${compLabel(comp)} • Grup aşaması`
+                : comp==='milli'?`${compLabel(comp)} • ${S.national.friendly?'Hazırlık maçı':'Eleme maçı'}`
+                : `${compLabel(comp)} • ${S.week}. hafta`;
   $('live-comp').textContent = compTxt;
   $('sb-home').innerHTML = `<span id="kit-home">${kitDot(fx.h,true)}</span><br>${fx.h}<br><span id="sb-cards-home" class="sb-cards"></span>`;
   $('sb-away').innerHTML = `<span id="kit-away">${kitDot(fx.a,true)}</span><br>${fx.a}<br><span id="sb-cards-away" class="sb-cards"></span>`;
@@ -5097,7 +5136,15 @@ const EURO_KIT = {
   'Paris Başkent':{c:'#1d4ed8',c2:'#dc2626',kit:'halves'}, 'Londra Mavileri':{c:'#1d4ed8',c2:'#93c5fd',kit:'solid'},
   'Amsterdam Aslanları':{c:'#dc2626',c2:'#ffffff',kit:'stripes'}, 'Lizbon Yeşilleri':{c:'#15803d',c2:'#ffffff',kit:'hoops'},
   'Torino Zebraları':{c:'#111827',c2:'#ffffff',kit:'stripes'}, 'Dortmund Sarıları':{c:'#eab308',c2:'#111827',kit:'solid'},
-  'Türkiye A Milli':{c:'#dc2626',c2:'#ffffff',kit:'hoops'}
+  'Türkiye A Milli':{c:'#dc2626',c2:'#ffffff',kit:'hoops'},
+  'Milano Nerazzurri':{c:'#1d4ed8',c2:'#111827',kit:'stripes'}, 'Sevilla Kızılları':{c:'#dc2626',c2:'#ffffff',kit:'solid'},
+  'Napoli Volkanı':{c:'#2563eb',c2:'#ffffff',kit:'solid'}, 'Roma Kurtları':{c:'#7c2d12',c2:'#eab308',kit:'halves'},
+  'Leipzig Boğaları':{c:'#ffffff',c2:'#111827',kit:'solid'}, 'Glasgow Yoncaları':{c:'#15803d',c2:'#ffffff',kit:'hoops'},
+  'Bergamo Atmacaları':{c:'#111827',c2:'#2563eb',kit:'stripes'}, 'Lyon Aslanları':{c:'#1d4ed8',c2:'#ffffff',kit:'halves'},
+  'Riyad Çölü':{c:'#15803d',c2:'#ffffff',kit:'solid'}, 'Rio Karnavalı':{c:'#111827',c2:'#ffffff',kit:'stripes'},
+  'Buenos Aires Ateşi':{c:'#1d4ed8',c2:'#ffeb3b',kit:'stripes'}, 'São Paulo Yıldızları':{c:'#dc2626',c2:'#111827',kit:'hoops'},
+  'Mexico Aztek':{c:'#15803d',c2:'#111827',kit:'halves'}, 'Boston Yıldızları':{c:'#1d4ed8',c2:'#dc2626',kit:'solid'},
+  'Tokyo Samuray':{c:'#dc2626',c2:'#ffffff',kit:'solid'}, 'Kahire Firavunları':{c:'#111827',c2:'#dc2626',kit:'halves'}
 };
 const NAT_KIT = {
   'Almanya':{c:'#ffffff',c2:'#111827',kit:'solid'}, 'Fransa':{c:'#1d4ed8',c2:'#ffffff',kit:'solid'},
@@ -6884,7 +6931,7 @@ function endWeek(){
 
   S.week++; S.weekDone=false;
   if(S.week<=34) scheduleNational(S.week);
-  if(S.week>34){ addNews(`Süper Lig ${S.seasonLabel} sezonu tamamlandı.`,'lig'); }
+  if(S.week>34){ addNews(`${leagueName()} ${S.seasonLabel} sezonu tamamlandı.`,'lig'); }
   // sezonluk transfer teklifleri 15 haftada bir yenilenir (15. haftanın maçları oynandıktan sonra)
   if(wk % 15 === 0) renewSeasonOffers();
   save(); render();
@@ -7178,7 +7225,7 @@ function showSeasonSummary(tbl, champ, scorer, avg){
     <div class="spread"><span class="sub">Gol / asist</span><b>${p.season.goals} / ${p.season.assists}</b></div>
     <div class="spread"><span class="sub">Ortalama puan</span><b>${p.season.apps?avg.toFixed(2):'—'}</b></div></div>`;
 
-  if(champ.n===p.team){ p.career.trophies.push(`${S.seasonLabel} Süper Lig`); p.money+=800000; p.happiness=clamp(p.happiness+25);
+  if(champ.n===p.team){ p.career.trophies.push(`${S.seasonLabel} ${leagueName()}`); p.money+=800000; p.happiness=clamp(p.happiness+25);
     txt += `<p style="color:var(--good)"><b>🏆 Şampiyonsun! Takımınla kupayı kaldırdın.</b></p>`; }
   if(scorer && scorer[0].split('|')[0]===p.name){ p.career.trophies.push(`${S.seasonLabel} Gol Kralı`); p.money+=400000;
     txt += `<p style="color:var(--good)"><b>👑 Gol kralı sensin!</b></p>`; }
@@ -7194,14 +7241,23 @@ function showSeasonSummary(tbl, champ, scorer, avg){
 
   // transfer teklifi — bu rastgele hesap sadece BİR KERE yapılır ve önbelleğe alınır;
   // pazarlık sırasında pencere tekrar çizilse bile teklif değişmez
+  // Sezon sonu teklif havuzu: bulunduğun ligin kulüpleri + (uygunsan) karşı ligden gelen bir teklif —
+  // Süper Lig'den yurt dışına çıkış, ya da Avrupa'dan Türkiye'ye dönüş şansı burada devreye giriyor.
   let offer = null;
+  const _homePool = curPool().map(t=>({...t, pool:S.leagueMode==='euro'?'euro':'tr'}));
+  const _awayList = S.leagueMode==='euro' ? TEAMS : EURO_CLUBS;
+  const _crossEligible = S.leagueMode==='euro' ? true : ((p.fame||0)>=45 && avg>=6.8);
+  const _awayPool = _crossEligible ? _awayList.map(t=>({...t, pool:S.leagueMode==='euro'?'tr':'euro'})) : [];
+  const _crossChance = S.leagueMode==='euro' ? 0.3 : 0.32;
+  const offerPool = (chance(_crossChance) ? _homePool.concat(_awayPool) : _homePool);
   if((avg>=7.0 && p.season.apps>=12) || p.transferRequested){
     if(p.transferRequested && p.transferTarget){
-      const target = TEAMS.find(t=>t.n===p.transferTarget && t.n!==p.team);
+      const target = _homePool.concat(_awayPool).find(t=>t.n===p.transferTarget && t.n!==p.team);
       if(target && chance(0.72)) offer = target;
     }
     if(!offer){
-      const better = TEAMS.filter(t=>t.s > (TEAMS.find(x=>x.n===p.team).s - (p.transferRequested?3:-2))).sort((a,b)=>b.s-a.s);
+      const myPower = (clubMeta(p.team)||{}).s ?? teamStrength(p.team);
+      const better = offerPool.filter(t=>t.n!==p.team && t.s > (myPower - (p.transferRequested?3:-2))).sort((a,b)=>b.s-a.s);
       if(better.length && chance(p.transferRequested?0.85:0.7)) offer = pick(better.slice(0,5));
     }
   }
@@ -7247,7 +7303,11 @@ function renderSeasonSummaryModal(){
 
   if(ctx.transfer){
     const tr = ctx.transfer;
-    txt += `<div class="statbox" style="border-color:var(--flood)"><b>Transfer teklifi: ${ctx.offer.n}</b>
+    const crossesOut = ctx.offer.pool==='euro' && S.leagueMode!=='euro';
+    const crossesBack = ctx.offer.pool==='tr' && S.leagueMode==='euro';
+    const crossBadge = crossesOut ? ' <span style="color:var(--flood)">🌍 Yurt dışı teklifi</span>'
+                      : crossesBack ? ' <span style="color:var(--flood)">🇹🇷 Türkiye\'ye dönüş teklifi</span>' : '';
+    txt += `<div class="statbox" style="border-color:var(--flood)"><b>Transfer teklifi: ${ctx.offer.n}</b>${crossBadge}
       <div class="sub">Daha güçlü bir kadro — ${tr.years} yıllık sözleşme. Ama forma rekabeti sert.</div>
       <div class="spread" style="margin-top:4px"><span class="sub">Maç başı ücret</span><b>${TL(tr.current)}</b></div>
       ${negNoteHtml(tr)}
@@ -7327,19 +7387,23 @@ function submitNegotiate(key){
 function acceptSeasonOffer(key){
   const ctx = SEASON_CTX; if(!ctx) return;
   if(key==='transfer' && ctx.offer && ctx.transfer){
-    nextSeason(ctx.offer.n, ctx.transfer.current, ctx.transfer.years);
+    nextSeason(ctx.offer.n, ctx.transfer.current, ctx.transfer.years, ctx.offer.pool);
   } else {
     nextSeason(null, ctx.stay.current);
   }
   SEASON_CTX = null;
 }
-function nextSeason(newTeam, newWage, newYears){
+function nextSeason(newTeam, newWage, newYears, newLeaguePool){
   closeModal();
   const p = S.p;
   // kariyer arşivi
   p.career.seasons.unshift({label:S.seasonLabel, team:p.team, apps:p.season.apps, goals:p.season.goals, assists:p.season.assists});
+  const wasLeagueMode = S.leagueMode;
   if(newTeam){
-    addNews(`TRANSFER: ${p.name}, ${p.team}'dan ${newTeam}'a transfer oldu.`,'transfer');
+    const crossing = newLeaguePool && newLeaguePool !== wasLeagueMode;
+    addNews(crossing
+      ? `TRANSFER: ${p.name}, ${p.team}'dan ${newTeam}'a transfer oldu — ${newLeaguePool==='euro'?'Avrupa Elit Ligi\'ne':'Süper Lig\'e'} adım atıyor!`
+      : `TRANSFER: ${p.name}, ${p.team}'dan ${newTeam}'a transfer oldu.`, 'transfer');
     p.team = newTeam;
     // yeni kulüp = yeni stadyum; yatırımların yarısı deneyim olarak taşınır
     const oldLv = (S.stadium && S.stadium.lv) || {};
@@ -7381,15 +7445,20 @@ function nextSeason(newTeam, newWage, newYears){
   const y = 2026 + S.season - 1;
   S.seasonLabel = `${y}/${String((y+1)%100).padStart(2,'0')}`;
   S.week = 1; S.weekDone=false;
-  S.table = TEAMS.map(t=>({n:t.n,o:0,g:0,b:0,m:0,ag:0,yg:0,p:0}));
-  S.fixtures = buildFixtures(TEAMS.map(t=>t.n));
-  S.cup = buildCup(p.team);
+  // hangi ligde oynayacağını belirle: yeni bir kulübe transfer olduysan onun havuzu geçerli,
+  // olmadıysa mevcut ligde kalırsın
+  if(newTeam && newLeaguePool){ S.leagueMode = newLeaguePool==='euro' ? 'euro' : 'tr'; }
+  const pool = curPool();
+  const clPool = pool===TEAMS ? EURO_CLUBS : ELITE_CLUBS;
+  S.table = pool.map(t=>({n:t.n,o:0,g:0,b:0,m:0,ag:0,yg:0,p:0}));
+  S.fixtures = buildFixtures(pool.map(t=>t.n));
+  S.cup = buildCup(p.team, pool);
   S.results = []; S.scorers = {}; S.weekGoals = [];
   S.national = buildNational();
-  S.euro = buildEuro(p.team, (S._qualEuroTeams||[]).includes(p.team));
-  TEAMS.forEach(t => S.squads[t.n] = makeSquad(t.n, t.s));
+  S.euro = buildEuro(p.team, (S._qualEuroTeams||[]).includes(p.team), clPool);
+  pool.forEach(t => S.squads[t.n] = makeSquad(t.n, t.s));
   insertUserIntoSquad();
-  addNews(`${S.seasonLabel} sezonu başladı. ${p.name} ${p.team} forması giyiyor.`,'lig');
+  addNews(`${S.seasonLabel} ${leagueName()} sezonu başladı. ${p.name} ${p.team} forması giyiyor.`,'lig');
   if(S.euro) addNews(`${p.team} bu sezon Şampiyonlar Ligi'nde mücadele edecek!`,'kupa');
   if(p.age>=34 && chance(0.5)){
     addNews(`${p.name} için emeklilik soruları artıyor.`,'genel');
