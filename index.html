@@ -3837,25 +3837,26 @@ function ensureClubNeg(teamName){
 // Şu an oynadığın ligin kulüpleri + (ün/güç yeterliyse) karşı ligden gelen ilgi.
 // Süper Lig'deysen ve yeterince ünlüysen Avrupa Elit Ligi kulüpleri de seni izler;
 // Avrupa'daysan Türkiye'den de "dönüş" ilgisi gelebilir.
-function scoutingPool(){
-  const p = S.p, ovr = userOverall();
-  const home = curPool();
-  const away = S.leagueMode==='euro' ? TEAMS : EURO_CLUBS;
-  let pool = home.slice();
-  const eligible = S.leagueMode==='euro' ? true : ((p.fame||0)>=45 && ovr>=72);
-  if(eligible) pool = pool.concat(away);
-  return pool;
-}
 function buildClubPool(){
   const p = S.p;
   const myS = teamStrength(p.team);
   const ovr = userOverall();
   const excluded = S.p.negotiatedClubsOut || [];
-  const ranked = scoutingPool().filter(t=>t.n!==p.team && !excluded.includes(t.n)).map(t=>{
-    const gap = t.s - myS;
-    const interest = clamp(0.5 + (ovr-(t.s-6))/40 + (p.fame||0)/220 - Math.max(gap,0)*0.03, 0.02, 0.97);
-    return {n:t.n, interest};
-  }).sort((a,b)=>b.interest-a.interest).slice(0,6);
+  const scoreOf = t => clamp(0.5 + (ovr-(t.s-6))/40 + (p.fame||0)/220 - Math.max(t.s-myS,0)*0.03, 0.02, 0.97);
+  // Not: ilgi formülü kasıtlı olarak "senden çok daha zayıf kulüpler seni daha çok ister" mantığıyla
+  // kurulu. Bu tek ligde sorun değil, ama iki farklı havuzu (TR: 65-88, Avrupa: 69-90) birleştirince
+  // TR'nin daha düşük tabanı yüzünden yabancı kulüpler skor sıralamasında hiç üste çıkamıyordu.
+  // Bunu düzeltmek için: uygunsan havuzda en az 2 yabancı kulüp slotu GARANTİ ediliyor,
+  // geri kalanı en yüksek skorlu yerli adaylarla dolduruluyor.
+  const home = curPool().filter(t=>t.n!==p.team && !excluded.includes(t.n))
+    .map(t=>({n:t.n, interest:scoreOf(t)})).sort((a,b)=>b.interest-a.interest);
+  const awayEligible = S.leagueMode==='euro' ? true : ((p.fame||0)>=45 && ovr>=72);
+  const awayList = S.leagueMode==='euro' ? TEAMS : EURO_CLUBS;
+  const away = awayEligible
+    ? awayList.filter(t=>!excluded.includes(t.n)).map(t=>({n:t.n, interest:scoreOf(t)})).sort((a,b)=>b.interest-a.interest)
+    : [];
+  const foreignSlots = Math.min(2, away.length);
+  const ranked = home.slice(0, 6-foreignSlots).concat(away.slice(0, foreignSlots)).sort((a,b)=>b.interest-a.interest);
   S.p.currentClubPool = ranked.map(x=>x.n);
 }
 function interestedClubs(){
