@@ -2437,8 +2437,8 @@ const ELITE_CLUBS = [
   {n:'Tokyo Samuray', s:78}, {n:'Kahire Firavunları', s:77}
 ];
 const EURO_GROUP_WEEKS = [2,5,8,11,15,18,22];
-const EURO_KO_WEEKS = [26,31,34];
-const EURO_KO_NAMES = ['Çeyrek Final','Yarı Final','Final'];
+const EURO_KO_WEEKS = [26,34];
+const EURO_KO_NAMES = ['Yarı Final','Final'];
 function buildEuro(myTeam, qualified, pool){
   if(!qualified) return null;
   pool = pool || EURO_CLUBS;
@@ -4360,9 +4360,9 @@ function renderEuro(){
   $('euroBox').innerHTML = `<div class="card"><h3>Şampiyonlar Ligi — Grup Aşaması</h3>
     <table><thead><tr><th class="num">#</th><th>Takım</th><th class="num">O</th><th class="num">P</th></tr></thead>
     <tbody>${rows}</tbody></table>
-    <p class="sub" style="margin-top:8px">İlk 4 çeyrek finale yükselir.</p></div>
-    ${e.knockout.length?`<div class="card"><h3>Çeyrek Final ve sonrası</h3>
-      <div class="bracket">${e.knockout.map((rd,i)=>`<div class="bcol"><h5>${['Çeyrek Final','Yarı Final','Final'][i]}</h5>
+    <p class="sub" style="margin-top:8px">İlk 4 yarı finale yükselir.</p></div>
+    ${e.knockout.length?`<div class="card"><h3>Yarı Final ve sonrası</h3>
+      <div class="bracket">${e.knockout.map((rd,i)=>`<div class="bcol"><h5>${EURO_KO_NAMES[i]}</h5>
         ${rd.map(t=>`<div class="tie ${(t.h===S.p.team||t.a===S.p.team)?'mine':''}">
           <div><span>${kitDot(t.h)}${t.h}</span><b>${t.hs===null?'':t.hs}</b></div>
           <div><span>${kitDot(t.a)}${t.a}</span><b>${t.as===null?'':t.as}</b></div></div>`).join('')||'<p class="sub">Bekleniyor</p>'}
@@ -5027,7 +5027,7 @@ function launchMatch(wantFullscreen){
   { const _l = $('log'); if(_l) _l.scrollTop = 0; }
   $('hub').style.display='none'; $('mgrhub').style.display='none'; $('live').style.display='block';
   const compTxt = comp==='kupa'?`${compLabel(comp)} • ${CUP_NAMES[cupIdx]}`
-                : comp==='euroko'?`${compLabel(comp)} • ${['Çeyrek Final','Yarı Final','Final'][cupIdx]}`
+                : comp==='euroko'?`${compLabel(comp)} • ${EURO_KO_NAMES[cupIdx]}`
                 : comp==='euro'?`${compLabel(comp)} • Grup aşaması`
                 : comp==='milli'?`${compLabel(comp)} • ${S.national.friendly?'Hazırlık maçı':'Eleme maçı'}`
                 : `${compLabel(comp)} • ${S.week}. hafta`;
@@ -6773,9 +6773,8 @@ function applyMatchResult(comp, fx, tie, cupIdx, hs, as, userPlayed, extra){
     if(hs===as){ const win = chance(0.5)?tie.h:tie.a; tie.w = win; addNews(`ŞL: ${tie.h} - ${tie.a} maçı uzatma sonrası ${win} lehine bitti.`,'kupa'); }
     else tie.w = hs>as ? tie.h : tie.a;
     S.results.push({week:S.week, h:tie.h, a:tie.a, hs, as, comp:'euroko'});
-    const names = ['Çeyrek Final','Yarı Final','Final'];
-    if(tie.w===S.p.team) addNews(`${S.p.team} Şampiyonlar Ligi'nde ${names[cupIdx]} turunu geçti.`,'kupa');
-    else if(tie.h===S.p.team||tie.a===S.p.team) addNews(`${S.p.team} Avrupa'ya ${names[cupIdx]} turunda veda etti.`,'kupa');
+    if(tie.w===S.p.team) addNews(`${S.p.team} Şampiyonlar Ligi'nde ${EURO_KO_NAMES[cupIdx]} turunu geçti.`,'kupa');
+    else if(tie.h===S.p.team||tie.a===S.p.team) addNews(`${S.p.team} Avrupa'ya ${EURO_KO_NAMES[cupIdx]} turunda veda etti.`,'kupa');
   } else if(comp==='milli'){
     S.national.done = true;
     S.results.push({week:S.week, h:fx.h, a:fx.a, hs, as, comp:'milli'});
@@ -6818,8 +6817,8 @@ function processEuroWeek(wk){
         const sorted = e.group.slice().sort((a,b)=>b.p-a.p||(b.ag-b.yg)-(a.ag-a.yg));
         const top4 = sorted.slice(0,4).map(t=>t.n);
         e.stage = 'ko';
-        e.knockout = [[{h:top4[0],a:top4[3],hs:null,as:null,w:null},{h:top4[1],a:top4[2],hs:null,as:null,w:null}],[],[]];
-        addNews(`Şampiyonlar Ligi grup aşaması bitti. Çeyrek finalistler: ${top4.join(', ')}.`,'kupa');
+        e.knockout = [[{h:top4[0],a:top4[3],hs:null,as:null,w:null},{h:top4[1],a:top4[2],hs:null,as:null,w:null}],[]];
+        addNews(`Şampiyonlar Ligi grup aşaması bitti. Yarı finalistler: ${top4.join(', ')}.`,'kupa');
         if(!top4.includes(S.p.team)){
           e.myOut = true;
           addNews(`${S.p.team} Şampiyonlar Ligi'nde grubu geçemedi.`,'kupa');
@@ -6838,7 +6837,7 @@ function processEuroWeek(wk){
           t.w = r.hs===r.as ? (chance(0.5)?t.h:t.a) : (r.hs>r.as?t.h:t.a);
           S.results.push({week:wk,h:t.h,a:t.a,hs:r.hs,as:r.as,comp:'euroko'});
         });
-        if(ki<2){
+        if(ki<1){
           const winners = rd.map(t=>t.w);
           const next=[]; for(let i=0;i<winners.length;i+=2) next.push({h:winners[i],a:winners[i+1],hs:null,as:null,w:null});
           e.knockout[ki+1] = next;
