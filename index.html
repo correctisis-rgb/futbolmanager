@@ -384,6 +384,53 @@ td.num,th.num{text-align:center;width:26px;white-space:nowrap;}
   pointer-events:none;box-shadow:0 0 6px 2px var(--flood);animation:sparkleOut .9s ease-out forwards;}
 @keyframes sparkleOut{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:var(--sxy) scale(.3)}}
 
+/* ---- gol anında açılan küçük "tekrar" ekranı: top fileye gidiyor ---- */
+.golreplay{position:absolute;inset:0;z-index:24;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;padding:10px;animation:golreplayFade 1.3s ease forwards;}
+@keyframes golreplayFade{0%{opacity:0}9%{opacity:1}80%{opacity:1}100%{opacity:0}}
+.golreplay .gscreen{width:min(78%,260px);aspect-ratio:16/10;background:#04121c;
+  border:2px solid var(--flood);border-radius:8px;position:relative;overflow:hidden;
+  box-shadow:0 0 26px rgba(255,210,74,.5),inset 0 0 18px rgba(0,0,0,.6);}
+.golreplay .gscreen::before{content:'';position:absolute;left:0;right:0;height:20%;z-index:3;
+  background:linear-gradient(180deg,transparent,rgba(255,210,74,.35),transparent);animation:vscan .9s linear infinite;}
+.golreplay .glabel{position:absolute;top:5px;left:7px;z-index:3;font-family:'Barlow Condensed';
+  letter-spacing:2px;font-size:.66rem;color:var(--flood);text-shadow:0 0 6px rgba(0,0,0,.9);}
+.golreplay .gpitch{position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,var(--grass) 0 8%,var(--grass2) 8% 16%);}
+.golreplay .gnet{position:absolute;top:16%;height:68%;width:11%;
+  background-image:linear-gradient(90deg,rgba(255,255,255,.6) 1px,transparent 1px),
+                   linear-gradient(0deg,rgba(255,255,255,.6) 1px,transparent 1px);
+  background-size:5px 5px;border:1px solid rgba(255,255,255,.85);background-color:rgba(255,255,255,.09);}
+.golreplay .gnet.gl{left:0;border-right:0;}
+.golreplay .gnet.gr{right:0;border-left:0;}
+.golreplay .gnet.hit{animation:golNetHit .5s cubic-bezier(.25,.7,.3,1) .78s;}
+@keyframes golNetHit{
+  0%{transform:scaleY(1);}
+  35%{transform:scaleY(1.16);}
+  65%{transform:scaleY(1.06);}
+  100%{transform:scaleY(1);}
+}
+.golreplay .gball{position:absolute;top:50%;left:50%;width:10%;aspect-ratio:1;
+  transform:translate(-50%,-50%);filter:drop-shadow(0 2px 3px rgba(0,0,0,.6));z-index:2;}
+.golreplay .gball i{display:block;width:100%;height:100%;font-size:5.5vw;line-height:1;
+  animation:ballspin .45s linear infinite;}
+.golreplay .gball.fly-r{left:16%;animation:gballFlyR .8s cubic-bezier(.32,.6,.33,1) .25s forwards,ballspin .45s linear infinite;}
+.golreplay .gball.fly-l{left:84%;animation:gballFlyL .8s cubic-bezier(.32,.6,.33,1) .25s forwards,ballspin .45s linear infinite;}
+@keyframes gballFlyR{
+  0%{left:16%;transform:translate(-50%,-50%) scale(1);}
+  70%{left:90%;transform:translate(-50%,-50%) scale(.85);}
+  100%{left:96%;transform:translate(-50%,-50%) scale(.5);opacity:.25;}
+}
+@keyframes gballFlyL{
+  0%{left:84%;transform:translate(-50%,-50%) scale(1);}
+  70%{left:10%;transform:translate(-50%,-50%) scale(.85);}
+  100%{left:4%;transform:translate(-50%,-50%) scale(.5);opacity:.25;}
+}
+.golreplay .gcaption{position:absolute;bottom:6px;left:0;right:0;text-align:center;z-index:3;
+  font-family:'Barlow Condensed';font-size:1.05rem;letter-spacing:1px;color:var(--flood);
+  text-shadow:0 0 8px rgba(0,0,0,.9);opacity:0;animation:gcapIn .4s ease .78s forwards;}
+@keyframes gcapIn{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
+
 /* ---- hücum / defans hızlı seçim ---- */
 .atkdef-fab{position:absolute;right:6px;bottom:6px;z-index:20;display:flex;flex-direction:row;gap:6px;
   background:rgba(4,10,14,.5);padding:4px;border-radius:11px;backdrop-filter:blur(2px);}
@@ -1134,6 +1181,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
               <div class="floodmask" id="floodmask"></div>
               <div class="ball" id="ball" style="left:50%;top:50%"><i>⚽</i></div>
               <div class="overlay" id="ov" style="display:none"><div class="big" id="ov-txt"></div><div class="sub" id="ov-sub"></div></div>
+              <div id="goalLayer"></div>
               <div id="varLayer"></div>
               <div class="pitchticker" id="logTicker">Maç başlamak üzere...</div>
               <div class="matchfab-row">
@@ -5908,6 +5956,7 @@ function scoreGoal(isUsTeam, scorer, assist, isPenalty=false){
   M.ballY = clamp(M.ballY, 38, 62);
   movePitch();
   $('ball').classList.add('goal-flash');
+  goalReplay(isUsTeam, scorer);
   celebrateGoal(isUsTeam, scorer);
   if(isUsTeam) confettiBurst();
   updateLiveStats();
@@ -5917,6 +5966,26 @@ function scoreGoal(isUsTeam, scorer, assist, isPenalty=false){
     if(M){ M.ballX=50; M.ballY=50; movePitch(); }
   }, 700);
   maybeVarGoal(isUsTeam, scorer, assist, isPenalty);
+}
+// gol anında açılan küçük "tekrar" ekranı: topun fileye gittiğini gösteren mini animasyon
+let _goalReplayTimer = null;
+function goalReplay(isUsTeam, scorer){
+  const l = $('goalLayer'); if(!l) return;
+  const flyClass = isUsTeam ? 'fly-r' : 'fly-l';
+  const netClass = isUsTeam ? 'gr' : 'gl';
+  const caption = scorer.isUser ? `⚽ ${scorer.name.split(' ').slice(-1)[0].toUpperCase()}!` : 'GOOOL!';
+  l.innerHTML = `<div class="golreplay">
+      <div class="gscreen">
+        <div class="glabel">TEKRAR İZLE</div>
+        <div class="gpitch"></div>
+        <div class="gnet gl${netClass==='gl'?' hit':''}"></div>
+        <div class="gnet gr${netClass==='gr'?' hit':''}"></div>
+        <div class="gball ${flyClass}"><i>⚽</i></div>
+        <div class="gcaption">${caption}</div>
+      </div>
+    </div>`;
+  clearTimeout(_goalReplayTimer);
+  _goalReplayTimer = setTimeout(()=>{ if(l) l.innerHTML=''; }, 1350);
 }
 function celebrateGoal(isUsTeam, scorer){
   const side = isUsTeam ? 'us' : 'them';
