@@ -2247,6 +2247,53 @@ function visibleBadges(p){
   return BADGES.filter(b=> !MANAGER_BADGE_IDS.includes(b.id));
 }
 /* başarım şartı sağlandığında: sadece bildir, ödülü kariyerdeki "Başarımlar" sekmesinden elle topla */
+/* ---------- Kupa Müzesi ---------- */
+// p.career.trophies düz string dizisi olarak tutuluyor (örn. "2027/28 Şampiyonlar Ligi").
+// Bu fonksiyon metne bakarak uygun ikon/renk/başlık üretir.
+function trophyMeta(str){
+  if(/^Oyunculuk kariyeri/.test(str)) return {icon:'👔', title:'Jübile', sub:str, color:'var(--dim)'};
+  if(/Şampiyonlar Ligi/.test(str)) return {icon:'🏆', title:'Şampiyonlar Ligi', color:'#ffd24a'};
+  if(/Türkiye Kupası/.test(str)) return {icon:'🏆', title:'Türkiye Kupası', color:'#60a5fa'};
+  if(/\(TD\)$/.test(str)){
+    const inner = str.replace(' (TD)','');
+    const m2 = inner.match(/^(\d{4}\/\d{2})\s+(.*)$/);
+    return {icon:'👔🥇', title: m2 ? `${m2[2]} Şampiyonu` : inner, sub: (m2?m2[1]+' • ':'')+'Teknik direktör olarak', color:'#a855f7'};
+  }
+  if(/Gol Kralı/.test(str)) return {icon:'⚽', title:'Gol Kralı', color:'#34d399'};
+  if(/Yılın Genç Yeteneği/.test(str)) return {icon:'💎', title:'Yılın Genç Yeteneği', color:'#60a5fa'};
+  if(/Yılın Oyuncusu/.test(str)) return {icon:'⭐', title:'Yılın Oyuncusu', color:'#facc15'};
+  if(/Süper Lig$|Avrupa Elit Ligi$/.test(str)) return {icon:'🥇', title:str.replace(/^\S+\s/,'')+' Şampiyonu', color:'#f97316'};
+  return {icon:'🏅', title:str, color:'var(--flood)'};
+}
+function renderTrophyMuseumHtml(){
+  const p = S.p;
+  const list = p.career.trophies.slice().reverse(); // en yeni en üstte
+  if(!list.length){
+    return `<h3>🏛️ Kupa Müzesi</h3><p class="sub">Henüz vitrinin boş. Sahaya çık, ilk kupanı kazan!</p>
+      <button class="btn primary block" style="margin-top:10px" onclick="closeModal()">Kapat</button>`;
+  }
+  const counts = {};
+  list.forEach(t=>{ const m=trophyMeta(t); counts[m.title]=(counts[m.title]||0)+1; });
+  const summaryLine = Object.entries(counts).map(([k,v])=>`${k} × ${v}`).join(' • ');
+  const cards = list.map(t=>{
+    const m = trophyMeta(t);
+    const seasonMatch = t.match(/^(\d{4}\/\d{2})\s+/);
+    const season = seasonMatch ? seasonMatch[1] : '';
+    return `<div class="statbox" style="display:flex;align-items:center;gap:10px;border-color:${m.color}">
+      <div style="font-size:1.6rem;line-height:1">${m.icon}</div>
+      <div style="flex:1">
+        <div style="font-weight:700">${m.title}</div>
+        <div class="sub">${m.sub || (season || 'Kariyer boyu')}</div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<h3>🏛️ Kupa Müzesi <span class="chip">${list.length}</span></h3>
+    <p class="sub" style="margin-bottom:10px">${summaryLine}</p>
+    <div style="display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow-y:auto">${cards}</div>
+    <button class="btn primary block" style="margin-top:12px" onclick="closeModal()">Kapat</button>`;
+}
+function openTrophyMuseum(){ modal(renderTrophyMuseumHtml()); }
+
 function checkBadges(){
   const p = S.p; let n=0;
   BADGES.forEach(b=>{
@@ -2574,7 +2621,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v7.5';
+const APP_VERSION = 'v7.7';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -3116,7 +3163,7 @@ function renderManagerProfile(){
       ${isGK(p)?`<div class="spread"><span class="sub">Kurtarış / gol yemedi</span><b>${p.career.saves} / ${p.career.cleanSheet}</b></div>`:''}
       <div class="spread"><span class="sub">Maçın adamı</span><b>${p.career.motm}</b></div>
     </div>
-    ${p.career.trophies.length?`<p class="sub" style="margin-top:8px">🏆 ${p.career.trophies.join(', ')}</p>`:''}
+    ${p.career.trophies.length?`<button class="btn sm" style="margin-top:8px" onclick="openTrophyMuseum()">🏛️ Kupa Müzesi (${p.career.trophies.length})</button>`:''}
     ${p.career.seasons.length?`<hr class="sep"><table><tr><th>Sezon</th><th>Takım</th><th class="num">M</th><th class="num">G</th><th class="num">A</th></tr>
       ${p.career.seasons.map(s=>`<tr><td>${s.label}</td><td>${s.team}</td><td class="num">${s.apps}</td><td class="num">${s.goals}</td><td class="num">${s.assists}</td></tr>`).join('')}</table>`:''}
     <hr class="sep">
@@ -3195,7 +3242,7 @@ function renderProfile(){
       ${po.grp==='GK'?`<div class="spread"><span class="sub">Kurtarış / gol yemedi</span><b>${p.career.saves} / ${p.career.cleanSheet}</b></div>`:''}
       <div class="spread"><span class="sub">Maçın adamı</span><b>${p.career.motm}</b></div>
     </div>
-    ${p.career.trophies.length?`<p class="sub" style="margin-top:8px">🏆 ${p.career.trophies.join(', ')}</p>`:''}
+    ${p.career.trophies.length?`<button class="btn sm" style="margin-top:8px" onclick="openTrophyMuseum()">🏛️ Kupa Müzesi (${p.career.trophies.length})</button>`:''}
     ${p.career.seasons.length?`<hr class="sep"><table><tr><th>Sezon</th><th>Takım</th><th class="num">M</th><th class="num">G</th><th class="num">A</th></tr>
       ${p.career.seasons.map(s=>`<tr><td>${s.label}</td><td>${s.team}</td><td class="num">${s.apps}</td><td class="num">${s.goals}</td><td class="num">${s.assists}</td></tr>`).join('')}</table>`:''}
     <hr class="sep">
@@ -7612,7 +7659,7 @@ function renderManagerHub(){
     <div class="statbox">
       <div class="spread"><span class="sub">Maç</span><b>${p.career.apps}</b></div>
       ${isGK(p)?`<div class="spread"><span class="sub">Kurtarış / gol yemeden</span><b>${p.career.saves} / ${p.career.cleanSheet}</b></div>`:`<div class="spread"><span class="sub">Gol / asist</span><b>${p.career.goals} / ${p.career.assists}</b></div>`}
-      ${p.career.trophies.length?`<div class="sub" style="margin-top:6px">🏆 ${p.career.trophies.join(', ')}</div>`:''}
+      ${p.career.trophies.length?`<button class="btn sm" style="margin-top:6px" onclick="openTrophyMuseum()">🏛️ Kupa Müzesi (${p.career.trophies.length})</button>`:''}
     </div>
   </div>`;
   $('mgrhub').innerHTML = html;
@@ -7664,6 +7711,7 @@ function endSeasonManager(){
   const tbl = sortTable();
   const champ = tbl[0];
   const p = S.p;
+  S._qualEuroTeams = tbl.slice(0,2).map(t=>t.n);
   const scorer = Object.entries(S.scorers).sort((a,b)=>b[1]-a[1])[0];
   const stages = buildAwardStages(tbl, champ, scorer, p, {});
   awardsCeremony(stages, ()=>{
