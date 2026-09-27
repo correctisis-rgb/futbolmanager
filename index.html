@@ -472,6 +472,26 @@ td.num,th.num{text-align:center;width:26px;white-space:nowrap;}
 .tg-legend span{display:inline-flex;align-items:center;gap:4px;}
 .tg-legend i{display:inline-block;width:9px;height:9px;border-radius:3px;}
 
+/* ---- antrenman: refleks oyunu (Hız / Kalecilik) ---- */
+.rx-box{height:92px;border-radius:12px;background:var(--surf4);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;
+  font-family:'Barlow Condensed';font-size:1.15rem;color:var(--dim);margin-top:10px;
+  transition:background .12s,color .12s,border-color .12s;}
+.rx-box.go{background:rgba(52,211,153,.32);border-color:var(--good);color:var(--ink);}
+.rx-box.early{background:rgba(248,113,113,.28);border-color:var(--bad);color:var(--ink);}
+
+/* ---- antrenman: hedef isabet oyunu (Pas / Dripling / Fizik) ---- */
+.sq-box{position:relative;height:180px;border-radius:12px;background:var(--surf4);
+  border:1px solid var(--line);overflow:hidden;margin-top:10px;}
+.sq-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:var(--dim);font-size:.86rem;text-align:center;padding:0 12px;}
+.sq-target{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;
+  background:var(--flood);color:#241c00;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-family:'Barlow Condensed';font-size:1.15rem;box-shadow:0 0 12px var(--flood);
+  cursor:pointer;animation:sqPop .22s ease;}
+@keyframes sqPop{0%{transform:scale(.35);opacity:0}100%{transform:scale(1);opacity:1}}
+.sq-progress{text-align:center;font-size:.8rem;color:var(--dim);margin-top:8px;}
+
 /* ---- sezon sonu ödül töreni ---- */
 .awardstage{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;
   position:relative;overflow:hidden;border-radius:10px;padding:22px 10px;}
@@ -1077,6 +1097,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
   <div id="game" style="display:none">
     <div class="topbar">
       <div class="who"><b id="t-name">—</b><span id="t-sub">—</span></div>
+      <div class="chip" id="t-streak" title="Giriş serisi" style="display:none">🔥 0</div>
       <div class="chip gold buy" id="t-money" role="button" tabindex="0" title="Para kazan">0 ₺</div>
       <div class="chip ovr" id="t-ovr">0</div>
       <button class="btn sm" id="t-sound" title="Ses" style="padding:4px 8px">🔊</button>
@@ -2129,6 +2150,101 @@ const WEATHER = [
   {id:'kar',   n:'Karlı',    ic:'❄️', drain:1.18, tech:-0.09},
   {id:'ruzgar',n:'Rüzgarlı', ic:'💨', drain:1.05, tech:-0.03}
 ];
+/* ---------- maç anlatımına bağlamsal çeşni ----------
+   Büyük dörtlü birbiriyle oynadığında derbi atmosferi, ayrıca o anki hava
+   durumuna göre küçük atmosfer notları — anlatım havuzundaki cümlelere
+   ara sıra eklenerek aynı olayın hep birebir aynı görünmesini önler. */
+const DERBY_TEAMS = ['Galata SK','Fenerköy SK','Beşiktepe SK','Trabzon FK'];
+function isDerbyMatch(h,a){ return h!==a && DERBY_TEAMS.includes(h) && DERBY_TEAMS.includes(a); }
+const DERBY_FLAVOR = ['Derbi geriliminden kimse geri adım atmıyor.','İki tribün de birbirine söz geçiremiyor.','Derbi atmosferi iyice kızıştı.','Bu, sıradan bir maç değil — derbi heyecanı sahaya yansıyor.'];
+const CROWD_FLAVOR = ['Tribünler ayakta.','Stat inledi.','Taraftar çılgına döndü.','Kale arkası tezahürat başlattı.','Sahaya bir anlık sessizlik çöktü.','Kamera flaşları art arda patladı.'];
+const WEATHER_FLAVOR = {
+  yagmur: ['Islak zeminde top beklenenden hızlı kaydı.','Yağmur altında formalar sırılsıklam oldu.','Yağmur, sahayı kayganlaştırdı.'],
+  kar:    ['Kar yağışı görüşü biraz zorlaştırdı.','Kar taneleri projektör ışığında parladı.','Karla kaplı zeminde adımlar temkinli atıldı.'],
+  ruzgar: ['Rüzgar topun rotasını hafifçe bozdu.','Esen rüzgar tribünlere kadar hissedildi.','Rüzgara karşı oynamak işi zorlaştırdı.']
+};
+function matchFlavor(p){
+  if(!M || !chance(p==null?0.28:p)) return '';
+  const bits = [];
+  if(M.isDerby) bits.push(...DERBY_FLAVOR);
+  const wf = WEATHER_FLAVOR[M.weather && M.weather.id];
+  if(wf) bits.push(...wf);
+  if(!bits.length) bits.push(...CROWD_FLAVOR);
+  return ' ' + pick(bits);
+}
+/* ---- şut sonucu anlatım havuzları: kurtarış / direk / auta / kesilme / korner ----
+   Bunlar maçtaki en sık tekrar eden olaylar olduğu için tek bir cümle yerine
+   birkaç varyasyon arasından rastgele seçilir. */
+function saveLine(shooterName, gkName){
+  const gk = gkName || 'kaleci';
+  return pick([
+    `${shooterName} vurdu, ${gk} <b>kurtardı!</b>`,
+    `${gk} tam zamanında yetişti, ${shooterName}'ın şutunu <b>çeldi!</b>`,
+    `${shooterName} denedi ama karşısında <b>${gk}</b> vardı.`,
+    `Sert vuruşu ${gk} son anda <b>uzaklaştırdı!</b>`,
+    `${shooterName}'ın vuruşunda ${gk} <b>kahraman</b> oldu.`
+  ]) + matchFlavor(0.22);
+}
+function postLine(shooterName){
+  return pick([
+    `${shooterName}'ın şutu <b>direkten</b> döndü!`,
+    `${shooterName} vurdu, top <b>direğe</b> çarpıp auta gitti!`,
+    `Az kalsın! ${shooterName}'ın şutu kaleciyi geçti ama <b>direk</b> kurtardı.`,
+    `${shooterName} demir gibi direğe çarptı, file sevinci yaşanmadı.`
+  ]) + matchFlavor(0.2);
+}
+function wideLine(shooterName){
+  return pick([
+    `${shooterName} auta vurdu, tribünden "ooo" sesi yükseldi.`,
+    `${shooterName}'ın şutu az farkla yandan gitti.`,
+    `${shooterName} net pozisyonu değerlendiremedi, top auta gitti.`,
+    `${shooterName} acele etti, vuruş kornere gitti.`
+  ]) + matchFlavor(0.2);
+}
+function blockedLine(atkName){
+  return pick([
+    `${atkName} atağı savunmada kesildi.`,
+    `${atkName}'ın hücumu son anda kesildi.`,
+    `Savunma araya girdi, ${atkName} atağı boşa çıktı.`
+  ]);
+}
+function cornerLine(atkName){
+  return pick([
+    `${atkName} köşe vuruşu kazandı ama sonuç alamadı.`,
+    `${atkName} korner kullandı, kale ağzında karambol çıktı ama gol olmadı.`,
+    `${atkName}'ın kornerinde kafa vuruşu üstten gitti.`
+  ]);
+}
+/* ---- gol anlatım havuzları ---- */
+function goalLineUser(){
+  return pick([
+    `⚽ <b>GOOOL! ${S.p.name}</b> ağları havalandırdı!`,
+    `⚽ <b>GOOOL!</b> ${S.p.name} soğukkanlılıkla topu file ile buluşturdu!`,
+    `⚽ <b>GOL!</b> ${S.p.name} kaleciye hiç şans tanımadı!`,
+    `⚽ <b>MÜTHİŞ GOL!</b> ${S.p.name} adını skor tabelasına yazdırdı!`
+  ]) + matchFlavor(0.3);
+}
+function goalLineAssist(scorerName){
+  return pick([
+    `⚽ <b>GOL!</b> ${scorerName} tamamladı — asist <b>${S.p.name}</b>!`,
+    `⚽ <b>GOL!</b> ${S.p.name}'ın pasını ${scorerName} ağlara gönderdi!`,
+    `⚽ <b>GOL!</b> Harika bir organizasyon — bitiren ${scorerName}, asist <b>${S.p.name}</b>.`
+  ]) + matchFlavor(0.3);
+}
+function goalLineTeammate(scorerName, teamName){
+  return pick([
+    `⚽ <b>GOL!</b> ${scorerName} ${teamName} adına kaydetti.`,
+    `⚽ <b>GOL!</b> ${scorerName} soğukkanlı bitirişle farkı yarattı.`,
+    `⚽ <b>GOL!</b> ${teamName} tribünleri ${scorerName} ile coştu.`
+  ]) + matchFlavor(0.25);
+}
+function goalLineOpponent(scorerName, teamName){
+  return pick([
+    `⚽ <b>GOL.</b> ${scorerName} ${teamName} adına attı, skor değişti.`,
+    `⚽ <b>GOL.</b> ${scorerName} savunmayı üzdü.`,
+    `⚽ <b>GOL.</b> ${teamName} tribünü ${scorerName} ile ayağa kalktı.`
+  ]) + matchFlavor(0.25);
+}
 const INJURY_TYPES = [
   {n:'Kas zorlanması', w:[1,2], part:'uyluk'}, {n:'Bilek burkulması', w:[1,3], part:'bilek'},
   {n:'Adale yırtığı', w:[3,6], part:'uyluk'}, {n:'Diz sıkışması', w:[2,4], part:'diz'},
@@ -2953,6 +3069,8 @@ function render(){
   $('t-sub').textContent = p.role==='Teknik Direktör' ? `${p.team} • Teknik Direktör` : `${p.team} • ${posByKey(p.posKey).label} • ${p.age} yaş`;
   $('t-money').textContent = TL(p.money);
   $('t-ovr').textContent = 'GÜÇ ' + userOverall();
+  { const sc = currentStreakCount(); const stChip = $('t-streak');
+    if(stChip){ if(sc>1){ stChip.style.display=''; stChip.textContent = '🔥 '+sc; } else stChip.style.display='none'; } }
   updateNavBadges();
   updateNavForRole();
 
@@ -3435,20 +3553,36 @@ function renderTrain(){
   </div>`;
 }
 let trainGame = null;
-// boşluk tuşu da DUR! butonuyla aynı işi yapsın; sayfanın kaymasını (default space-scroll) engelle,
-// tuşa basılı tutulunca (auto-repeat) birden fazla tetiklenmesin
+// boşluk tuşu: zamanlama oyununda DUR!, refleks oyununda VUR!/YAKALA! ile aynı işi yapsın;
+// sayfanın kaymasını (default space-scroll) engelle, basılı tutulunca (auto-repeat) tekrar tetiklenmesin
 document.addEventListener('keydown', e=>{
   if(!trainGame) return;
   if(e.code==='Space' || e.key===' ' || e.key==='Spacebar'){
     e.preventDefault();
-    if(!e.repeat) stopTrainGame();
+    if(e.repeat) return;
+    if(trainGame.type==='timing') stopTrainGame();
+    else if(trainGame.type==='reaction') hitReaction();
   }
 });
+// Her özellik tek bir mini-oyuna sabitlenmiş değil: 3 farklı mekanik arasında dağıtılıyor
+// ki antrenman haftadan haftaya "yine aynı şey" hissi vermesin.
+//   timing   -> Şut / Defans   : zamanlama çubuğu (mevcut oyun)
+//   reaction -> Hız / Kalecilik: refleks testi (tepki süresi)
+//   sequence -> Pas / Dripling / Fizik: sırayla çıkan hedeflere isabet
+const TRAIN_GAME_TYPE = {sut:'timing', def:'timing', hiz:'reaction', klc:'reaction', pas:'sequence', drib:'sequence', fiz:'sequence'};
 function openTrainGame(k){
   const p=S.p;
   if(p.attrs[k]>=99) return toast(`${ATTR_LABEL[k]} zaten maksimum seviyede (99), daha fazla geliştirilemez.`);
   if(p.trainPoints<1) return toast('Bu hafta antrenman hakkın kalmadı.');
   if(p.fitness<20) return toast('Çok yorgunsun, önce dinlen.');
+  const type = TRAIN_GAME_TYPE[k] || 'timing';
+  if(type==='timing') openTimingGame(k);
+  else if(type==='reaction') openReactionGame(k);
+  else openSequenceGame(k);
+}
+/* ============ 1) Zamanlama çubuğu (Şut / Defans) ============ */
+function openTimingGame(k){
+  const p=S.p;
   const gwBase = clamp(30 - Math.round((p.attrs[k]||40)/9), 12, 28); // yetenek seviyesine göre taban değer
   const gw = Math.max(6, Math.round(gwBase * 0.5)); // yeşil bölge küçük — +4 almak zorlaşsın
   const ow = Math.round(gw * 2.4); // turuncu bölge belirgin biçimde daha geniş
@@ -3456,9 +3590,10 @@ function openTrainGame(k){
   const half = Math.ceil(rw/2);
   const zoneCenter = ri(half+2, 100-half-2);
   const period = ri(650, 950);
-  trainGame = {k, zoneCenter, gw, ow, rw, t0:null, period, raf:null, pos:50};
+  trainGame = {k, type:'timing', zoneCenter, gw, ow, rw, t0:null, period, raf:null, pos:50};
+  const intro = k==='def' ? 'Müdahale anını doğru zamanda yakala.' : 'Gösterge tam zamanında';
   modal(`<h3>${ATTR_LABEL[k]} antrenmanı</h3>
-    <p class="sub">Gösterge tam zamanında <b>DUR!</b>'a bas (ya da <b>boşluk</b> tuşu): yeşilde +4, turuncuda +2, kırmızıda +1 puan. Bölgelerin dışında puan yok.</p>
+    <p class="sub">${intro} <b>DUR!</b>'a bas (ya da <b>boşluk</b> tuşu): yeşilde +4, turuncuda +2, kırmızıda +1 puan. Bölgelerin dışında puan yok.</p>
     <div class="tg-track" id="tg-track">
       <div class="tg-zone red" style="left:${zoneCenter-rw/2}%;width:${rw}%"></div>
       <div class="tg-zone orange" style="left:${zoneCenter-ow/2}%;width:${ow}%"></div>
@@ -3476,7 +3611,7 @@ function openTrainGame(k){
   requestAnimationFrame(tickTrainGame);
 }
 function tickTrainGame(ts){
-  if(!trainGame) return;
+  if(!trainGame || trainGame.type!=='timing') return;
   const el = document.getElementById('tg-marker');
   if(!el){ trainGame=null; return; } // modal başka bir şeyle kapatıldı
   if(trainGame.t0===null) trainGame.t0 = ts;
@@ -3488,7 +3623,7 @@ function tickTrainGame(ts){
   trainGame.raf = requestAnimationFrame(tickTrainGame);
 }
 function stopTrainGame(){
-  if(!trainGame) return;
+  if(!trainGame || trainGame.type!=='timing') return;
   cancelAnimationFrame(trainGame.raf);
   const {k, zoneCenter, gw, ow, rw, pos} = trainGame;
   const dist = Math.abs(pos - zoneCenter);
@@ -3497,6 +3632,112 @@ function stopTrainGame(){
   else if(dist<=ow/2){ points=2; label='İyi zamanlama +2'; cls='color:#f59e0b'; }
   else if(dist<=rw/2){ points=1; label='Fena değil +1'; cls='color:#ef4444'; }
   else { points=0; label='Kaçırdın... +0'; cls='color:var(--dim)'; }
+  trainGame = null;
+  const r = document.getElementById('tg-result');
+  if(r){ r.style.cssText=cls; r.textContent = label; }
+  setTimeout(()=>{ closeModal(); resolveTrain(k, points); }, 550);
+}
+/* ============ 2) Refleks testi (Hız / Kalecilik) ============ */
+const REACTION_META = {
+  hiz: {verb:'PATLA!', title:'Refleks çıkışı', wait:'Hazır ol... çıkış işareti bekleniyor.', now:'ÇIK! ŞİMDİ!',
+        desc:'Kutu yeşile dönene kadar bekle, sonra elinden geldiğince hızlı çıkış yap. Erken çıkarsan faul sayılır.'},
+  klc:  {verb:'YAKALA!', title:'Kaleci refleksi', wait:'Kaleci bekliyor... şut ne zaman gelecek belli değil.', now:'ŞUT GELDİ!',
+        desc:'Şut gelene kadar bekle, top göründüğü an elinden geldiğince hızlı tepki ver. Erken atlarsan pozisyonunu kaybedersin.'}
+};
+function openReactionGame(k){
+  const meta = REACTION_META[k] || REACTION_META.hiz;
+  trainGame = {k, type:'reaction', phase:'wait', waitTimer:null, t0:0};
+  modal(`<h3>${ATTR_LABEL[k]} antrenmanı — ${meta.title}</h3>
+    <p class="sub">${meta.desc} (ya da <b>boşluk</b> tuşu ile de tepki verebilirsin.)</p>
+    <div class="rx-box" id="rx-box">${meta.wait}</div>
+    <button class="btn primary block" id="rx-btn" style="margin-top:12px" onclick="hitReaction()">${meta.verb}</button>
+    <div class="tg-result" id="tg-result"></div>`);
+  const delay = ri(900, 2500);
+  trainGame.waitTimer = setTimeout(()=>{
+    if(!trainGame || trainGame.type!=='reaction' || trainGame.k!==k) return;
+    trainGame.phase='go'; trainGame.t0 = performance.now();
+    const box = document.getElementById('rx-box');
+    if(box){ box.textContent = meta.now; box.classList.add('go'); }
+  }, delay);
+}
+function hitReaction(){
+  if(!trainGame || trainGame.type!=='reaction') return;
+  const {k, phase} = trainGame;
+  if(phase==='wait'){
+    clearTimeout(trainGame.waitTimer);
+    trainGame = null;
+    const box = document.getElementById('rx-box');
+    if(box) box.classList.add('early');
+    const r = document.getElementById('tg-result');
+    if(r){ r.style.cssText='color:var(--bad)'; r.textContent='Erken kalktın! +0'; }
+    setTimeout(()=>{ closeModal(); resolveTrain(k, 0); }, 550);
+    return;
+  }
+  const rt = performance.now() - trainGame.t0;
+  let points, label, cls;
+  if(rt<=230){ points=4; label=`Yıldırım hızı! (${Math.round(rt)} ms) +4`; cls='color:var(--good)'; }
+  else if(rt<=380){ points=2; label=`Hızlı tepki (${Math.round(rt)} ms) +2`; cls='color:#f59e0b'; }
+  else if(rt<=600){ points=1; label=`Fena değil (${Math.round(rt)} ms) +1`; cls='color:#ef4444'; }
+  else { points=0; label=`Geç kaldın (${Math.round(rt)} ms) +0`; cls='color:var(--dim)'; }
+  trainGame = null;
+  const r = document.getElementById('tg-result');
+  if(r){ r.style.cssText=cls; r.textContent = label; }
+  setTimeout(()=>{ closeModal(); resolveTrain(k, points); }, 550);
+}
+/* ============ 3) Hedef isabet dizisi (Pas / Dripling / Fizik) ============ */
+const SEQUENCE_META = {
+  pas:  {title:'Pas parkuru', desc:'Işıklanan oyuncuya elinden geldiğince hızlı ve isabetli pas at.'},
+  drib: {title:'Slalom dripling', desc:'Huniler arasında hızlıca ilerle, ışıklanan noktaya zamanında dokun.'},
+  fiz:  {title:'Kondisyon devresi', desc:'Tempoyu düşürmeden sırayla çıkan işaretlere dokun.'}
+};
+function openSequenceGame(k){
+  const meta = SEQUENCE_META[k] || SEQUENCE_META.pas;
+  trainGame = {k, type:'sequence', round:0, hits:0, total:5, timer:null};
+  modal(`<h3>${ATTR_LABEL[k]} antrenmanı — ${meta.title}</h3>
+    <p class="sub">${meta.desc} Kaçırırsan sıradaki hedefe geçilir, seri ne kadar dolu biterse gelişim o kadar büyük olur.</p>
+    <div class="sq-box" id="sq-box"><div class="sq-hint" id="sq-hint">Hazır ol...</div></div>
+    <div class="sq-progress" id="sq-progress">0/${trainGame.total} • İsabet: 0</div>
+    <div class="tg-result" id="tg-result"></div>`);
+  setTimeout(nextSeqTarget, 700);
+}
+function nextSeqTarget(){
+  if(!trainGame || trainGame.type!=='sequence') return;
+  const box = document.getElementById('sq-box');
+  if(!box){ trainGame=null; return; } // modal başka bir şeyle kapatıldı
+  if(trainGame.round>=trainGame.total){ finishSeqGame(); return; }
+  trainGame.round++;
+  box.querySelectorAll('.sq-target,.sq-hint').forEach(n=>n.remove());
+  const t = document.createElement('div');
+  t.className = 'sq-target';
+  const x = ri(12, 88), y = ri(14, 86);
+  t.style.left = x+'%'; t.style.top = y+'%';
+  t.textContent = trainGame.round;
+  const life = Math.max(430, 820 - trainGame.round*70);
+  t.onclick = ()=> hitSeqTarget(true);
+  box.appendChild(t);
+  updateSeqProgress();
+  trainGame.timer = setTimeout(()=> hitSeqTarget(false), life);
+}
+function hitSeqTarget(success){
+  if(!trainGame || trainGame.type!=='sequence') return;
+  clearTimeout(trainGame.timer);
+  if(success) trainGame.hits++;
+  const box = document.getElementById('sq-box');
+  if(box) box.querySelectorAll('.sq-target').forEach(n=>n.remove());
+  updateSeqProgress();
+  setTimeout(nextSeqTarget, 170);
+}
+function updateSeqProgress(){
+  const el = document.getElementById('sq-progress'); if(!el || !trainGame) return;
+  el.textContent = `${trainGame.round}/${trainGame.total} • İsabet: ${trainGame.hits}`;
+}
+function finishSeqGame(){
+  const {k, hits, total} = trainGame;
+  let points, label, cls;
+  if(hits>=total){ points=4; label='Kusursuz seri! +4'; cls='color:var(--good)'; }
+  else if(hits>=Math.ceil(total*0.6)){ points=2; label='İyi seri +2'; cls='color:#f59e0b'; }
+  else if(hits>=1){ points=1; label='Fena değil +1'; cls='color:#ef4444'; }
+  else { points=0; label='Seri tutmadı +0'; cls='color:var(--dim)'; }
   trainGame = null;
   const r = document.getElementById('tg-result');
   if(r){ r.style.cssText=cls; r.textContent = label; }
@@ -5161,7 +5402,7 @@ function launchMatch(wantFullscreen){
     ballX:50, ballY:50, momentum:0,
     userOn:true, drinkUsed:false, boost:0, effort:1, tactic:'dengeli',
     atkLevel:0, defLevel:0,
-    weather: pick(WEATHER),
+    weather: pick(WEATHER), isDerby: isDerbyMatch(fx.h, fx.a),
     rating:6.0, notes:[], timer:null, speed:1, paused:true, ended:false,
     varBusy:false, patched:false, fast:false, _inj:null, userPaused:false,
     stats:{shotsUs:0, shotsThem:0, momSum:0, momN:0}
@@ -5259,7 +5500,7 @@ function tunnelScreen(){
         </div>
       </div>
       <div class="shake">🤝</div>
-      <div class="sub">Takımlar sahaya çıkıyor, kaptanlar el sıkışıyor...</div>
+      <div class="sub">${M.isDerby?'🔥 Derbi günü! ':''}Takımlar sahaya çıkıyor, kaptanlar el sıkışıyor...</div>
     </div>`;
   Sfx.crowd(2.0, 0.18, 750);
   setTimeout(()=>{ Sfx.whistleOnce(0,0.22,0.16); }, 1500);
@@ -5278,7 +5519,7 @@ function pickTactic(k){
   M.tactic = k;
   $('ov-txt').textContent = 'MAÇ BAŞLIYOR';
   $('ov-sub').textContent = `${M.fx.h} — ${M.fx.a}`;
-  say(`<b>${M.fx.h} — ${M.fx.a}</b> karşılaşması başlıyor. Taktik: ${TACTICS[k].n}. ${M.weather.ic} ${M.weather.n}.`,'hi');
+  say(`<b>${M.fx.h} — ${M.fx.a}</b> karşılaşması başlıyor. Taktik: ${TACTICS[k].n}. ${M.weather.ic} ${M.weather.n}.${M.isDerby?' 🔥 Bu bir DERBİ!':''}`,'hi');
   M.paused = false;
   setTimeout(()=>{
     $('ov').style.display='none';
@@ -5891,23 +6132,23 @@ function autoPhase(atk, def, usAttack){
     const goalX = atkSide==='us' ? 97 : 3;
     if(r<0.34){
       if(gk) ballToPlayer(defSide, gk, 2); else { M.ballX=goalX; movePitch(); }
-      Sfx.save(); say(`${shooter.name} vurdu, ${gk?gk.name:'kaleci'} <b>kurtardı!</b>`); if(gk && gk.isUser) addRating(0.25, 'kurtarış'); if(gk&&gk.isUser){ S.p.season.saves++; S.p.career.saves++; gk.mSaves=(gk.mSaves||0)+1; }
+      Sfx.save(); say(saveLine(shooter.name, gk?gk.name:null)); if(gk && gk.isUser) addRating(0.25, 'kurtarış'); if(gk&&gk.isUser){ S.p.season.saves++; S.p.career.saves++; gk.mSaves=(gk.mSaves||0)+1; }
     }
     else if(r<0.46){
       M.ballX = goalX; M.ballY = clamp(M.ballY,32,68); movePitch();
-      Sfx.post(); say(`${shooter.name}'ın şutu <b>direkten</b> döndü!`,'hi'); Sfx.swell(0.14);
+      Sfx.post(); say(postLine(shooter.name),'hi'); Sfx.swell(0.14);
     }
     else if(r<0.62){
       M.ballX = atkSide==='us'?99:1; movePitch();
-      Sfx.ooh(); say(`${shooter.name} auta vurdu, tribünden "ooo" sesi yükseldi.`);
+      Sfx.ooh(); say(wideLine(shooter.name));
     }
     else if(r<0.78){
       M.ballX = clamp(M.ballX + (atkSide==='us'?-14:14), 6, 94); movePitch();
-      say(`${atk.name} atağı savunmada kesildi.`);
+      say(blockedLine(atk.name));
     }
     else {
       M.ballX = atkSide==='us'?97:3; M.ballY = pick([6,94]); movePitch();
-      say(`${atk.name} köşe vuruşu kazandı ama sonuç alamadı.`);
+      say(cornerLine(atk.name));
     }
   }
 }
@@ -5923,14 +6164,14 @@ function scoreGoal(isUsTeam, scorer, assist, isPenalty=false){
   updateScore();
   if(scorer.isUser){
     addRating(1.25,'gol');
-    say(`⚽ <b>GOOOL! ${S.p.name}</b> ağları havalandırdı! ${T.name} ${M.us.score}-${M.them.score}.`,'gl');
+    say(`${goalLineUser()} ${T.name} ${M.us.score}-${M.them.score}.`,'gl');
   } else if(assist && assist.isUser){
     addRating(0.85,'asist');
-    say(`⚽ <b>GOL!</b> ${scorer.name} tamamladı — asist <b>${S.p.name}</b>!`,'gl');
+    say(goalLineAssist(scorer.name),'gl');
   } else if(isUsTeam){
-    say(`⚽ <b>GOL!</b> ${scorer.name} ${T.name} adına kaydetti.`,'gl');
+    say(goalLineTeammate(scorer.name, T.name),'gl');
   } else {
-    say(`⚽ <b>GOL.</b> ${scorer.name} ${T.name} adına attı, skor değişti.`,'bd');
+    say(goalLineOpponent(scorer.name, T.name),'bd');
     const me = M.us.squad.find(x=>x.isUser);
     if(me && me.on && posByKey(S.p.posKey).grp==='GK') addRating(-0.25,'gol yedi');
     else if(me && me.on && posByKey(S.p.posKey).grp==='DEF') addRating(-0.12,'gol yedi');
@@ -6342,17 +6583,18 @@ function userChoice(a){
   switch(a){
     case 'sut': {
       M.stats.shotsUs++;
+      const gkS = gkOf(M.them);
       if(!goalFrom(0.06+sk('sut')*0.26)){
-        if(chance(0.45)){ Sfx.save(); say(`${S.p.name} vurdu, kaleci köşeden çeldi!`); addRating(0.1); }
-        else if(chance(0.25)){ Sfx.post(); say(`${S.p.name}'ın şutu direğe çarptı! Az kalsın...`,'hi'); addRating(0.15); }
-        else { Sfx.ooh(); say(`${S.p.name} vuruşunda isabeti tutturamadı.`); addRating(-0.15); }
+        if(chance(0.45)){ Sfx.save(); say(saveLine(S.p.name, gkS?gkS.name:null)); addRating(0.1); }
+        else if(chance(0.25)){ Sfx.post(); say(postLine(S.p.name),'hi'); addRating(0.15); }
+        else { Sfx.ooh(); say(wideLine(S.p.name)); addRating(-0.15); }
       }
       break;
     }
     case 'lob': {
       M.stats.shotsUs++;
       if(!goalFrom(0.05+sk('sut')*0.20+sk('drib')*0.08)){
-        Sfx.ooh(); say(`Aşırtma vuruş kaleciyi geçti ama üstten auta gitti.`); addRating(-0.1);
+        Sfx.ooh(); say(pick([`Aşırtma vuruş kaleciyi geçti ama üstten auta gitti.`,`Klas bir aşırtma denemesiydi ama top az farkla dışarı çıktı.`,`Kaleciyi lobla geçmeyi denedin, top üstten auta gitti.`])+matchFlavor(0.2)); addRating(-0.1);
       } else addRating(0.25,'zarif bitiriş');
       break;
     }
@@ -6385,10 +6627,10 @@ function userChoice(a){
       else if(a==='solo-chip') p0 = 0.34+sk('sut')*0.16+sk('drib')*0.18;
       else p0 = 0.30+sk('sut')*0.28;
       if(!goalFrom(clamp(p0,0.15,0.85))){
-        if(a==='solo-chip' && chance(0.35)){ Sfx.ooh(); say(`Klas vuruş kaleciyi geçti ama üstten auta gitti.`); addRating(-0.12); }
-        else if(chance(0.5)){ Sfx.save(); say(`${S.p.name} vurdu, ${gk?gk.name:'kaleci'} inanılmaz bir refleksle çıkardı!`); addRating(0.18); }
-        else if(chance(0.35)){ Sfx.post(); say(`${S.p.name}'ın vuruşu direkten döndü! Çok yakındı...`,'hi'); addRating(0.22); }
-        else { Sfx.ooh(); say(`${S.p.name} net pozisyonu değerlendiremedi, top auta gitti.`); addRating(-0.22); }
+        if(a==='solo-chip' && chance(0.35)){ Sfx.ooh(); say(pick([`Klas vuruş kaleciyi geçti ama üstten auta gitti.`,`Aşırtma denemen kaleciyi aştı ama az farkla dışarı çıktı.`])+matchFlavor(0.2)); addRating(-0.12); }
+        else if(chance(0.5)){ Sfx.save(); say(saveLine(S.p.name, gk?gk.name:null)); addRating(0.18); }
+        else if(chance(0.35)){ Sfx.post(); say(postLine(S.p.name),'hi'); addRating(0.22); }
+        else { Sfx.ooh(); say(wideLine(S.p.name)); addRating(-0.22); }
       } else addRating(0.2,'net pozisyon golü');
       break;
     }
@@ -6423,8 +6665,8 @@ function userChoice(a){
     case 'longshot': {
       M.stats.shotsUs++;
       if(!goalFrom(0.04+sk('sut')*0.18)){
-        if(chance(0.4)){ Sfx.save(); say(`Uzaktan sert vuruş, kaleci güçlükle kurtardı.`); }
-        else { Sfx.ooh(); say(`Uzaktan denedi, top auta gitti.`); addRating(-0.12); }
+        if(chance(0.4)){ Sfx.save(); say(pick([`Uzaktan sert vuruş, kaleci güçlükle kurtardı.`,`Uzaktan denedin, kaleci son anda parmak ucuyla çeldi.`])+matchFlavor(0.2)); }
+        else { Sfx.ooh(); say(pick([`Uzaktan denedi, top auta gitti.`,`Uzaktan vuruşun az farkla yandan gitti.`])+matchFlavor(0.2)); addRating(-0.12); }
       } else addRating(0.3,'uzaktan gol');
       break;
     }
@@ -6479,7 +6721,11 @@ function userChoice(a){
       ballToPlayer('us', me, 2);
       let p0 = a==='gk-stay'?0.34 : a==='gk-rush'?0.30 : 0.36;
       const prob = clamp(p0 + sk('klc')*0.45, 0.2, 0.9);
-      if(chance(prob)){ Sfx.save(); say(`🧤 <b>MÜTHİŞ KURTARIŞ!</b> ${S.p.name} takımını ayakta tuttu.`,'hi');
+      if(chance(prob)){ Sfx.save(); say(pick([
+          `🧤 <b>MÜTHİŞ KURTARIŞ!</b> ${S.p.name} takımını ayakta tuttu.`,
+          `🧤 <b>İNANILMAZ REFLEKS!</b> ${S.p.name} imkansızı başardı.`,
+          `🧤 ${S.p.name} kurtarışıyla stadı ayağa kaldırdı!`
+        ])+matchFlavor(0.25),'hi');
         addRating(0.35,'kurtarış'); S.p.season.saves++; S.p.career.saves++; me.mSaves=(me.mSaves||0)+1; Sfx.swell(0.16); }
       else { say(`Şut ağlarla buluştu, ${S.p.name} çaresiz kaldı.`); scoreGoal(false, pickAttacker(M.them), null); }
       break;
@@ -7983,15 +8229,80 @@ function videoState(){
   return st;
 }
 function saveVideoState(st){ try{ localStorage.setItem('sahaVideo', JSON.stringify(st)); }catch(e){} }
+
+/* =========================================================
+   GÜNLÜK GİRİŞ SERİSİ (STREAK)
+   Üst üste giren oyuncuya küçük bir "seri" ödülü verir. Ödül doğrudan bugünkü
+   reklam-izleme hakkına (dailyCap) ek haklar olarak ve zaman zaman nakit
+   bonus şeklinde işler — zaten var olan ödüllü video altyapısını kullanır,
+   yeni bir para kaynağı icat etmez. Cihaz bazlı localStorage'da tutulur,
+   kariyer kaydından bağımsızdır (yeni kariyer başlatsan da seri korunur). */
+const STREAK_KEY = 'sahaStreak';
+const STREAK_REWARDS = [
+  {ads:1, cash:0,      n:'Hoş geldin ödülü'},
+  {ads:1, cash:15000,  n:'2. gün ödülü'},
+  {ads:2, cash:0,      n:'3. gün ödülü'},
+  {ads:2, cash:35000,  n:'4. gün ödülü'},
+  {ads:2, cash:0,      n:'5. gün ödülü'},
+  {ads:3, cash:60000,  n:'6. gün ödülü'},
+  {ads:5, cash:150000, n:'7. gün — BÜYÜK ödül! 🏆'}
+];
+let streakBonusAdsToday = 0;
+function dateKeyOffset(days){
+  const d = new Date(); d.setDate(d.getDate()+days);
+  return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+}
+function loadStreakRaw(){ try{ return JSON.parse(localStorage.getItem(STREAK_KEY)||'null'); }catch(e){ return null; } }
+function saveStreakRaw(st){ try{ localStorage.setItem(STREAK_KEY, JSON.stringify(st)); }catch(e){} }
+function currentStreakCount(){ const st = loadStreakRaw(); return (st && st.day===todayKey()) ? (st.count||1) : 0; }
+/* Bugün ilk kez mi giriliyor bak; öyleyse seriyi ilerlet (ya da dünle bağlantı
+   kopmuşsa 1'e sıfırla) ve bugüne özel ödülü hesapla. Aynı gün içinde tekrar
+   çağrılırsa (sayfa yenilenmesi vb.) sadece daha önce belirlenen bonusu geri
+   verir, ödülü ikinci kez dağıtmaz. */
+function computeStreak(){
+  const today = todayKey();
+  const prev = loadStreakRaw();
+  if(prev && prev.day===today) return Object.assign({}, prev, {isNew:false});
+  const yesterday = dateKeyOffset(-1);
+  const count = (prev && prev.day===yesterday) ? (prev.count||1)+1 : 1;
+  const reward = STREAK_REWARDS[(count-1)%STREAK_REWARDS.length];
+  const st = {day:today, count, bonusAds:reward.ads||0};
+  saveStreakRaw(st);
+  return Object.assign({}, st, {isNew:true});
+}
+function checkDailyStreak(){
+  const st = computeStreak();
+  streakBonusAdsToday = st.bonusAds||0;
+  if(!st.isNew) return;
+  const reward = STREAK_REWARDS[(st.count-1)%STREAK_REWARDS.length];
+  if(S && reward.cash>0){ S.p.money += reward.cash; save(); }
+  showStreakModal(st.count, reward);
+  render();
+}
+function showStreakModal(count, reward){
+  modal(`<div class="awardstage" style="padding:18px 10px">
+      <div class="spotlight"></div>
+      <div class="trophy">🔥</div>
+      <div class="aline">GİRİŞ SERİSİ</div>
+      <div class="aname">${count}. GÜN</div>
+      <div class="asub">${reward.n}</div>
+    </div>
+    <div class="statbox spread" style="margin-top:10px"><span class="sub">Bugüne özel ekstra reklam hakkı</span><b style="color:var(--good)">+${reward.ads}</b></div>
+    ${reward.cash>0?`<div class="statbox spread"><span class="sub">Bonus nakit</span><b style="color:var(--good)">${TL(reward.cash)}</b></div>`:''}
+    <p class="sub" style="margin-top:8px;text-align:center">Her gün üst üste giriş yaptıkça ödüller büyür. Bir gün ara verirsen seri 1'den başlar.</p>
+    <button class="btn primary block" style="margin-top:12px" onclick="closeModal()">Harika!</button>`);
+}
+
 function videoInfo(){
   const st = videoState();
-  return {n:st.n, left:Math.max(0, REWARD_CONFIG.dailyCap-st.n),
+  const cap = REWARD_CONFIG.dailyCap + (streakBonusAdsToday||0);
+  return {n:st.n, left:Math.max(0, cap-st.n), cap,
           wait:Math.max(0, Math.ceil((st.last + REWARD_CONFIG.cooldownSec*1000 - Date.now())/1000)), reward:rewardAmount()};
 }
 /* Tüm ödüllü reklam butonlarında aynı paylaşılan günlük hakkı göstermek için:
    "(kalan/toplam)" rozeti. Buton her render edildiğinde başlangıç değeri bu ile
    yazılır; sonrasında updateVideoButtons() her saniye günceller. */
-function adCapBadge(){ const v = videoInfo(); return `(${v.left}/${REWARD_CONFIG.dailyCap})`; }
+function adCapBadge(){ const v = videoInfo(); return `(${v.left}/${v.cap})`; }
 function videoBlockHTML(){
   const v = videoInfo();
   return `<div class="packcard vid">
@@ -8012,7 +8323,7 @@ function updateVideoButtons(){
     b.textContent = vidBusy ? '…' : v.left<=0 ? 'Yarın' : v.wait>0 ? `⏳ ${v.wait} sn` : 'İzle';
   });
   document.querySelectorAll('.vidsub').forEach(e=>{
-    e.textContent = v.left>0 ? `Bugün ${v.left}/${REWARD_CONFIG.dailyCap} hak kaldı` : 'Bugünkü haklarını kullandın';
+    e.textContent = v.left>0 ? `Bugün ${v.left}/${v.cap} hak kaldı` : 'Bugünkü haklarını kullandın';
   });
   document.querySelectorAll('.adcap').forEach(e=>{ e.textContent = `(${v.left}/${REWARD_CONFIG.dailyCap})`; });
   document.querySelectorAll('.adcapbtn').forEach(b=>{ b.disabled = vidBusy || v.left<=0 || v.wait>0; });
@@ -8335,9 +8646,10 @@ function bindUI(){
     Sfx.init();
     go('v-match');
     initRewardedProvider(); // reklam altyapısı ancak gerçek oyun ekranına geçildiğinde yüklensin
+    setTimeout(checkDailyStreak, 500);
   });
   $('s-load').addEventListener('click', ()=>{
-    if(load()){ $('setup').style.display='none'; $('game').style.display='block'; go('v-match'); initRewardedProvider(); }
+    if(load()){ $('setup').style.display='none'; $('game').style.display='block'; go('v-match'); initRewardedProvider(); setTimeout(checkDailyStreak, 500); }
     else toast('Kayıt bulunamadı.');
   });
   $('s-restore').addEventListener('click', openRestoreModal);
@@ -8359,6 +8671,7 @@ function bindUI(){
     $('setup').style.display='none'; $('game').style.display='block';
     go('v-match');
     initRewardedProvider(); // reklam altyapısı ancak gerçek oyun ekranına geçildiğinde yüklensin
+    setTimeout(checkDailyStreak, 700);
   }
   if('serviceWorker' in navigator){
     window.addEventListener('load', registerSW);
