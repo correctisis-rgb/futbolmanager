@@ -505,6 +505,21 @@ td.num,th.num{text-align:center;width:26px;white-space:nowrap;}
   background:conic-gradient(from 0deg at 50% -20%, transparent 0 78%, rgba(255,255,255,.06) 82%, transparent 86% 100%);
   animation:spinLight 6s linear infinite;}
 @keyframes spinLight{to{transform:rotate(360deg)}}
+
+/* ---- günlük giriş serisi ödül panosu (3'lü sıra, 7 gün) ---- */
+.streakgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
+.streakday{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:10px 4px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.streakday-n{font-family:'Barlow Condensed';font-weight:700;font-size:.8rem;color:var(--dim);}
+.streakday-ic{font-size:1.3rem;line-height:1.1;}
+.streakday-amt{font-size:.72rem;font-weight:700;color:var(--dim);}
+.streakday.done{border-color:#2e5a42;background:#152820;}
+.streakday.done .streakday-n,.streakday.done .streakday-amt{color:var(--good);}
+.streakday.today{border-color:#caa42e;background:var(--flood);box-shadow:0 0 14px rgba(255,210,74,.5);animation:sqPop .3s ease;}
+.streakday.today .streakday-n,.streakday.today .streakday-amt{color:#241c00;}
+.streakday.future{opacity:.55;}
+.streakday.big{grid-column:span 3;flex-direction:row;justify-content:center;gap:10px;padding:12px;}
+.streakday.big .streakday-ic{font-size:1.6rem;}
 .livebar{display:flex;height:7px;border-radius:999px;overflow:hidden;border:1px solid var(--line);margin-top:6px;}
 .livebar i{display:block;height:100%;}
 
@@ -8313,6 +8328,17 @@ function checkDailyStreak(){
   render();
 }
 function showStreakModal(count, reward){
+  const cycleDay = ((count-1)%STREAK_REWARDS.length)+1;
+  const cells = STREAK_REWARDS.map((r,i)=>{
+    const day = i+1, last = day===STREAK_REWARDS.length;
+    const state = day<cycleDay ? 'done' : day===cycleDay ? 'today' : 'future';
+    const ic = state==='done' ? '✅' : last ? '🏆' : state==='today' ? '🎁' : '🔒';
+    return `<div class="streakday ${state}${last?' big':''}">
+      <div class="streakday-n">${day}. Gün</div>
+      <div class="streakday-ic">${ic}</div>
+      <div class="streakday-amt">${TL(r.cash)}</div>
+    </div>`;
+  }).join('');
   modal(`<div class="awardstage" style="padding:18px 10px">
       <div class="spotlight"></div>
       <div class="trophy">🔥</div>
@@ -8320,8 +8346,9 @@ function showStreakModal(count, reward){
       <div class="aname">${count}. GÜN</div>
       <div class="asub">${reward.n}</div>
     </div>
-    <div class="statbox spread" style="margin-top:10px"><span class="sub">Bonus nakit</span><b style="color:var(--good)">${TL(reward.cash)}</b></div>
-    <p class="sub" style="margin-top:8px;text-align:center">Her gün üst üste giriş yaptıkça ödül büyür. Bir gün ara verirsen seri 1'den başlar.</p>
+    <div class="statbox spread" style="margin-top:10px"><span class="sub">Bugünün ödülü</span><b style="color:var(--good)">${TL(reward.cash)}</b></div>
+    <div class="streakgrid">${cells}</div>
+    <p class="sub" style="margin-top:10px;text-align:center">Her gün üst üste giriş yaptıkça ödül büyür. 7. günde büyük ödül alınır ve seri baştan başlar. Bir gün ara verirsen seri 1'den başlar.</p>
     <button class="btn primary block" style="margin-top:12px" onclick="closeModal()">Harika!</button>`);
 }
 
