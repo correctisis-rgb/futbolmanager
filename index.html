@@ -2925,7 +2925,7 @@ function load(){
     return true;
   }catch(e){ return false; }
 }
-function wipe(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} S = null; }
+function wipe(){ try{ localStorage.removeItem(SAVE_KEY); localStorage.removeItem(STREAK_KEY); }catch(e){} S = null; }
 function confirmJubilee(){
   modal(`<h3 style="color:var(--flood)">Jübile yapılsın mı?</h3>
     <p class="sub">Kariyerini futbolcu olarak bitirip Teknik Direktör olmak istediğine emin misin?</p>
