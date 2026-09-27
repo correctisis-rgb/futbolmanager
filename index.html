@@ -2249,21 +2249,24 @@ function visibleBadges(p){
 /* başarım şartı sağlandığında: sadece bildir, ödülü kariyerdeki "Başarımlar" sekmesinden elle topla */
 /* ---------- Kupa Müzesi ---------- */
 // p.career.trophies düz string dizisi olarak tutuluyor (örn. "2027/28 Şampiyonlar Ligi").
-// Bu fonksiyon metne bakarak uygun ikon/renk/başlık üretir.
+// Bu fonksiyon metne bakarak uygun ikon/renk/başlık/prestij kademesi (tier) üretir.
+// Tier'ler, transfer pazarındaki oyuncu kartlarıyla AYNI görsel şablonu (parıltılı, renkli çerçeve) kullanır.
 function trophyMeta(str){
-  if(/^Oyunculuk kariyeri/.test(str)) return {icon:'👔', title:'Jübile', sub:str, color:'var(--dim)'};
-  if(/Şampiyonlar Ligi/.test(str)) return {icon:'🏆', title:'Şampiyonlar Ligi', color:'#ffd24a'};
-  if(/Türkiye Kupası/.test(str)) return {icon:'🏆', title:'Türkiye Kupası', color:'#60a5fa'};
+  const seasonMatch = str.match(/^(\d{4}\/\d{2})\s+/);
+  const season = seasonMatch ? seasonMatch[1] : '';
+  if(/^Oyunculuk kariyeri/.test(str)) return {icon:'👔', title:'Jübile', sub:str, tier:'pro', word:'KARİYER DÖNÜM NOKTASI', season:''};
+  if(/Şampiyonlar Ligi/.test(str)) return {icon:'🏆', title:'Şampiyonlar Ligi', sub:'Avrupa şampiyonu', tier:'elite', word:'EFSANEVİ', season};
   if(/\(TD\)$/.test(str)){
     const inner = str.replace(' (TD)','');
     const m2 = inner.match(/^(\d{4}\/\d{2})\s+(.*)$/);
-    return {icon:'👔🥇', title: m2 ? `${m2[2]} Şampiyonu` : inner, sub: (m2?m2[1]+' • ':'')+'Teknik direktör olarak', color:'#a855f7'};
+    return {icon:'👔', title: m2?`${m2[2]} Şampiyonu`:inner, sub:'Teknik direktör olarak', tier:'good', word:'YÖNETİM BAŞARISI', season: m2?m2[1]:''};
   }
-  if(/Gol Kralı/.test(str)) return {icon:'⚽', title:'Gol Kralı', color:'#34d399'};
-  if(/Yılın Genç Yeteneği/.test(str)) return {icon:'💎', title:'Yılın Genç Yeteneği', color:'#60a5fa'};
-  if(/Yılın Oyuncusu/.test(str)) return {icon:'⭐', title:'Yılın Oyuncusu', color:'#facc15'};
-  if(/Süper Lig$|Avrupa Elit Ligi$/.test(str)) return {icon:'🥇', title:str.replace(/^\S+\s/,'')+' Şampiyonu', color:'#f97316'};
-  return {icon:'🏅', title:str, color:'var(--flood)'};
+  if(/Türkiye Kupası/.test(str)) return {icon:'🏆', title:'Türkiye Kupası', sub:'Kupa şampiyonu', tier:'good', word:'KUPA ZAFERİ', season};
+  if(/Gol Kralı/.test(str)) return {icon:'⚽', title:'Gol Kralı', sub:'Ligin en golcüsü', tier:'pro', word:'GOLCÜ', season};
+  if(/Yılın Genç Yeteneği/.test(str)) return {icon:'💎', title:'Yılın Genç Yeteneği', sub:'Geleceğin yıldızı', tier:'youth', word:'GENÇ YETENEK', season};
+  if(/Yılın Oyuncusu/.test(str)) return {icon:'⭐', title:'Yılın Oyuncusu', sub:'Sezonun en iyisi', tier:'great', word:'MVP', season};
+  if(/Süper Lig$|Avrupa Elit Ligi$/.test(str)) return {icon:'🥇', title:str.replace(/^\S+\s/,'')+' Şampiyonu', sub:'Lig birinciliği', tier:'great', word:'ŞAMPİYON', season};
+  return {icon:'🏅', title:str, sub:'', tier:'pro', word:'BAŞARIM', season};
 }
 function renderTrophyMuseumHtml(){
   const p = S.p;
@@ -2272,24 +2275,27 @@ function renderTrophyMuseumHtml(){
     return `<h3>🏛️ Kupa Müzesi</h3><p class="sub">Henüz vitrinin boş. Sahaya çık, ilk kupanı kazan!</p>
       <button class="btn primary block" style="margin-top:10px" onclick="closeModal()">Kapat</button>`;
   }
+  const metas = list.map(trophyMeta);
   const counts = {};
-  list.forEach(t=>{ const m=trophyMeta(t); counts[m.title]=(counts[m.title]||0)+1; });
+  metas.forEach(m=>{ counts[m.title]=(counts[m.title]||0)+1; });
   const summaryLine = Object.entries(counts).map(([k,v])=>`${k} × ${v}`).join(' • ');
-  const cards = list.map(t=>{
-    const m = trophyMeta(t);
-    const seasonMatch = t.match(/^(\d{4}\/\d{2})\s+/);
-    const season = seasonMatch ? seasonMatch[1] : '';
-    return `<div class="statbox" style="display:flex;align-items:center;gap:10px;border-color:${m.color}">
-      <div style="font-size:1.6rem;line-height:1">${m.icon}</div>
-      <div style="flex:1">
-        <div style="font-weight:700">${m.title}</div>
-        <div class="sub">${m.sub || (season || 'Kariyer boyu')}</div>
+  const cards = metas.map(m=>`
+    <div class="pcard-item">
+      <div class="pcard tier-${m.tier}">
+        <div class="pcard-body">
+          <span class="pcard-num">${m.season||'—'}</span>
+          <div class="pcard-head" style="justify-content:center;width:100%;margin-top:4px">
+            <span style="font-size:2.1rem;filter:drop-shadow(0 0 4px rgba(0,0,0,.5))">${m.icon}</span>
+          </div>
+          <span class="pcard-tierword">${m.word}</span>
+          <div class="pcard-name">${m.title}</div>
+          <span class="pcard-role">${m.sub}</span>
+        </div>
       </div>
-    </div>`;
-  }).join('');
+    </div>`).join('');
   return `<h3>🏛️ Kupa Müzesi <span class="chip">${list.length}</span></h3>
     <p class="sub" style="margin-bottom:10px">${summaryLine}</p>
-    <div style="display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow-y:auto">${cards}</div>
+    <div class="squad-grid" style="grid-template-columns:repeat(2,1fr);max-height:64vh;overflow-y:auto;padding-bottom:4px">${cards}</div>
     <button class="btn primary block" style="margin-top:12px" onclick="closeModal()">Kapat</button>`;
 }
 function openTrophyMuseum(){ modal(renderTrophyMuseumHtml()); }
@@ -2621,7 +2627,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v7.7';
+const APP_VERSION = 'v7.8';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
