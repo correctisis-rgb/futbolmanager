@@ -8421,12 +8421,25 @@ function openWheelModal(){
       <div class="wheel-hub">🎯</div>
     </div>
     <button class="btn primary block" id="wheel-spin-btn" style="margin-top:14px" ${avail?'':'disabled'} onclick="spinWheel()">${avail?'ÇEVİR':'Yarın tekrar gel'}</button>
+    ${REWARD_CONFIG.enabled ? `<button class="btn sm green block adcapbtn" id="wheel-ad-btn" style="margin-top:8px" onclick="watchAdForSpin()"><span class="adcap">${adCapBadge()}</span> 📺 Reklam izle, bir kez daha çevir</button>` : ''}
     <button class="btn block" style="margin-top:8px" onclick="closeModal()">Kapat</button>`);
+  updateVideoButtons();
 }
 function spinWheel(){
   if(!S || wheelBusy || !wheelAvailable()) return;
+  doSpin(true);
+}
+async function watchAdForSpin(){
+  if(!S || wheelBusy) return;
+  const r = await requestRewardedAd();
+  if(!r.ok) return;
+  closeModal();       // ödüllü reklam akışı modalı kendi UI'siyle doldurmuş olabilir
+  openWheelModal();    // çarkı temiz haliyle tekrar aç
+  setTimeout(()=>doSpin(false), 60); // modal DOM'a otursun, sonra hemen çevir
+}
+function doSpin(consumesFreeSpin){
   wheelBusy = true;
-  const btn = $('wheel-spin-btn'); if(btn){ btn.disabled = true; btn.textContent = 'Çevriliyor…'; }
+  const btn = $('wheel-spin-btn'); if(btn && consumesFreeSpin){ btn.disabled = true; btn.textContent = 'Çevriliyor…'; }
   const st = $('wheel-status'); if(st) st.textContent = 'Çark dönüyor…';
   const idx = pickWheelPrize();
   const seg = 360/WHEEL_PRIZES.length;
@@ -8441,15 +8454,16 @@ function spinWheel(){
     wheelEl.style.transition = 'transform 4s cubic-bezier(.12,.66,.1,1)';
     wheelEl.style.transform = `rotate(${rotation}deg)`;
   }
-  setTimeout(()=>finishWheel(idx), reduceMotion ? 350 : 4200);
+  setTimeout(()=>finishWheel(idx, consumesFreeSpin), reduceMotion ? 350 : 4200);
 }
-function finishWheel(idx){
+function finishWheel(idx, consumesFreeSpin){
   wheelBusy = false;
   if(!S) return;
   const prize = WHEEL_PRIZES[idx];
   grantWheelPrize(prize);
-  saveWheelState({day:todayKey()});
-  const btn = $('wheel-spin-btn'); if(btn){ btn.disabled = true; btn.textContent = 'Yarın tekrar gel'; }
+  if(consumesFreeSpin) saveWheelState({day:todayKey()});
+  const btn = $('wheel-spin-btn');
+  if(btn){ const avail = wheelAvailable(); btn.disabled = !avail; btn.textContent = avail ? 'ÇEVİR' : 'Yarın tekrar gel'; }
   const st = $('wheel-status'); if(st){ st.style.color = 'var(--good)'; st.textContent = `🎉 Kazandın: ${prize.label}`; }
   Sfx.coin();
   coinPopup(prize.kind==='cash' ? `+${TL(prize.amount)} 🪙` : `+1 ${prize.label}`);
