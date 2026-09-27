@@ -1051,6 +1051,23 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
 .testflag{display:inline-block;background:#4c1d1d;border:1px solid #8b2f2f;color:#ffdede;border-radius:999px;
   padding:2px 10px;font-size:.72rem;font-weight:700;}
 
+/* ---------- Şans çarkı ---------- */
+.wheelwrap{position:relative;width:250px;height:250px;margin:12px auto 4px;}
+.wheel{width:100%;height:100%;border-radius:50%;position:relative;overflow:hidden;
+  border:6px solid var(--flood);box-shadow:0 0 0 2px var(--night) inset,0 8px 22px rgba(0,0,0,.35);}
+.wheel-seg{position:absolute;top:50%;left:50%;width:0;height:0;}
+.wheel-seg .wseg-content{position:absolute;top:-108px;left:-32px;width:64px;text-align:center;}
+.wheel-seg .wseg-ic{display:block;font-size:1.3rem;line-height:1;}
+.wheel-seg .wseg-lb{display:block;font-size:.56rem;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55);margin-top:2px;}
+.wheel-ptr{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:1.7rem;z-index:2;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.4));}
+.wheel-hub{position:absolute;top:50%;left:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;
+  background:var(--flood);border:3px solid var(--night);z-index:2;display:flex;align-items:center;
+  justify-content:center;font-size:1.15rem;}
+
+/* ---------- Arkadaş davet ---------- */
+.refcode-box{font-size:1.2rem;font-weight:800;letter-spacing:3px;color:var(--flood);}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
 </style>
 </head>
@@ -1255,7 +1272,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
         <button data-pane="c-health">Sağlık<span class="tabdot" id="dot-health"></span></button>
         <button data-pane="c-room">Soyunma Odası</button>
         <button data-pane="c-shop" id="tab-c-shop">Mağaza</button>
-        <button data-pane="c-cash">Para Kazan</button>
+        <button data-pane="c-cash">Para Kazan<span class="tabdot" id="dot-cash-tab"></span></button>
         <button data-pane="c-stad">Stadyum</button>
         <button data-pane="c-sponsor">Sponsorlar<span class="tabdot" id="dot-sponsor-tab"></span></button>
         <button data-pane="c-contract">Sözleşme<span class="tabdot" id="dot-contract-tab"></span></button>
@@ -1787,6 +1804,7 @@ const Sfx = {
   kick(){ this.init(); this.tone(180,0.12,0.4,'triangle',48); this.noise(0.08, 900, 1, 0.25); },
   post(){ this.init(); this.tone(880,0.5,0.3,'square',720); this.tone(1320,0.4,0.15,'sine'); },
   card(){ this.init(); this.tone(1200,0.09,0.25,'square'); this.tone(900,0.12,0.2,'square',700,0.1); },
+  coin(){ this.init(); this.tone(700,0.09,0.3,'triangle',1300); this.tone(1300,0.14,0.22,'sine',1900,0.08); },
   save(){ this.init(); this.noise(0.25, 500, 1, 0.3); this.crowd(1.0, 0.16, 520); },
   crowd(dur=1.5, vol=0.2, freq=700){ this.init(); this.noise(dur, freq, 0.7, vol, 'bandpass'); },
   boo(){ this.init(); if(!this.ctx) return;
@@ -3140,6 +3158,8 @@ function updateNavBadges(){
   setNavDot('dot-sponsor-tab', isPlayer ? SPONSORS.filter(s=>p.fame>=s.req && !p.sponsors.includes(s.id)).length : 0);
   setNavDot('dot-contract-tab', isPlayer && canJubilee(p) ? 1 : 0);
   setNavDot('dot-badges-tab', (p.badgesEligible||[]).length);
+  // Şans çarkı: bugün henüz ücretsiz çevrilmediyse "Para Kazan" sekmesinde küçük bir rozet göster
+  setNavDot('dot-cash-tab', wheelAvailable() ? 1 : 0);
 }
 
 /* ---------- Jübile sonrası menü/tab düzeni ----------
@@ -8352,6 +8372,253 @@ function showStreakModal(count, reward){
     <button class="btn primary block" style="margin-top:12px" onclick="closeModal()">Harika!</button>`);
 }
 
+/* =========================================================
+   ŞANS ÇARKI
+   Günde bir kere ücretsiz çevrilen çark: küçük nakit, enerji içeceği
+   ya da ilk yardım paketi verir. Streak sistemi gibi cihaz bazlı
+   localStorage'da tutulur (kariyer kaydından bağımsız), ödül ise
+   o an açık olan kariyere (S.p) yazılır. */
+const WHEEL_KEY = 'sahaWheel';
+const WHEEL_PRIZES = [
+  {ic:'💵', label:'1.000₺',        kind:'cash',   amount:1000,  weight:22, col:'#3b5470'},
+  {ic:'⚡', label:'Enerji İçeceği', kind:'drink',  weight:16, col:'#c8862a'},
+  {ic:'💵', label:'4.000₺',        kind:'cash',   amount:4000,  weight:20, col:'#2f4d63'},
+  {ic:'🧰', label:'İlk Yardım',    kind:'medkit', weight:14, col:'#1f6b46'},
+  {ic:'💵', label:'8.000₺',        kind:'cash',   amount:8000,  weight:14, col:'#3b5470'},
+  {ic:'💵', label:'2.000₺',        kind:'cash',   amount:2000,  weight:18, col:'#2f4d63'},
+  {ic:'🏆', label:'BÜYÜK 20.000₺', kind:'cash',   amount:20000, weight:4,  col:'#a3791f'},
+  {ic:'⚡', label:'Enerji İçeceği', kind:'drink',  weight:12, col:'#c8862a'}
+];
+function wheelStateRaw(){ try{ return JSON.parse(localStorage.getItem(WHEEL_KEY)||'null'); }catch(e){ return null; } }
+function saveWheelState(st){ try{ localStorage.setItem(WHEEL_KEY, JSON.stringify(st)); }catch(e){} }
+function wheelAvailable(){ const st = wheelStateRaw(); return !st || st.day!==todayKey(); }
+function pickWheelPrize(){
+  const total = WHEEL_PRIZES.reduce((s,p)=>s+p.weight,0);
+  let r = Math.random()*total;
+  for(let i=0;i<WHEEL_PRIZES.length;i++){ r -= WHEEL_PRIZES[i].weight; if(r<=0) return i; }
+  return WHEEL_PRIZES.length-1;
+}
+function wheelConicGradient(){
+  const n = WHEEL_PRIZES.length, seg = 360/n;
+  return 'conic-gradient(' + WHEEL_PRIZES.map((p,i)=>`${p.col} ${i*seg}deg ${(i+1)*seg}deg`).join(',') + ')';
+}
+let wheelBusy = false;
+function openWheelModal(){
+  if(!S) return;
+  const seg = 360/WHEEL_PRIZES.length;
+  const segHtml = WHEEL_PRIZES.map((p,i)=>{
+    const angle = i*seg + seg/2;
+    return `<div class="wheel-seg" style="transform:rotate(${angle}deg)">
+      <div class="wseg-content"><span class="wseg-ic">${p.ic}</span><span class="wseg-lb">${p.label}</span></div>
+    </div>`;
+  }).join('');
+  const avail = wheelAvailable();
+  modal(`<h3 style="color:var(--flood)">🎡 Şans Çarkı</h3>
+    <p class="sub" id="wheel-status" style="text-align:center">${avail?'Günün ücretsiz çevirişi seni bekliyor!':'Bugünkü ücretsiz çevirişini kullandın, yarın tekrar gel.'}</p>
+    <div class="wheelwrap">
+      <div class="wheel-ptr">🔻</div>
+      <div class="wheel" id="wheelEl" style="background:${wheelConicGradient()}">${segHtml}</div>
+      <div class="wheel-hub">🎯</div>
+    </div>
+    <button class="btn primary block" id="wheel-spin-btn" style="margin-top:14px" ${avail?'':'disabled'} onclick="spinWheel()">${avail?'ÇEVİR':'Yarın tekrar gel'}</button>
+    <button class="btn block" style="margin-top:8px" onclick="closeModal()">Kapat</button>`);
+}
+function spinWheel(){
+  if(!S || wheelBusy || !wheelAvailable()) return;
+  wheelBusy = true;
+  const btn = $('wheel-spin-btn'); if(btn){ btn.disabled = true; btn.textContent = 'Çevriliyor…'; }
+  const st = $('wheel-status'); if(st) st.textContent = 'Çark dönüyor…';
+  const idx = pickWheelPrize();
+  const seg = 360/WHEEL_PRIZES.length;
+  const center = idx*seg + seg/2;
+  const jitter = (Math.random()*0.5 - 0.25)*seg;
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rotation = 360*6 + (360-center) + jitter;
+  const wheelEl = $('wheelEl');
+  if(wheelEl){
+    wheelEl.style.transition = 'none'; wheelEl.style.transform = 'rotate(0deg)';
+    void wheelEl.offsetWidth; // reflow'u zorla, animasyon sıfırdan başlasın
+    wheelEl.style.transition = 'transform 4s cubic-bezier(.12,.66,.1,1)';
+    wheelEl.style.transform = `rotate(${rotation}deg)`;
+  }
+  setTimeout(()=>finishWheel(idx), reduceMotion ? 350 : 4200);
+}
+function finishWheel(idx){
+  wheelBusy = false;
+  if(!S) return;
+  const prize = WHEEL_PRIZES[idx];
+  grantWheelPrize(prize);
+  saveWheelState({day:todayKey()});
+  const btn = $('wheel-spin-btn'); if(btn){ btn.disabled = true; btn.textContent = 'Yarın tekrar gel'; }
+  const st = $('wheel-status'); if(st){ st.style.color = 'var(--good)'; st.textContent = `🎉 Kazandın: ${prize.label}`; }
+  Sfx.coin();
+  coinPopup(prize.kind==='cash' ? `+${TL(prize.amount)} 🪙` : `+1 ${prize.label}`);
+  toast(`🎡 ${prize.label} kazandın!`);
+  save(); render();
+}
+function grantWheelPrize(p){
+  if(!S) return;
+  if(p.kind==='cash'){ S.p.money += p.amount; }
+  else if(p.kind==='drink'){ const d = drInv(); d.e1 = (d.e1||0)+1; syncDrinks(); }
+  else if(p.kind==='medkit'){ S.p.medkits = (S.p.medkits||0)+1; }
+}
+
+/* =========================================================
+   ARKADAŞ DAVET SİSTEMİ
+   Sunucusuz çalışır: her cihaz kendi 6 haneli davet koduna sahiptir.
+   Bir arkadaş bu kodu (link veya elle) girip katılınca kendisi hemen
+   ödülünü alır ve kendisine, davet edeni tanımlayan bir "onay kodu"
+   üretilir. Bu kodu davet edene geri gönderdiğinde, o da kendi
+   kodunu kullanarak (imzayı yeniden hesaplayıp doğrulayarak) kendi
+   ödülünü talep edebilir. Her onay kodu yalnızca bir kez kullanılabilir. */
+const REF_SALT = 'SahaKariyer-Ref-v1';
+const REF_REWARD_INVITEE_CASH = 12000;
+const REF_REWARD_INVITER_CASH = 15000;
+const REF_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // karışabilecek 0/O, 1/I gibi karakterler yok
+function genRefCode(){
+  let s=''; for(let i=0;i<6;i++) s += REF_CODE_CHARS[Math.floor(Math.random()*REF_CODE_CHARS.length)];
+  return s;
+}
+function myRefCode(){
+  try{
+    let c = localStorage.getItem('sahaRefCode');
+    if(!c || c.length!==6){ c = genRefCode(); localStorage.setItem('sahaRefCode', c); }
+    return c;
+  }catch(e){ return 'AAAAAA'; }
+}
+function refClaimed(){ try{ return localStorage.getItem('sahaRefClaimed')==='1'; }catch(e){ return false; } }
+function setRefClaimed(){ try{ localStorage.setItem('sahaRefClaimed','1'); }catch(e){} }
+function computeRefHash(code, nonce){ return sha256hex(code+'|'+nonce+'|'+REF_SALT).slice(0,6).toUpperCase(); }
+function refConfCode(friendCode){
+  const nonce = Math.random().toString(36).slice(2,6).toUpperCase().padEnd(4,'X');
+  return `${friendCode}-${nonce}-${computeRefHash(friendCode,nonce)}`;
+}
+function parseRefConf(raw){
+  const s = normCode(raw);
+  if(s.length!==16) return null;
+  return {code:s.slice(0,6), nonce:s.slice(6,10), hash:s.slice(10,16)};
+}
+function copyText(text, okMsg){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>toast(okMsg||'📋 Kopyalandı!')).catch(()=>fallbackCopyText(text, okMsg));
+  } else fallbackCopyText(text, okMsg);
+}
+function fallbackCopyText(text, okMsg){
+  try{
+    const ta = document.createElement('textarea'); ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    toast(okMsg||'📋 Kopyalandı!');
+  }catch(e){ toast('Kopyalanamadı, elle seçip kopyalayabilirsin.'); }
+}
+function inviteLinkFor(code){
+  try{ return location.origin + location.pathname + '?ref=' + code; }catch(e){ return code; }
+}
+function copyInviteLink(){
+  const code = myRefCode();
+  copyText(`${inviteLinkFor(code)} (Kod: ${code})`, '📋 Davet linki kopyalandı!');
+}
+async function shareInviteLink(){
+  const code = myRefCode();
+  const url = inviteLinkFor(code);
+  const text = `Saha Kariyer'de futbolcu kariyerimi yaşıyorum ⚽ Kodumla katıl, ikimiz de ödül kazanalım: ${code}`;
+  if(navigator.share){
+    try{ await navigator.share({title:'Saha Kariyer', text, url}); }catch(e){ /* paylaşım iptal edildi */ }
+    return;
+  }
+  copyInviteLink();
+}
+function applyFriendCodeFromInput(){
+  const inp = $('friend-code-input'); if(!inp) return;
+  applyFriendCode(inp.value, false);
+}
+function applyFriendCode(raw, auto){
+  if(!S) return;
+  const code = normCode(raw);
+  if(code.length!==6){ if(!auto) toast('Kod 6 karakter olmalı.'); return; }
+  if(code===myRefCode()){ if(!auto) toast('Kendi kodunu giremezsin 🙂'); return; }
+  if(refClaimed()){ if(!auto) toast('Bu cihazda davet ödülü zaten alınmış.'); return; }
+  setRefClaimed();
+  S.p.money += REF_REWARD_INVITEE_CASH;
+  const d = drInv(); d.e1 = (d.e1||0)+1; syncDrinks();
+  save();
+  Sfx.coin();
+  showFriendJoinedModal(refConfCode(code));
+  render();
+}
+function showFriendJoinedModal(conf){
+  modal(`<div class="awardstage" style="padding:18px 10px">
+      <div class="spotlight"></div>
+      <div class="trophy">🎉</div>
+      <div class="aline">DAVET ÖDÜLÜ</div>
+      <div class="aname">Hoş geldin!</div>
+      <div class="asub">+${TL(REF_REWARD_INVITEE_CASH)} ve +1 enerji içeceği kazandın</div>
+    </div>
+    <p class="sub" style="margin-top:10px">Seni davet eden arkadaşının da ödülünü alması için bu <b>onay kodunu</b> ona gönder:</p>
+    <div class="statbox spread" style="margin-top:8px">
+      <b class="refcode-box" style="font-size:1rem;letter-spacing:1.5px">${conf}</b>
+      <button class="btn sm" onclick="copyText('${conf}','📋 Onay kodu kopyalandı!')">📋 Kopyala</button>
+    </div>
+    <button class="btn primary block" style="margin-top:12px" onclick="closeModal()">Harika!</button>`);
+}
+function openRefConfirmClaimModal(){
+  modal(`<h3 style="color:var(--flood)">🎉 Arkadaşın katıldı mı?</h3>
+    <p class="sub">Arkadaşın senin kodunla katıldıktan sonra kendisine verilen <b>onay kodunu</b> buraya yapıştır, ödülünü al.</p>
+    <input id="ref-conf-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="18"
+      placeholder="ONAY KODU" style="width:100%;margin-top:10px;padding:12px;border-radius:10px;border:1px solid var(--line);
+      background:var(--inputbg);color:var(--ink);font-size:1rem;letter-spacing:1.5px;text-transform:uppercase;text-align:center"
+      onkeydown="if(event.key==='Enter')claimReferrerReward()">
+    <p id="ref-conf-msg" class="sub" style="min-height:1.3em;margin:6px 0 0"></p>
+    <div class="btngrid" style="margin-top:8px">
+      <button class="btn" onclick="closeModal()">Kapat</button>
+      <button class="btn primary" onclick="claimReferrerReward()">Ödülü al</button>
+    </div>`);
+  setTimeout(()=>{ const i=$('ref-conf-input'); if(i) i.focus(); }, 60);
+}
+function claimReferrerReward(){
+  if(!S) return;
+  const inp = $('ref-conf-input'); if(!inp) return;
+  const msg = $('ref-conf-msg');
+  const setMsg = (t,ok)=>{ if(msg){ msg.style.color = ok?'var(--good)':'var(--bad)'; msg.textContent = t; } };
+  const parsed = parseRefConf(inp.value);
+  if(!parsed) return setMsg('Kod biçimi hatalı.', false);
+  if(parsed.code !== myRefCode()) return setMsg('Bu kod senin davet koduna ait değil.', false);
+  if(computeRefHash(parsed.code, parsed.nonce) !== parsed.hash) return setMsg('Kod geçersiz.', false);
+  const h = 'REFCONF-'+parsed.code+'-'+parsed.nonce;
+  if(usedHashes().includes(h)) return setMsg('Bu kod zaten kullanılmış.', false);
+  markUsed(h);
+  S.p.money += REF_REWARD_INVITER_CASH;
+  save(); render();
+  Sfx.coin();
+  coinPopup(`+${TL(REF_REWARD_INVITER_CASH)} 🪙`);
+  setMsg(`🎉 +${TL(REF_REWARD_INVITER_CASH)} kazandın!`, true);
+  setTimeout(closeModal, 1400);
+}
+/* ---- ?ref=KOD ile açılan linkler: kodu bir kere sakla, kariyer açılınca uygula ---- */
+function getUrlRefCode(){
+  try{
+    const u = new URL(location.href);
+    const r = normCode(u.searchParams.get('ref')||'');
+    return r.length===6 ? r : '';
+  }catch(e){ return ''; }
+}
+function stashUrlRefCode(){
+  const r = getUrlRefCode();
+  if(r){
+    try{ localStorage.setItem('sahaPendingRef', r); }catch(e){}
+    try{ history.replaceState(null,'', location.pathname); }catch(e){}
+  }
+}
+function tryAutoApplyRefWhenFree(tries){
+  tries = tries||0;
+  if(tries>25) return; // ~7.5 sn sonra vazgeç, başka bir modal açık kalmış olabilir
+  if($('modal') && $('modal').classList.contains('on')){ setTimeout(()=>tryAutoApplyRefWhenFree(tries+1), 300); return; }
+  let code=''; try{ code = localStorage.getItem('sahaPendingRef')||''; }catch(e){}
+  if(!code || !S) return;
+  try{ localStorage.removeItem('sahaPendingRef'); }catch(e){}
+  if(code===myRefCode() || refClaimed()) return;
+  applyFriendCode(code, true);
+}
+
 function videoInfo(){
   const st = videoState();
   const cap = REWARD_CONFIG.dailyCap;
@@ -8537,10 +8804,37 @@ function cashNote(){
 function claimBtnHTML(){ return `<button class="btn block" style="margin-top:6px" onclick="openClaimModal()">🎟️ Kodum var</button>`; }
 function renderCash(){
   const box = $('cashBox'); if(!box) return;
+  const avail = wheelAvailable();
+  const myCode = myRefCode();
   box.innerHTML = `<div class="card">
     <h3>📺 Video izle, para kazan <span class="chip gold">${TL(S.p.money)}</span></h3>
     <p class="sub" style="margin-bottom:8px">Kısa bir video izle, oyun parası kazan. Ödül maaşınla birlikte büyür.</p>
     ${REWARD_CONFIG.enabled ? videoBlockHTML() : '<p class="sub">Video ödülü şu an kapalı.</p>'}
+  </div>
+  <div class="card">
+    <h3>🎡 Şans Çarkı</h3>
+    <p class="sub" style="margin-bottom:8px">Günde bir kere ücretsiz çevir: nakit, enerji içeceği ya da ilk yardım paketi kazanabilirsin.</p>
+    <button class="btn ${avail?'primary':''} block" onclick="openWheelModal()">${avail?'🎡 Çarkı çevir':'✅ Bugün çevirdin, yarın tekrar gel'}</button>
+  </div>
+  <div class="card">
+    <h3>👥 Arkadaşını davet et</h3>
+    <p class="sub" style="margin-bottom:8px">Kodunu paylaş, arkadaşın katılınca ikinize de ödül var.</p>
+    <div class="statbox spread">
+      <div><span class="sub">Senin davet kodun</span><br><b class="refcode-box">${myCode}</b></div>
+      <button class="btn sm" onclick="copyInviteLink()">📋 Kopyala</button>
+    </div>
+    <div class="btngrid" style="margin-top:8px">
+      <button class="btn primary" onclick="shareInviteLink()">🔗 Linki paylaş</button>
+      <button class="btn" onclick="openRefConfirmClaimModal()">🎉 Arkadaşım katıldı</button>
+    </div>
+    ${!refClaimed() ? `<hr class="sep">
+    <p class="sub" style="margin-bottom:6px">Bir arkadaşının davet kodunu aldıysan buraya yaz, hoş geldin ödülünü hemen al:</p>
+    <div class="row" style="gap:6px">
+      <input id="friend-code-input" type="text" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Arkadaş kodu"
+        style="flex:1;min-width:0;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--inputbg);color:var(--ink);text-transform:uppercase;letter-spacing:2px;text-align:center"
+        onkeydown="if(event.key==='Enter')applyFriendCodeFromInput()">
+      <button class="btn sm primary" onclick="applyFriendCodeFromInput()">Katıl</button>
+    </div>` : ''}
   </div>
   ${paidEnabled() ? `<div class="card">
     <h3>💳 Oyun parası satın al</h3>
@@ -8706,9 +9000,10 @@ function bindUI(){
     go('v-match');
     initRewardedProvider(); // reklam altyapısı ancak gerçek oyun ekranına geçildiğinde yüklensin
     setTimeout(checkDailyStreak, 500);
+    setTimeout(()=>tryAutoApplyRefWhenFree(), 1200);
   });
   $('s-load').addEventListener('click', ()=>{
-    if(load()){ $('setup').style.display='none'; $('game').style.display='block'; go('v-match'); initRewardedProvider(); setTimeout(checkDailyStreak, 500); }
+    if(load()){ $('setup').style.display='none'; $('game').style.display='block'; go('v-match'); initRewardedProvider(); setTimeout(checkDailyStreak, 500); setTimeout(()=>tryAutoApplyRefWhenFree(), 1200); }
     else toast('Kayıt bulunamadı.');
   });
   $('s-restore').addEventListener('click', openRestoreModal);
@@ -8720,6 +9015,7 @@ function bindUI(){
   initTheme();
   updateOfflineBanner();
   checkVersionUpdate();
+  stashUrlRefCode(); // ?ref=KOD ile açıldıysa kodu sakla, kariyer hazır olunca uygula
   fillSetup(); bindUI();
   let has=false;
   try{ has = !!localStorage.getItem(SAVE_KEY); }catch(e){}
@@ -8731,6 +9027,7 @@ function bindUI(){
     go('v-match');
     initRewardedProvider(); // reklam altyapısı ancak gerçek oyun ekranına geçildiğinde yüklensin
     setTimeout(checkDailyStreak, 700);
+    setTimeout(()=>tryAutoApplyRefWhenFree(), 1400);
   }
   if('serviceWorker' in navigator){
     window.addEventListener('load', registerSW);
