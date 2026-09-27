@@ -8354,17 +8354,27 @@ function computeStreak(){
 }
 function checkDailyStreak(){
   const st = computeStreak();
-  if(!st.isNew) return;
+  if(!st.isNew) return false;
   const reward = STREAK_REWARDS[(st.count-1)%STREAK_REWARDS.length];
   if(S && reward.cash>0){ S.p.money += reward.cash; save(); }
   showStreakModal(st.count, reward);
   render();
+  return true;
 }
-/* Maç ekranındaki "Günlük Giriş Ödülü" kartına dokununca: yeni bir ödül
-   VERMEDEN, bugün hangi günün ödülünü aldığını ve 7 günlük tabloyu
-   tekrar gösterir. computeStreak() aynı gün içinde ikinci kez çağrılırsa
-   sadece daha önce hesaplanmış durumu döndürür, side-effect yapmaz. */
+/* Maç ekranındaki "Günlük Giriş Ödülü" kartına dokununca çağrılır.
+   DÜZELTME: Eskiden bu fonksiyon sadece bilgi gösteriyordu ve
+   computeStreak()'i "side-effect'siz" sanarak çağırıyordu — ama
+   computeStreak() günü ilk kez görüldüğünde localStorage'a YAZIYOR
+   (isNew=true). Oyun açılışında checkDailyStreak() 500-700ms gecikmeyle
+   çalıştığından, kullanıcı bu aradaki kartına hemen dokunursa
+   openStreakInfoModal() günü computeStreak() ile "işlenmiş" hale
+   getiriyor; birkaç saniye sonra asıl checkDailyStreak() çalıştığında
+   isNew=false görüp parayı hiç vermeden çıkıyordu. Böylece kullanıcı
+   günün ödülünü asla alamıyordu. Şimdi önce checkDailyStreak() deneniyor:
+   ödül henüz verilmediyse gerçekten verilip gösteriliyor; zaten
+   verilmişse (isNew=false) sadece bilgi amaçlı tekrar gösteriliyor. */
 function openStreakInfoModal(){
+  if(checkDailyStreak()) return;
   const st = computeStreak();
   const reward = STREAK_REWARDS[(st.count-1)%STREAK_REWARDS.length];
   showStreakModal(st.count, reward);
