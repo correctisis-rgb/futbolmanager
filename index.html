@@ -2119,25 +2119,25 @@ function gearList(p){ return isGK(p) ? GLOVES : BOOTS; }
 function gearWord(p){ return isGK(p) ? 'Eldiven' : 'Krampon'; }
 const SPONSORS = [
   {id:'sp1',  n:'Yerel süt markası',            ic:'🥛', weekly:4000,    cost:0, req:0},
-  {id:'sp2',  n:'Spor giyim mağazası',          ic:'👕', weekly:9000,   cost:0, req:8},
-  {id:'sp3',  n:'Enerji içeceği markası',       ic:'⚡', weekly:17000,   cost:0, req:14},
-  {id:'sp4',  n:'Mahalle spor salonu',          ic:'🏋️', weekly:6000,    cost:0, req:5},
-  {id:'sp5',  n:'Yerel banka şubesi',           ic:'🏦', weekly:13000,   cost:0, req:12},
-  {id:'sp6',  n:'Şehir içi kargo firması',      ic:'📦', weekly:15500,   cost:0, req:18},
-  {id:'sp7',  n:'Telekom operatörü',            ic:'📱', weekly:24500,   cost:0, req:24},
-  {id:'sp8',  n:'Hazır giyim zinciri',          ic:'🛍️', weekly:29000,   cost:0, req:30},
-  {id:'sp9',  n:'Uluslararası spor markası',    ic:'👟', weekly:36000,   cost:0, req:36},
-  {id:'sp10', n:'Fast-food zinciri',            ic:'🍔', weekly:40500,   cost:0, req:42},
-  {id:'sp11', n:'Akıllı saat markası',          ic:'⌚', weekly:45500,   cost:0, req:48},
-  {id:'sp12', n:'Ulusal market zinciri',        ic:'🛒', weekly:50500,   cost:0, req:54},
-  {id:'sp13', n:'Otomobil markası',             ic:'🚗', weekly:58500,   cost:0, req:60},
-  {id:'sp14', n:'Havayolu şirketi',             ic:'✈️', weekly:71500,  cost:0, req:65},
-  {id:'sp15', n:'Kulaklık & ses markası',       ic:'🎧', weekly:81000,  cost:0, req:70},
-  {id:'sp16', n:'Akıllı telefon devi',          ic:'📲', weekly:97500,  cost:0, req:75},
-  {id:'sp17', n:'Global kredi kartı',           ic:'💳', weekly:117000,  cost:0, req:80},
-  {id:'sp18', n:'Lüks saat markası',            ic:'💎', weekly:143000,  cost:0, req:85},
-  {id:'sp19', n:'Dünya çapında içecek devi',    ic:'🥤', weekly:182000,  cost:0, req:90},
-  {id:'sp20', n:'Video oyunu kapak yüzü',       ic:'🎮', weekly:227500,  cost:0, req:95}
+  {id:'sp2',  n:'Spor giyim mağazası',          ic:'👕', weekly:9000,   cost:0, req:12},
+  {id:'sp3',  n:'Enerji içeceği markası',       ic:'⚡', weekly:17000,   cost:0, req:20},
+  {id:'sp4',  n:'Mahalle spor salonu',          ic:'🏋️', weekly:6000,    cost:0, req:8},
+  {id:'sp5',  n:'Yerel banka şubesi',           ic:'🏦', weekly:13000,   cost:0, req:18},
+  {id:'sp6',  n:'Şehir içi kargo firması',      ic:'📦', weekly:15500,   cost:0, req:26},
+  {id:'sp7',  n:'Telekom operatörü',            ic:'📱', weekly:24500,   cost:0, req:34},
+  {id:'sp8',  n:'Hazır giyim zinciri',          ic:'🛍️', weekly:29000,   cost:0, req:42},
+  {id:'sp9',  n:'Uluslararası spor markası',    ic:'👟', weekly:36000,   cost:0, req:50},
+  {id:'sp10', n:'Fast-food zinciri',            ic:'🍔', weekly:40500,   cost:0, req:58},
+  {id:'sp11', n:'Akıllı saat markası',          ic:'⌚', weekly:45500,   cost:0, req:64},
+  {id:'sp12', n:'Ulusal market zinciri',        ic:'🛒', weekly:50500,   cost:0, req:70},
+  {id:'sp13', n:'Otomobil markası',             ic:'🚗', weekly:58500,   cost:0, req:75},
+  {id:'sp14', n:'Havayolu şirketi',             ic:'✈️', weekly:71500,  cost:0, req:80},
+  {id:'sp15', n:'Kulaklık & ses markası',       ic:'🎧', weekly:81000,  cost:0, req:84},
+  {id:'sp16', n:'Akıllı telefon devi',          ic:'📲', weekly:97500,  cost:0, req:88},
+  {id:'sp17', n:'Global kredi kartı',           ic:'💳', weekly:117000,  cost:0, req:91},
+  {id:'sp18', n:'Lüks saat markası',            ic:'💎', weekly:143000,  cost:0, req:94},
+  {id:'sp19', n:'Dünya çapında içecek devi',    ic:'🥤', weekly:182000,  cost:0, req:97},
+  {id:'sp20', n:'Video oyunu kapak yüzü',       ic:'🎮', weekly:227500,  cost:0, req:100}
 ];
 function sponsorWeekly(){
   const p=S.p; if(!p||!p.sponsors) return 0;
@@ -2502,38 +2502,38 @@ const LUX = [
   {id:'l2', cat:'tasit', ic:'🏎️', n:'BMW M4',                        cost:900000,    mut:14, un:6,  inc:0},
   {id:'l6', cat:'tasit', ic:'🛵', n:'Motosiklet (şehir içi)',        cost:320000,    mut:7,  un:2,  inc:0},
   {id:'l7', cat:'tasit', ic:'🚘', n:'Mercedes G-Serisi',             cost:4200000,   mut:18, un:9,  inc:0},
-  {id:'l8', cat:'tasit', ic:'🏁', n:'Ferrari 296 GTB',               cost:16000000,  mut:26, un:16, inc:0},
+  {id:'l8', cat:'tasit', ic:'🏁', n:'Ferrari 296 GTB',               cost:15500000,  mut:26, un:16, inc:0},
   {id:'l9', cat:'tasit', ic:'⛵', n:'Küçük yelkenli tekne',          cost:2800000,   mut:14, un:5,  inc:0},
   {id:'l10',cat:'tasit', ic:'🛥️', n:'Motor yat (18 m)',              cost:9500000,   mut:22, un:10, inc:0},
-  {id:'l11',cat:'tasit', ic:'🚤', n:'Lüks yat (32 m, mürettebatlı)', cost:45000000,  mut:34, un:22, inc:0},
-  {id:'l12',cat:'tasit', ic:'🛳️', n:'Mega yat (60 m, helipadli)',    cost:180000000, mut:48, un:38, inc:0},
-  {id:'l13',cat:'tasit', ic:'🚁', n:'Özel helikopter',               cost:38000000,  mut:28, un:18, inc:0},
-  {id:'l14',cat:'tasit', ic:'✈️', n:'Özel jet',                      cost:150000000, mut:42, un:34, inc:0},
+  {id:'l11',cat:'tasit', ic:'🚤', n:'Lüks yat (32 m, mürettebatlı)', cost:31500000,  mut:34, un:22, inc:0},
+  {id:'l12',cat:'tasit', ic:'🛳️', n:'Mega yat (60 m, helipadli)',    cost:106000000, mut:48, un:38, inc:0},
+  {id:'l13',cat:'tasit', ic:'🚁', n:'Özel helikopter',               cost:27500000,  mut:28, un:18, inc:0},
+  {id:'l14',cat:'tasit', ic:'✈️', n:'Özel jet',                      cost:89000000,  mut:42, un:34, inc:0},
   /* --- katlar / gayrimenkul --- */
   {id:'l3', cat:'kat',   ic:'🏙️', n:'Şehir merkezinde daire',        cost:3500000,   mut:18, un:5,  inc:0},
   {id:'l4', cat:'kat',   ic:'🏡', n:'Boğaz manzaralı villa',         cost:12000000,  mut:28, un:12, inc:0},
   {id:'l15',cat:'kat',   ic:'🏬', n:'Rezidans katı (yüksek kat)',    cost:7500000,   mut:20, un:7,  inc:20000},
-  {id:'l16',cat:'kat',   ic:'🌆', n:'Çatı katı / penthouse',         cost:28000000,  mut:32, un:18, inc:50000},
-  {id:'l17',cat:'kat',   ic:'🏢', n:'İş merkezinde tam kat (kiralık)',cost:42000000, mut:16, un:10, inc:145000},
-  {id:'l18',cat:'kat',   ic:'🏘️', n:'Apartman bloğu (8 kat)',        cost:85000000,  mut:24, un:14, inc:285000},
-  {id:'l19',cat:'kat',   ic:'🏖️', n:'Bodrum yalı katı',              cost:60000000,  mut:36, un:20, inc:75000},
+  {id:'l16',cat:'kat',   ic:'🌆', n:'Çatı katı / penthouse',         cost:22000000,  mut:32, un:18, inc:50000},
+  {id:'l17',cat:'kat',   ic:'🏢', n:'İş merkezinde tam kat (kiralık)',cost:30000000, mut:16, un:10, inc:145000},
+  {id:'l18',cat:'kat',   ic:'🏘️', n:'Apartman bloğu (8 kat)',        cost:53500000,  mut:24, un:14, inc:285000},
+  {id:'l19',cat:'kat',   ic:'🏖️', n:'Bodrum yalı katı',              cost:40000000,  mut:36, un:20, inc:75000},
   /* --- işletmeler / fabrikalar --- */
   {id:'l20',cat:'is',    ic:'☕', n:'Kahve dükkânı',                 cost:2200000,   mut:8,  un:3,  inc:35000},
   {id:'l21',cat:'is',    ic:'🍽️', n:'Butik restoran',                cost:6500000,   mut:12, un:6,  inc:90000},
   {id:'l22',cat:'is',    ic:'⚽', n:'Kendi futbol okulun',           cost:14000000,  mut:22, un:12, inc:130000},
-  {id:'l23',cat:'is',    ic:'🏨', n:'Sahil oteli',                   cost:75000000,  mut:26, un:18, inc:495000},
-  {id:'l24',cat:'is',    ic:'🧵', n:'Tekstil fabrikası',             cost:30000000,  mut:10, un:6,  inc:230000},
-  {id:'l25',cat:'is',    ic:'🍞', n:'Gıda fabrikası',                cost:48000000,  mut:12, un:8,  inc:360000},
-  {id:'l26',cat:'is',    ic:'⚡', n:'Enerji içeceği fabrikası',      cost:70000000,  mut:16, un:14, inc:540000},
-  {id:'l27',cat:'is',    ic:'👟', n:'Krampon & spor giyim fabrikası',cost:110000000, mut:20, un:20, inc:825000},
-  {id:'l28',cat:'is',    ic:'🔩', n:'Otomotiv yan sanayi fabrikası', cost:160000000, mut:14, un:12, inc:1155000},
-  {id:'l29',cat:'is',    ic:'🔋', n:'Batarya & enerji fabrikası',    cost:240000000, mut:18, un:18, inc:1760000},
+  {id:'l23',cat:'is',    ic:'🏨', n:'Sahil oteli',                   cost:48000000,  mut:26, un:18, inc:495000},
+  {id:'l24',cat:'is',    ic:'🧵', n:'Tekstil fabrikası',             cost:23000000,  mut:10, un:6,  inc:230000},
+  {id:'l25',cat:'is',    ic:'🍞', n:'Gıda fabrikası',                cost:33000000,  mut:12, un:8,  inc:360000},
+  {id:'l26',cat:'is',    ic:'⚡', n:'Enerji içeceği fabrikası',      cost:45000000,  mut:16, un:14, inc:540000},
+  {id:'l27',cat:'is',    ic:'👟', n:'Krampon & spor giyim fabrikası',cost:67000000,  mut:20, un:20, inc:825000},
+  {id:'l28',cat:'is',    ic:'🔩', n:'Otomotiv yan sanayi fabrikası', cost:95000000,  mut:14, un:12, inc:1155000},
+  {id:'l29',cat:'is',    ic:'🔋', n:'Batarya & enerji fabrikası',    cost:139000000, mut:18, un:18, inc:1760000},
   /* --- yaşam --- */
   {id:'l5', cat:'yasam', ic:'🏠', n:'Aileye ev aldım',               cost:2500000,   mut:30, un:4,  inc:0},
   {id:'l30',cat:'yasam', ic:'⌚', n:'Koleksiyon saat',               cost:5500000,   mut:16, un:8,  inc:0},
-  {id:'l31',cat:'yasam', ic:'🎨', n:'Sanat koleksiyonu',             cost:22000000,  mut:20, un:11, inc:0},
+  {id:'l31',cat:'yasam', ic:'🎨', n:'Sanat koleksiyonu',             cost:19000000,  mut:20, un:11, inc:0},
   {id:'l32',cat:'yasam', ic:'🐎', n:'Yarış atı',                     cost:18000000,  mut:18, un:13, inc:45000},
-  {id:'l33',cat:'yasam', ic:'❤️', n:'Kendi hayır vakfın',            cost:35000000,  mut:45, un:28, inc:0}
+  {id:'l33',cat:'yasam', ic:'❤️', n:'Kendi hayır vakfın',            cost:26000000,  mut:45, un:28, inc:0}
 ];
 function businessWeekly(){
   const p=S.p; if(!p||!p.luxury) return 0;
@@ -4077,7 +4077,7 @@ function upgradeStad(id){
 }
 function buyLux(id){ const l=LUX.find(x=>x.id===id),p=S.p;
   if(p.money<l.cost) return needMoney(l.cost);
-  p.money-=l.cost; p.luxury.push(id); p.happiness=clamp(p.happiness+l.mut); p.fame=clamp(p.fame+l.un);
+  p.money-=l.cost; p.luxury.push(id); p.happiness=clamp(p.happiness+l.mut); p.fame=clamp(p.fame+l.un*0.5);
   addNews(`${p.name} kendine ${l.n.toLowerCase()} aldı. Sosyal medya konuşuyor.`,'magazin');
   toast(l.inc?`${l.n} alındı. Haftalık +${TL(l.inc)} gelir.`:`${l.n} alındı.`); save(); render(); }
 
@@ -5165,7 +5165,7 @@ function doSocialPost(kindId){
   let likes = Math.max(8, Math.round(followers*engageRate));
   let comments = Math.max(1, Math.round(likes*ri(3,9)/100));
   let followerGain = Math.round(likes*ri(4,11)/100) + Math.round(p.fame*ri(1,3));
-  let fameGain = clamp((followerGain/3200) + (kindId==='match'?0.4:kindId==='fan'?0.25:0.15), 0, 6);
+  let fameGain = clamp((followerGain/5500) + (kindId==='match'?0.22:kindId==='fan'?0.14:0.08), 0, 3);
   let moneyGain = 0, backlash = false;
   if(chance(k.risk)){
     backlash = true;
@@ -7070,7 +7070,7 @@ function finishMatch(){
     const relDrift = M.us.score>M.them.score ? ri(1,2) : (M.us.score<M.them.score ? -ri(1,2) : 0);
     if(relDrift) Object.keys(p.teammateRel).forEach(k=>{ p.teammateRel[k] = clamp(p.teammateRel[k] + relDrift); });
   }
-  p.fame   = clamp(p.fame + me.mGoals*(isMilli?3:2) + (me.mSaves||0)*(isMilli?0.3:0.2) + (keptCleanSheet?(isMilli?3:2):0) + (motm?3:0) + (isMilli?2:0.4));
+  p.fame   = clamp(p.fame + me.mGoals*(isMilli?1.8:1.1) + (me.mSaves||0)*(isMilli?0.18:0.12) + (keptCleanSheet?(isMilli?1.8:1.1):0) + (motm?1.6:0) + (isMilli?1.2:0.22));
   p.happiness = clamp(p.happiness + (M.us.score>M.them.score?4:-2));
   p.love = clamp(p.love + (M.us.score>M.them.score?4:M.us.score<M.them.score?-5:0) + me.mGoals*3);
 
@@ -7403,7 +7403,7 @@ function endWeek(){
   p.fitness = clamp(p.fitness + 40 + sb.heal*3);
   p.morale = clamp(p.morale + (p.morale<55?4:-1));
   p.happiness = clamp(p.happiness - 2);
-  p.fame = clamp(p.fame + sb.fame*0.15);
+  p.fame = clamp(p.fame + sb.fame*0.08);
   p.lifePoints = 3; p.trainPoints = 2 + (sb.train>=2?1:0);
   if(p.injuryWeeks>0){
     p.injuryWeeks--;
