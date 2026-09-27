@@ -3570,12 +3570,41 @@ document.addEventListener('keydown', e=>{
 //   reaction -> Hız / Kalecilik: refleks testi (tepki süresi)
 //   sequence -> Pas / Dripling / Fizik: sırayla çıkan hedeflere isabet
 const TRAIN_GAME_TYPE = {sut:'timing', def:'timing', hiz:'reaction', klc:'reaction', pas:'sequence', drib:'sequence', fiz:'sequence'};
+/* Her mekanik türü için oyuncuya İLK karşılaşmasında bir kerelik "nasıl oynanır"
+   ekranı gösteriyoruz. Cihazda localStorage'da tutuluyor (kariyer kaydından
+   bağımsız) ki hangi kariyeri oynarsa oynasın, bir mekaniği bir kere görmüş
+   oyuncuya tekrar tekrar aynı açıklamayı göstermeyelim. */
+const TRAIN_INTRO_KEY = 'sahaTrainIntroSeen';
+const TRAIN_INTRO_META = {
+  timing:   {title:'Zamanlama çubuğu — nasıl oynanır?',
+    desc:'Gösterge çubuk üzerinde ileri geri hareket eder. Gösterge tam istediğin bölgedeyken <b>DUR!</b> butonuna bas (ya da klavyede <b>boşluk</b> tuşuna). Yeşil bölgede durdurursan +4, turuncuda +2, kırmızıda +1 puan kazanırsın; bölgelerin dışında puan kazanamazsın. Ne kadar isabetli durdurursan gelişimin o kadar büyük olur.'},
+  reaction: {title:'Refleks testi — nasıl oynanır?',
+    desc:'Önce ekran "bekleniyor" durumunda olur, hemen tepki verme. İşaret geldiği an (ekran metni/rengi değiştiğinde) elinden geldiğince hızlı şekilde butona bas (ya da boşluk tuşuna). İşaret gelmeden erken basarsan puan alamazsın; ne kadar hızlı tepki verirsen o kadar çok puan kazanırsın.'},
+  sequence: {title:'Hedef isabet dizisi — nasıl oynanır?',
+    desc:'Ekranda sırayla hedefler belirir, her biri kısa bir süre görünür kalır. Hedef belirir belirmez üzerine dokunarak isabet ettir; kaçırırsan sıradaki hedefe geçilir. Ne kadar çok hedefe isabet ettirirsen seri o kadar dolar ve gelişimin o kadar büyük olur.'}
+};
+function loadTrainIntroSeen(){ try{ return JSON.parse(localStorage.getItem(TRAIN_INTRO_KEY)||'{}'); }catch(e){ return {}; } }
+function markTrainIntroSeen(type){
+  const s = loadTrainIntroSeen(); s[type] = true;
+  try{ localStorage.setItem(TRAIN_INTRO_KEY, JSON.stringify(s)); }catch(e){}
+}
 function openTrainGame(k){
   const p=S.p;
   if(p.attrs[k]>=99) return toast(`${ATTR_LABEL[k]} zaten maksimum seviyede (99), daha fazla geliştirilemez.`);
   if(p.trainPoints<1) return toast('Bu hafta antrenman hakkın kalmadı.');
   if(p.fitness<20) return toast('Çok yorgunsun, önce dinlen.');
   const type = TRAIN_GAME_TYPE[k] || 'timing';
+  const seen = loadTrainIntroSeen();
+  if(!seen[type]) showTrainIntro(k, type);
+  else launchTrainGame(k, type);
+}
+function showTrainIntro(k, type){
+  const meta = TRAIN_INTRO_META[type] || TRAIN_INTRO_META.timing;
+  modal(`<h3>${meta.title}</h3>
+    <p class="sub" style="line-height:1.6">${meta.desc}</p>
+    <button class="btn primary block" style="margin-top:14px" onclick="markTrainIntroSeen('${type}');launchTrainGame('${k}','${type}')">Başla</button>`);
+}
+function launchTrainGame(k, type){
   if(type==='timing') openTimingGame(k);
   else if(type==='reaction') openReactionGame(k);
   else openSequenceGame(k);
@@ -3817,12 +3846,16 @@ function renderShop(){
     <h3>${isGK(p)?'Eldivenler':'Kramponlar'}</h3>
     ${gearList(p).slice().sort((a,b)=>a.cost-b.cost).map(b=>{
       const owned = p.owned.includes(b.id), eq = p.boot===b.id;
-      const col = ['#9ca3af','#f97316','#38bdf8','#a855f7','#facc15'][gearList(p).indexOf(b)] || '#9ca3af';
+      const idx = gearList(p).indexOf(b);
+      const prevItem = idx>0 ? gearList(p)[idx-1] : null;
+      const locked = !owned && prevItem && !p.owned.includes(prevItem.id);
+      const col = ['#9ca3af','#f97316','#38bdf8','#a855f7','#facc15'][idx] || '#9ca3af';
       return `<div class="statbox shoprow">
         ${Icon.boot(col, '#ffffff')}
-        <div class="sinfo"><b>${b.n}</b> <span class="chip">+${b.bonus} güç</span><div class="sub">${b.desc}</div></div>
+        <div class="sinfo"><b>${b.n}</b> <span class="chip">+${b.bonus} güç</span><div class="sub">${b.desc}${locked?`<br><span style="color:var(--warn)">🔒 Önce ${prevItem.n} almalısın</span>`:''}</div></div>
         <div>${eq?'<span class="chip ovr">Giyili</span>':
           owned?`<button class="btn sm" onclick="equip('${b.id}')">Giy</button>`:
+          locked?`<button class="btn sm" disabled title="Önce ${prevItem.n} almalısın">🔒 ${TL(b.cost)}</button>`:
           `<button class="btn sm ${p.money>=b.cost?'primary':''}" onclick="buyBoot('${b.id}')">${TL(b.cost)}</button>`}</div>
       </div>`;
     }).join('')}
@@ -3877,7 +3910,9 @@ function renderShop(){
     `).join('')}
   </div>`;
 }
-function buyBoot(id){ const p=S.p, b=gearList(p).find(x=>x.id===id);
+function buyBoot(id){
+  const p=S.p, list=gearList(p), idx=list.findIndex(x=>x.id===id), b=list[idx];
+  if(idx>0 && !p.owned.includes(list[idx-1].id)) return toast(`Önce ${list[idx-1].n} almalısın.`);
   if(p.money<b.cost) return needMoney(b.cost);
   p.money-=b.cost; p.owned.push(id); p.boot=id; insertUserIntoSquad();
   toast(`${b.n} alındı ve giyildi.`); save(); render(); }
@@ -8213,14 +8248,16 @@ const REWARD_CONFIG = {
   provider: 'h5',
   h5Client: 'ca-pub-9854310952239850',   // provider 'h5' iken AdSense yayıncı kimliğin
   h5Test: false,                          // false: gerçek reklam. Onay gelene kadar reklam boşsa video sadece atlanır.
-  cooldownSec: 45,                        // iki video arası bekleme
-  dailyCap: 30,                           // günlük en fazla video
-  minReward: 50000,
+  cooldownSec: 90,                        // iki video arası bekleme — spam izlemeyi zorlaştırır
+  dailyCap: 15,                           // günlük en fazla video — reklam asıl kazanç yolu olmasın, küçük bir ek olsun
+  minReward: 12000,
   testDurationSec: 5                      // provider 'placeholder' iken sahte test reklamının süresi (sn)
 };
+// Reklam ödülü artık maaşın küçük bir kesri (maçtan kazandığından çok daha az):
+// asıl kazanç yolu maçlar + sponsorluklar olsun, reklam sadece isteğe bağlı küçük bir destek olsun.
 function rewardAmount(){
   const w = (S && S.p && S.p.wage) || 40000;
-  return Math.max(REWARD_CONFIG.minReward, Math.round(w*1.5/5000)*5000);   // kazanç, maaşa göre büyür
+  return Math.max(REWARD_CONFIG.minReward, Math.round(w*0.35/1000)*1000);
 }
 function todayKey(){ const d = new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function videoState(){
@@ -8232,22 +8269,20 @@ function saveVideoState(st){ try{ localStorage.setItem('sahaVideo', JSON.stringi
 
 /* =========================================================
    GÜNLÜK GİRİŞ SERİSİ (STREAK)
-   Üst üste giren oyuncuya küçük bir "seri" ödülü verir. Ödül doğrudan bugünkü
-   reklam-izleme hakkına (dailyCap) ek haklar olarak ve zaman zaman nakit
-   bonus şeklinde işler — zaten var olan ödüllü video altyapısını kullanır,
-   yeni bir para kaynağı icat etmez. Cihaz bazlı localStorage'da tutulur,
-   kariyer kaydından bağımsızdır (yeni kariyer başlatsan da seri korunur). */
+   Üst üste giren oyuncuya küçük bir "seri" ödülü verir. Ödül doğrudan oyun
+   parası (nakit) olarak verilir — reklam izleme hakkıyla ilgisi yoktur.
+   Cihaz bazlı localStorage'da tutulur, kariyer kaydından bağımsızdır
+   (yeni kariyer başlatsan da seri korunur). */
 const STREAK_KEY = 'sahaStreak';
 const STREAK_REWARDS = [
-  {ads:1, cash:0,      n:'Hoş geldin ödülü'},
-  {ads:1, cash:15000,  n:'2. gün ödülü'},
-  {ads:2, cash:0,      n:'3. gün ödülü'},
-  {ads:2, cash:35000,  n:'4. gün ödülü'},
-  {ads:2, cash:0,      n:'5. gün ödülü'},
-  {ads:3, cash:60000,  n:'6. gün ödülü'},
-  {ads:5, cash:150000, n:'7. gün — BÜYÜK ödül! 🏆'}
+  {cash:10000,  n:'Hoş geldin ödülü'},
+  {cash:20000,  n:'2. gün ödülü'},
+  {cash:35000,  n:'3. gün ödülü'},
+  {cash:50000,  n:'4. gün ödülü'},
+  {cash:70000,  n:'5. gün ödülü'},
+  {cash:100000, n:'6. gün ödülü'},
+  {cash:200000, n:'7. gün — BÜYÜK ödül! 🏆'}
 ];
-let streakBonusAdsToday = 0;
 function dateKeyOffset(days){
   const d = new Date(); d.setDate(d.getDate()+days);
   return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
@@ -8265,14 +8300,12 @@ function computeStreak(){
   if(prev && prev.day===today) return Object.assign({}, prev, {isNew:false});
   const yesterday = dateKeyOffset(-1);
   const count = (prev && prev.day===yesterday) ? (prev.count||1)+1 : 1;
-  const reward = STREAK_REWARDS[(count-1)%STREAK_REWARDS.length];
-  const st = {day:today, count, bonusAds:reward.ads||0};
+  const st = {day:today, count};
   saveStreakRaw(st);
   return Object.assign({}, st, {isNew:true});
 }
 function checkDailyStreak(){
   const st = computeStreak();
-  streakBonusAdsToday = st.bonusAds||0;
   if(!st.isNew) return;
   const reward = STREAK_REWARDS[(st.count-1)%STREAK_REWARDS.length];
   if(S && reward.cash>0){ S.p.money += reward.cash; save(); }
@@ -8287,15 +8320,14 @@ function showStreakModal(count, reward){
       <div class="aname">${count}. GÜN</div>
       <div class="asub">${reward.n}</div>
     </div>
-    <div class="statbox spread" style="margin-top:10px"><span class="sub">Bugüne özel ekstra reklam hakkı</span><b style="color:var(--good)">+${reward.ads}</b></div>
-    ${reward.cash>0?`<div class="statbox spread"><span class="sub">Bonus nakit</span><b style="color:var(--good)">${TL(reward.cash)}</b></div>`:''}
-    <p class="sub" style="margin-top:8px;text-align:center">Her gün üst üste giriş yaptıkça ödüller büyür. Bir gün ara verirsen seri 1'den başlar.</p>
+    <div class="statbox spread" style="margin-top:10px"><span class="sub">Bonus nakit</span><b style="color:var(--good)">${TL(reward.cash)}</b></div>
+    <p class="sub" style="margin-top:8px;text-align:center">Her gün üst üste giriş yaptıkça ödül büyür. Bir gün ara verirsen seri 1'den başlar.</p>
     <button class="btn primary block" style="margin-top:12px" onclick="closeModal()">Harika!</button>`);
 }
 
 function videoInfo(){
   const st = videoState();
-  const cap = REWARD_CONFIG.dailyCap + (streakBonusAdsToday||0);
+  const cap = REWARD_CONFIG.dailyCap;
   return {n:st.n, left:Math.max(0, cap-st.n), cap,
           wait:Math.max(0, Math.ceil((st.last + REWARD_CONFIG.cooldownSec*1000 - Date.now())/1000)), reward:rewardAmount()};
 }
