@@ -8414,14 +8414,14 @@ function openWheelModal(){
   }).join('');
   const avail = wheelAvailable();
   modal(`<h3 style="color:var(--flood)">🎡 Şans Çarkı</h3>
-    <p class="sub" id="wheel-status" style="text-align:center">${avail?'Günün ücretsiz çevirişi seni bekliyor!':'Bugünkü ücretsiz çevirişini kullandın, yarın tekrar gel.'}</p>
+    <p class="sub" id="wheel-status" style="text-align:center">${avail?'Günün ücretsiz çevirişi seni bekliyor!':'Ücretsiz hakkını kullandın ama reklam izleyerek çevirmeye devam edebilirsin.'}</p>
     <div class="wheelwrap">
       <div class="wheel-ptr">🔻</div>
       <div class="wheel" id="wheelEl" style="background:${wheelConicGradient()}">${segHtml}</div>
       <div class="wheel-hub">🎯</div>
     </div>
-    <button class="btn primary block" id="wheel-spin-btn" style="margin-top:14px" ${avail?'':'disabled'} onclick="spinWheel()">${avail?'ÇEVİR':'Yarın tekrar gel'}</button>
-    ${REWARD_CONFIG.enabled ? `<button class="btn sm green block adcapbtn" id="wheel-ad-btn" style="margin-top:8px" onclick="watchAdForSpin()"><span class="adcap">${adCapBadge()}</span> 📺 Reklam izle, bir kez daha çevir</button>` : ''}
+    <button class="btn primary block" id="wheel-spin-btn" style="margin-top:14px" ${avail?'':'disabled'} onclick="spinWheel()">${avail?'ÜCRETSİZ ÇEVİR':'Ücretsiz hakkın bitti (yarın yenilenir)'}</button>
+    ${REWARD_CONFIG.enabled ? `<button class="btn sm green block adcapbtn" id="wheel-ad-btn" style="margin-top:8px" onclick="watchAdForSpin()"><span class="adcap">${adCapBadge()}</span> 📺 Reklam izle, yine de çevir</button>` : ''}
     <button class="btn block" style="margin-top:8px" onclick="closeModal()">Kapat</button>`);
   updateVideoButtons();
 }
@@ -8463,8 +8463,8 @@ function finishWheel(idx, consumesFreeSpin){
   grantWheelPrize(prize);
   if(consumesFreeSpin) saveWheelState({day:todayKey()});
   const btn = $('wheel-spin-btn');
-  if(btn){ const avail = wheelAvailable(); btn.disabled = !avail; btn.textContent = avail ? 'ÇEVİR' : 'Yarın tekrar gel'; }
-  const st = $('wheel-status'); if(st){ st.style.color = 'var(--good)'; st.textContent = `🎉 Kazandın: ${prize.label}`; }
+  if(btn){ const avail = wheelAvailable(); btn.disabled = !avail; btn.textContent = avail ? 'ÜCRETSİZ ÇEVİR' : 'Ücretsiz hakkın bitti (yarın yenilenir)'; }
+  const st = $('wheel-status'); if(st){ st.style.color = 'var(--good)'; st.textContent = `🎉 Kazandın: ${prize.label}${wheelAvailable()?'':' — reklam izleyerek yine çevirebilirsin.'}`; }
   Sfx.coin();
   coinPopup(prize.kind==='cash' ? `+${TL(prize.amount)} 🪙` : `+1 ${prize.label}`);
   toast(`🎡 ${prize.label} kazandın!`);
@@ -8828,7 +8828,7 @@ function renderCash(){
   <div class="card">
     <h3>🎡 Şans Çarkı</h3>
     <p class="sub" style="margin-bottom:8px">Günde bir kere ücretsiz çevir: nakit, enerji içeceği ya da ilk yardım paketi kazanabilirsin.</p>
-    <button class="btn ${avail?'primary':''} block" onclick="openWheelModal()">${avail?'🎡 Çarkı çevir':'✅ Bugün çevirdin, yarın tekrar gel'}</button>
+    <button class="btn ${avail?'primary':''} block" onclick="openWheelModal()">${avail?'🎡 Çarkı çevir':'🎡 Çarkı aç (reklamla tekrar çevirebilirsin)'}</button>
   </div>
   <div class="card">
     <h3>👥 Arkadaşını davet et</h3>
