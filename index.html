@@ -8345,18 +8345,27 @@ function currentStreakCount(){ const st = loadStreakRaw(); return (st && st.day=
 function computeStreak(){
   const today = todayKey();
   const prev = loadStreakRaw();
-  if(prev && prev.day===today) return Object.assign({}, prev, {isNew:false});
+  // needsPay: bugünün ödülü henüz gerçekten VERİLMEMİŞ mi? Eski/bozuk kayıtlarda
+  // "paid" alanı hiç yoktu (eski hatalı akışta gün "işlendi" diye kaydediliyor ama
+  // para hiç verilmiyordu) — bu yüzden !prev.paid, o yarım kalmış günleri de
+  // otomatik olarak onarıp ödülü şimdi verir.
+  if(prev && prev.day===today) return Object.assign({}, prev, {isNew:false, needsPay: !prev.paid});
   const yesterday = dateKeyOffset(-1);
   const count = (prev && prev.day===yesterday) ? (prev.count||1)+1 : 1;
-  const st = {day:today, count};
+  const st = {day:today, count, paid:false};
   saveStreakRaw(st);
-  return Object.assign({}, st, {isNew:true});
+  return Object.assign({}, st, {isNew:true, needsPay:true});
+}
+function markStreakPaid(){
+  const st = loadStreakRaw();
+  if(st){ st.paid = true; saveStreakRaw(st); }
 }
 function checkDailyStreak(){
   const st = computeStreak();
-  if(!st.isNew) return false;
+  if(!st.needsPay) return false;
   const reward = STREAK_REWARDS[(st.count-1)%STREAK_REWARDS.length];
   if(S && reward.cash>0){ S.p.money += reward.cash; save(); }
+  markStreakPaid();
   showStreakModal(st.count, reward);
   render();
   return true;
@@ -8369,10 +8378,9 @@ function checkDailyStreak(){
    çalıştığından, kullanıcı bu aradaki kartına hemen dokunursa
    openStreakInfoModal() günü computeStreak() ile "işlenmiş" hale
    getiriyor; birkaç saniye sonra asıl checkDailyStreak() çalıştığında
-   isNew=false görüp parayı hiç vermeden çıkıyordu. Böylece kullanıcı
-   günün ödülünü asla alamıyordu. Şimdi önce checkDailyStreak() deneniyor:
-   ödül henüz verilmediyse gerçekten verilip gösteriliyor; zaten
-   verilmişse (isNew=false) sadece bilgi amaçlı tekrar gösteriliyor. */
+   isNew=false görüp parayı hiç vermeden çıkıyordu. Şimdi "paid" bayrağıyla
+   hem bu çakışma önleniyor hem de daha önce bu yüzden parası hiç
+   verilmemiş günler otomatik onarılıp ödeniyor. */
 function openStreakInfoModal(){
   if(checkDailyStreak()) return;
   const st = computeStreak();
