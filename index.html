@@ -801,8 +801,18 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
 .fm-pl.fm-no{opacity:.55;}
 .fm-pl.fm-drop .fm-dot{transform:scale(1.25);outline:3px solid var(--flood);outline-offset:1px;}
 .fm-ghost{position:fixed !important;z-index:400;pointer-events:none;transform:translate(-50%,-50%) scale(1.15) !important;opacity:.95;transition:none !important;}
-.fm-bench{display:flex;flex-wrap:wrap;gap:6px;}
-.fm-bn{display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);font-size:.74rem;}
+/* saha solda, yedekler sağ sütunda */
+.fm-board{display:flex;gap:8px;align-items:stretch;}
+.fm-board .fm-pitch{flex:1 1 auto;min-width:0;margin:0;}
+.fm-benchcol{flex:0 0 92px;position:relative;min-height:200px;}
+.fm-bench-in{position:absolute;inset:0;overflow-y:auto;border:1px solid var(--line);border-radius:10px;padding:6px;background:var(--panel2);}
+.fm-bh{font-size:.62rem;font-weight:800;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;text-align:center;}
+.fm-bench{display:flex;flex-direction:column;gap:6px;}
+.fm-pl{width:58px;}
+.fm-dot{width:30px;height:30px;font-size:.74rem;}
+.fm-nm{max-width:58px;font-size:.56rem;}
+.fm-bn{display:flex;align-items:center;gap:4px;padding:5px 6px;border-radius:9px;background:var(--panel);border:1px solid var(--line);font-size:.68rem;}
+.fm-bnm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .fm-bn .fm-bpos{font-weight:800;font-size:.62rem;padding:1px 5px;border-radius:6px;background:rgba(0,0,0,.35);}
 .fm-bn.fm-ok{border-color:var(--good);box-shadow:0 0 0 2px rgba(34,197,94,.35);}
 .fm-bn.fm-no{opacity:.55;}
@@ -2857,7 +2867,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v8';
+const APP_VERSION = 'v8.1';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -4798,21 +4808,27 @@ function mgrFormationInner(pfx, tall){
   const slotOf = {}; res.forEach((a,si)=>{ if(a) slotOf[a.pl.uid]=si; });
   return `<div class="fm-btns">${Object.keys(FORMATIONS).map(k=>`<button class="btn sm${k===cur?' primary':''}" data-fm="${k}" onclick="setMgrFormation('${k}','${pfx}')">${k}</button>`).join('')}</div>
     <p class="sub" id="${pfx}-note" style="margin:0 0 4px"></p>
-    <div class="fm-pitch${tall?' tall':''}" id="${pfx}-pitch">
-      <div class="fm-ln fm-out"></div><div class="fm-ln fm-circ"></div><div class="fm-ln fm-box"></div><div class="fm-ln fm-box2"></div>
-      ${pool.map(o=>{ const si = slotOf[o.pl.uid]; const st = (fmInstantNext && si!=null) ? `left:${F.slots[si][1]}%;top:${F.slots[si][2]}%;` : '';
-        return `<div class="fm-pl" id="${pfx}-p${o.pl.uid}" data-uid="${o.pl.uid}" data-src="pitch" style="${st}">
-        <div class="fm-dot">${o.pl.ovr}</div><span class="fm-nm">${fmLast(o.pl.name)}</span><span class="fm-pos"></span>
-      </div>`; }).join('')}
+    <div class="fm-board">
+      <div class="fm-pitch${tall?' tall':''}" id="${pfx}-pitch">
+        <div class="fm-ln fm-out"></div><div class="fm-ln fm-circ"></div><div class="fm-ln fm-box"></div><div class="fm-ln fm-box2"></div>
+        ${pool.map(o=>{ const si = slotOf[o.pl.uid]; const st = (fmInstantNext && si!=null) ? `left:${F.slots[si][1]}%;top:${F.slots[si][2]}%;` : '';
+          return `<div class="fm-pl" id="${pfx}-p${o.pl.uid}" data-uid="${o.pl.uid}" data-src="pitch" style="${st}">
+          <div class="fm-dot">${o.pl.ovr}</div><span class="fm-nm">${fmLast(o.pl.name)}</span><span class="fm-pos"></span>
+        </div>`; }).join('')}
+      </div>
+      <div class="fm-benchcol">
+        <div class="fm-bench-in">
+          <div class="fm-bh">Yedekler (${bench.length})</div>
+          <div class="fm-bench" id="${pfx}-bench">
+            ${bench.length ? bench.map(o=>`<div class="fm-bn" id="${pfx}-b${o.pl.uid}" data-uid="${o.pl.uid}" data-src="bench">
+              <span class="fm-bpos">${posByKey(o.pl.posKey).short}</span><span class="fm-bnm">${fmLast(o.pl.name)}</span><b>${o.pl.ovr}</b>
+            </div>`).join('') : '<span class="sub">Yedek yok.</span>'}
+          </div>
+        </div>
+      </div>
     </div>
     <div class="fm-info" id="${pfx}-info"></div>
-    <p class="sub" style="margin:8px 0 4px">👆 Oyuncuyu <b>sürükleyip</b> başka birinin üstüne bırak (ya da sırayla iki oyuncuya dokun). Yedekten sahadakinin üstüne bırakırsan <b>ilk 11'e girer</b>. Yeşil halka = o mevkiye uygun.</p>
-    <h5 style="margin:6px 0 4px">Yedekler <span class="sub">(${bench.length})</span></h5>
-    <div class="fm-bench" id="${pfx}-bench">
-      ${bench.length ? bench.map(o=>`<div class="fm-bn" id="${pfx}-b${o.pl.uid}" data-uid="${o.pl.uid}" data-src="bench">
-        <span class="fm-bpos">${posByKey(o.pl.posKey).short}</span><span class="fm-bnm">${fmLast(o.pl.name)}</span><b>${o.pl.ovr}</b>
-      </div>`).join('') : '<span class="sub">Yedek oyuncu yok.</span>'}
-    </div>`;
+    <p class="sub" style="margin:8px 0 0">👆 Oyuncuyu <b>sürükleyip</b> aynı mevkideki birinin üstüne bırak (ya da sırayla iki oyuncuya dokun). Sağdaki yedekleri sahadaki oyuncunun üstüne bırakırsan <b>ilk 11'e girer</b>. Yeşil halka = değişime uygun.</p>`;
 }
 function mgrFormationHTML(pfx, tall){
   return `<div class="fm-wrap" id="${pfx}-root" data-tall="${tall?1:0}">${mgrFormationInner(pfx, tall)}</div>`;
@@ -4854,33 +4870,52 @@ function fmRefresh(pfx){
   root.innerHTML = mgrFormationInner(pfx, root.dataset.tall==='1');
   fmLayout(pfx);
 }
+/* Değişim kuralı: bir oyuncu, gireceği yerin mevkisine uygunsa (uyum >= %50)
+   oynayabilir. Böylece stoper forvet yerine, kaleci saha yerine geçemez. */
+function fmCtx(){
+  const cur = fmKey(), F = FORMATIONS[cur], a = fmAssign(cur), sq = S.squads[S.p.team]||[];
+  const slotOf = {}; a.res.forEach((x,si)=>{ if(x) slotOf[x.pl.uid]=si; });
+  return {cur, F, res:a.res, sq, slotOf};
+}
+function fmCanPlay(pl, role){ return fmSlotOk(pl, role) && fmFit(pl, role) >= 0.5; }
+function fmWhyNot(pl, role){
+  if(role==='GK') return 'Kaleci yerine sadece kaleci oynayabilir.';
+  if(pl.posKey==='GK') return 'Kaleci saha oyuncusunun yerine oynayamaz.';
+  return `${pl.name}, ${posByKey(role).label} mevkisine uygun değil — sadece aynı mevkideki oyuncularla değiştirebilirsin.`;
+}
+function fmCheck(c, uidA, uidB){
+  const pa = c.sq.find(x=>x.uid===uidA), pb = c.sq.find(x=>x.uid===uidB);
+  if(!pa || !pb || uidA===uidB) return {ok:false};
+  const ia = c.slotOf[uidA], ib = c.slotOf[uidB];
+  if(ia==null && ib==null) return {ok:false};   // iki yedek: anlamsız
+  const bad = (pl, slot)=>{ const role = c.F.slots[slot][0]; return fmCanPlay(pl, role) ? null : fmWhyNot(pl, role); };
+  if(ia!=null && ib!=null){
+    const r = bad(pb, ia) || bad(pa, ib);
+    return r ? {ok:false, reason:r} : {ok:true, pa, pb, ia, ib};
+  }
+  const slot = ia!=null ? ia : ib, out = ia!=null ? pa : pb, inn = ia!=null ? pb : pa;
+  const r = bad(inn, slot);
+  return r ? {ok:false, reason:r} : {ok:true, slot, out, inn};
+}
 /* İki oyuncuyu değiştirir: ikisi de sahadaysa yer değiştirir; biri yedekteyse
    yedek ilk 11'e girer, çıkan yedeğe düşer (gerçek kadro durumu — takım gücü değişir). */
 function fmSwap(uidA, uidB, pfx){
-  if(uidA===uidB) return false;
-  const cur = fmKey(), F = FORMATIONS[cur];
-  const a = fmAssign(cur);
-  const sq = S.squads[S.p.team] || [];
-  const pa = sq.find(x=>x.uid===uidA), pb = sq.find(x=>x.uid===uidB);
-  if(!pa || !pb) return false;
-  const ia = a.res.findIndex(x=>x&&x.pl.uid===uidA), ib = a.res.findIndex(x=>x&&x.pl.uid===uidB);
-  if(ia<0 && ib<0) return false;
-  const res = a.res.slice();
+  const c = fmCtx();
+  const chk = fmCheck(c, uidA, uidB);
+  if(!chk.ok){ if(chk.reason) toast(chk.reason); return false; }
+  const res = c.res.slice();
   let msg = '';
-  if(ia>=0 && ib>=0){
-    if(!fmSlotOk(pb,F.slots[ia][0]) || !fmSlotOk(pa,F.slots[ib][0])){ toast('Kaleci ile saha oyuncusu yer değiştiremez.'); return false; }
-    const t = res[ia]; res[ia] = res[ib]; res[ib] = t;
+  if(chk.slot==null){
+    const t = res[chk.ia]; res[chk.ia] = res[chk.ib]; res[chk.ib] = t;
   } else {
-    const slot = ia>=0 ? ia : ib;
-    const out = ia>=0 ? pa : pb, inn = ia>=0 ? pb : pa;
-    if(!fmSlotOk(inn, F.slots[slot][0])){ toast(inn.posKey==='GK' ? 'Kaleci saha oyuncusunun yerine giremez.' : 'Kaleci yerine sadece kaleci girebilir.'); return false; }
+    const {out, inn, slot} = chk;
     out.on = false; inn.on = true;
     if(out.slot!=null) inn.slot = out.slot;
-    res[slot] = {pl:inn, fit:fmFit(inn,F.slots[slot][0])};
+    res[slot] = {pl:inn, fit:fmFit(inn, c.F.slots[slot][0])};
     msg = `🔁 ${inn.name} ilk 11'e girdi, ${out.name} yedeğe çekildi.`;
   }
   S.p.mgrAssign = S.p.mgrAssign || {};
-  S.p.mgrAssign[cur] = res.map(x=>x?x.pl.uid:null);
+  S.p.mgrAssign[c.cur] = res.map(x=>x?x.pl.uid:null);
   save();
   if(msg) toast(msg);
   fmRefresh(pfx);
@@ -4897,24 +4932,18 @@ function fmHints(uid, pfx, on){
   const root = $(`${pfx}-root`); if(!root) return;
   root.querySelectorAll('.fm-ok,.fm-no').forEach(el=>el.classList.remove('fm-ok','fm-no'));
   if(!on) return;
-  const sq = S.squads[S.p.team]||[];
-  const pl = sq.find(x=>x.uid===uid); if(!pl) return;
-  const srcEl = root.querySelector(`[data-uid="${uid}"]`);
-  const srcRole = srcEl && srcEl.dataset.role;
-  root.querySelectorAll('.fm-pl').forEach(el=>{
+  const c = fmCtx();
+  const srcBench = c.slotOf[uid]==null;
+  root.querySelectorAll('.fm-pl, .fm-bn').forEach(el=>{
     if(el.dataset.uid===uid) return;
-    const role = el.dataset.role; if(!role) return;
-    el.classList.add(fmSlotOk(pl,role) && fmFit(pl,role)>=0.5 ? 'fm-ok' : 'fm-no');
-  });
-  if(srcRole) root.querySelectorAll('.fm-bn').forEach(el=>{
-    const b = sq.find(x=>x.uid===el.dataset.uid); if(!b) return;
-    el.classList.add(fmSlotOk(b,srcRole) && fmFit(b,srcRole)>=0.5 ? 'fm-ok' : 'fm-no');
+    if(srcBench && el.classList.contains('fm-bn')) return;   // yedek-yedek işlemi yok
+    el.classList.add(fmCheck(c, uid, el.dataset.uid).ok ? 'fm-ok' : 'fm-no');
   });
 }
 function fmDown(e, pfx){
   const el = e.target.closest('.fm-pl, .fm-bn'); if(!el || fmDrag) return;
   if(e.pointerType==='mouse' && e.button!==0) return;
-  fmDrag = {el, pfx, uid:el.dataset.uid, sx:e.clientX, sy:e.clientY, moved:false, ghost:null, over:null, pid:e.pointerId};
+  fmDrag = {el, pfx, uid:el.dataset.uid, sx:e.clientX, sy:e.clientY, moved:false, ghost:null, over:null, badReason:null, ctx:null, pid:e.pointerId};
   document.addEventListener('pointermove', fmMove);
   document.addEventListener('pointerup', fmUp);
   document.addEventListener('pointercancel', fmCancel);
@@ -4923,7 +4952,7 @@ function fmMove(e){
   const d = fmDrag; if(!d || e.pointerId!==d.pid) return;
   if(!d.moved){
     if(Math.hypot(e.clientX-d.sx, e.clientY-d.sy) < 8) return;
-    d.moved = true;
+    d.moved = true; d.ctx = fmCtx();
     const g = d.el.cloneNode(true); g.removeAttribute('id'); g.classList.add('fm-ghost');
     document.body.appendChild(g); d.ghost = g;
     d.el.classList.add('fm-src');
@@ -4933,7 +4962,11 @@ function fmMove(e){
   const t = document.elementFromPoint(e.clientX, e.clientY);
   const tel = t && t.closest('.fm-pl, .fm-bn');
   const root = $(`${d.pfx}-root`);
-  const valid = tel && tel!==d.el && root && root.contains(tel) ? tel : null;
+  let valid = null; d.badReason = null;
+  if(tel && tel!==d.el && root && root.contains(tel)){
+    const chk = fmCheck(d.ctx, d.uid, tel.dataset.uid);
+    if(chk.ok) valid = tel; else d.badReason = chk.reason || null;
+  }
   if(d.over && d.over!==valid) d.over.classList.remove('fm-drop');
   if(valid) valid.classList.add('fm-drop');
   d.over = valid;
@@ -4956,6 +4989,7 @@ function fmUp(e){
   if(d.moved){
     fmHints(d.uid, d.pfx, false);
     if(d.over) fmSwap(d.uid, d.over.dataset.uid, d.pfx);
+    else if(d.badReason) toast(d.badReason);
     return;
   }
   // dokunma: önce biri seçilir, sonra diğerine dokununca yer değiştirir
