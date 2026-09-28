@@ -772,6 +772,43 @@ body.match-active.force-landscape .pitchticker{left:112px;right:190px;bottom:8px
 .lineup-full .lineup-pct{font-size:.72rem;}
 .lineup-full .btn{flex:none;margin-top:0;}
 
+/* ---------- Teknik direktör: diziliş / saha ---------- */
+.fm-btns{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;}
+.fm-btns .btn{flex:1 1 30%;min-width:74px;}
+.fm-pitch{position:relative;width:100%;height:400px;border-radius:12px;overflow:hidden;margin:8px 0;
+  background:repeating-linear-gradient(180deg,#1c6a37 0,#1c6a37 40px,#1a6233 40px,#1a6233 80px);border:1px solid #0e3d1e;}
+.fm-pitch.tall{height:62vh;min-height:360px;}
+.fm-pitch .fm-ln{position:absolute;border:2px solid rgba(255,255,255,.4);pointer-events:none;}
+.fm-pitch .fm-out{inset:6px;border-radius:4px;}
+.fm-pitch .fm-circ{top:-46px;left:50%;width:92px;height:92px;border-radius:50%;transform:translateX(-50%);}
+.fm-pitch .fm-box{bottom:6px;left:22%;width:56%;height:17%;border-top-width:2px;}
+.fm-pitch .fm-box2{bottom:6px;left:37%;width:26%;height:7%;}
+.fm-pl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;
+  width:66px;z-index:2;transition:left .85s cubic-bezier(.2,.9,.3,1.08),top .85s cubic-bezier(.2,.9,.3,1.08);}
+.fm-dot{width:34px;height:34px;border-radius:50%;background:var(--us);color:#fff;font-weight:800;font-size:.8rem;display:flex;
+  align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.45);}
+.fm-pl.mid .fm-dot{border-color:#f59e0b;}
+.fm-pl.bad .fm-dot{border-color:#ef4444;}
+.fm-nm{font-size:.6rem;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8);white-space:nowrap;max-width:68px;overflow:hidden;text-overflow:ellipsis;}
+.fm-pos{font-size:.54rem;font-weight:800;padding:1px 5px;border-radius:6px;background:rgba(0,0,0,.5);color:#fff;}
+.fm-info{display:flex;gap:8px;flex-wrap:wrap;font-size:.78rem;color:var(--dim);}
+.fm-info b{color:var(--text,#fff);}
+@media (prefers-reduced-motion: reduce){ .fm-pl{transition:none;} }
+.fm-pl,.fm-bn{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;}
+.fm-pl.fm-src,.fm-bn.fm-src{opacity:.35;}
+.fm-pl.fm-sel .fm-dot,.fm-bn.fm-sel{box-shadow:0 0 0 3px var(--flood),0 2px 6px rgba(0,0,0,.5);}
+.fm-pl.fm-ok .fm-dot{outline:3px solid var(--good);outline-offset:1px;}
+.fm-pl.fm-no{opacity:.55;}
+.fm-pl.fm-drop .fm-dot{transform:scale(1.25);outline:3px solid var(--flood);outline-offset:1px;}
+.fm-ghost{position:fixed !important;z-index:400;pointer-events:none;transform:translate(-50%,-50%) scale(1.15) !important;opacity:.95;transition:none !important;}
+.fm-bench{display:flex;flex-wrap:wrap;gap:6px;}
+.fm-bn{display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);font-size:.74rem;}
+.fm-bn .fm-bpos{font-weight:800;font-size:.62rem;padding:1px 5px;border-radius:6px;background:rgba(0,0,0,.35);}
+.fm-bn.fm-ok{border-color:var(--good);box-shadow:0 0 0 2px rgba(34,197,94,.35);}
+.fm-bn.fm-no{opacity:.55;}
+.fm-bn.fm-drop{border-color:var(--flood);box-shadow:0 0 0 3px var(--flood);}
+
+
 /* ---------- Newspaper ---------- */
 .paper{background-color:#f3ece0;background-image:linear-gradient(rgba(243,236,224,0.88),rgba(243,236,224,0.88)),url('gazete/futbolcu.jpg');background-size:cover;background-position:center;background-repeat:no-repeat;color:#181410;border-radius:10px;padding:16px 14px;border:1px solid #cdbfa8;font-family:Georgia,'Times New Roman',serif;}
 @keyframes paperToss{
@@ -2820,7 +2857,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v7.9';
+const APP_VERSION = 'v8';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -4654,6 +4691,296 @@ function promoteIfStronger(pl, sq){
     pl.on = false;
   }
 }
+/* =========================================================
+   TEKNİK DİREKTÖR: DİZİLİŞ (4-4-2, 4-2-3-1 ...) VE SAHA GÖRÜNÜMÜ
+   Formasyon seçince ilk 11 sahanın üzerinde yeni yerlerine kayarak
+   şekil alır. Diziliş ayrıca maç simülasyonuna küçük bir hücum/savunma
+   etkisi katar; oyuncular mevkilerine uymuyorsa (ör. 3'lü savunma için
+   yeterli stoper yoksa) "uyum" düşer ve etki cezalandırılır. Oyuncuların
+   gerçek "on/slot" bilgisine dokunulmaz — sadece görünüm + etki hesabı. */
+const FM_PREF = {
+  GK:['GK'], RB:['RB','RM','LB','CB','RW'], LB:['LB','LM','RB','CB','LW'],
+  CB:['CB','SW','DM','RB','LB'], DM:['DM','CM','BB','CB'], CM:['CM','BB','DM','AM','TQ'],
+  AM:['AM','TQ','CM','SS','BB'], RM:['RM','RW','CM','RB'], LM:['LM','LW','CM','LB'],
+  RW:['RW','RM','ST','AM'], LW:['LW','LM','ST','AM'], ST:['ST','CF','SS','AM'], SS:['SS','CF','ST','AM','TQ']
+};
+// slots: [rol, x%, y%]  (y küçük = forvet hattı, 91 = kaleci)
+const FORMATIONS = {
+  '4-3-3':  {atk:0,     def:0,     note:'Dengeli sistem: kanatlar ve tek santrafor.',
+    slots:[['GK',50,91],['RB',84,74],['CB',62,77],['CB',38,77],['LB',16,74],['CM',70,52],['DM',50,60],['CM',30,52],['RW',82,24],['ST',50,15],['LW',18,24]]},
+  '4-4-2':  {atk:0.005, def:0.01,  note:'Klasik iki forvet, düzenli iki hat.',
+    slots:[['GK',50,91],['RB',84,74],['CB',62,77],['CB',38,77],['LB',16,74],['RM',84,50],['CM',62,54],['CM',38,54],['LM',16,50],['ST',62,20],['ST',38,20]]},
+  '4-2-3-1':{atk:0.01,  def:0.02,  note:'Modern denge: iki ön libero, arkasında üçlü.',
+    slots:[['GK',50,91],['RB',84,74],['CB',62,77],['CB',38,77],['LB',16,74],['DM',64,60],['DM',36,60],['RW',82,38],['AM',50,38],['LW',18,38],['ST',50,14]]},
+  '3-5-2':  {atk:0.02,  def:-0.005,note:'Orta saha üstünlüğü, kanat bekler bindirir.',
+    slots:[['GK',50,91],['CB',70,77],['CB',50,80],['CB',30,77],['RB',90,52],['CM',66,50],['DM',50,61],['CM',34,50],['LB',10,52],['ST',62,20],['ST',38,20]]},
+  '5-3-2':  {atk:-0.02, def:0.04,  note:'Beşli savunma: sağlam ama az riskli.',
+    slots:[['GK',50,91],['RB',90,68],['CB',68,77],['CB',50,80],['CB',32,77],['LB',10,68],['CM',68,49],['CM',50,54],['CM',32,49],['ST',62,20],['ST',38,20]]},
+  '4-1-4-1':{atk:-0.01, def:0.03,  note:'Tek ön libero, dört kişilik orta saha hattı.',
+    slots:[['GK',50,91],['RB',84,74],['CB',62,77],['CB',38,77],['LB',16,74],['DM',50,62],['RM',84,42],['CM',62,44],['CM',38,44],['LM',16,42],['ST',50,15]]},
+  '3-4-3':  {atk:0.035, def:-0.025,note:'Çok hücumcu: üç forvet, üç stoper.',
+    slots:[['GK',50,91],['CB',70,77],['CB',50,80],['CB',30,77],['RM',84,52],['CM',62,55],['CM',38,55],['LM',16,52],['RW',80,24],['ST',50,15],['LW',20,24]]}
+};
+const FM_DEFAULT = '4-3-3';
+function fmKey(){ const k = S && S.p && S.p.mgrFormation; return FORMATIONS[k] ? k : FM_DEFAULT; }
+function fmFit(pl, role){
+  const pref = FM_PREF[role] || [];
+  const i = pref.indexOf(pl.posKey);
+  if(i>=0) return Math.max(0.35, 1 - i*0.18);
+  const g = posByKey(pl.posKey).grp, rg = posByKey(pref[0]||'CM').grp;
+  return g===rg ? 0.3 : 0.1;
+}
+/* Her oyuncuya kalıcı bir kimlik (uid) veriyoruz: diziliş seçimi satış/alışla
+   dizi sırası değişse bile doğru oyuncuya bağlı kalsın. */
+function fmUid(pl){ if(!pl.uid) pl.uid = 'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); return pl.uid; }
+// Kaleci sadece kaleci yerine, forvet/defans sadece saha yerine oynar.
+function fmSlotOk(pl, role){ return (pl.posKey==='GK') === (role==='GK'); }
+let fmInstantNext = false;   // true iken oyuncular ortadan kayarak değil, doğrudan yerine çizilir
+let fmSelUid = null;         // dokunarak seçme (sürüklemenin alternatifi)
+let fmDrag = null;
+
+/* İlk 11'i formasyon yerlerine dağıtır. Oyuncunun elle yaptığı yerleşim
+   (S.p.mgrAssign) varsa ona uyar; eksik/geçersiz kalanları en uygun mevkiyle
+   otomatik doldurur. bench = ilk 11 dışındaki yedekler. */
+function fmAssign(formKey){
+  const F = FORMATIONS[formKey] || FORMATIONS[FM_DEFAULT];
+  const sq = S.squads[S.p.team] || [];
+  const all = [];
+  sq.forEach((pl,idx)=>{ if(!pl.isUser){ fmUid(pl); all.push({pl,idx}); } });
+  let pool = all.filter(o=>o.pl.on);
+  if(pool.length<11){
+    const rest = all.filter(o=>!o.pl.on).sort((a,b)=>b.pl.ovr-a.pl.ovr);
+    pool = pool.concat(rest.slice(0, 11-pool.length));
+  }
+  const inPool = new Set(pool.map(o=>o.pl.uid));
+  const bench = all.filter(o=>!inPool.has(o.pl.uid)).sort((a,b)=>b.pl.ovr-a.pl.ovr);
+  const stored = (S.p.mgrAssign && S.p.mgrAssign[formKey]) || [];
+  const byUid = {}; pool.forEach(o=>{ byUid[o.pl.uid]=o; });
+  const res = new Array(F.slots.length).fill(null);
+  const used = new Set();
+  F.slots.forEach((sl,si)=>{
+    const o = byUid[stored[si]];
+    if(o && !used.has(o.pl.uid) && fmSlotOk(o.pl, sl[0])){ used.add(o.pl.uid); res[si] = {pl:o.pl, idx:o.idx, fit:fmFit(o.pl, sl[0])}; }
+  });
+  const left = pool.filter(o=>!used.has(o.pl.uid));
+  const pairs = [];
+  F.slots.forEach((sl,si)=>{ if(res[si]) return; left.forEach((o,pi)=>pairs.push({si,pi,sc:fmFit(o.pl,sl[0])*100 + o.pl.ovr/100})); });
+  pairs.sort((x,y)=>y.sc-x.sc);
+  const uS = new Set(), uP = new Set();
+  pairs.forEach(o=>{
+    if(uS.has(o.si)||uP.has(o.pi)) return;
+    uS.add(o.si); uP.add(o.pi);
+    const q = left[o.pi];
+    res[o.si] = {pl:q.pl, idx:q.idx, fit:fmFit(q.pl, F.slots[o.si][0])};
+  });
+  return {res, pool, bench};
+}
+function fmFitAvg(formKey){
+  const a = fmAssign(formKey).res;
+  return a.reduce((t,x)=>t+(x?x.fit:0),0) / a.length;
+}
+// simScore'a eklenen diziliş etkisi (mevkiye uymayan kadroda ceza)
+function fmModifiers(formKey){
+  const F = FORMATIONS[formKey] || FORMATIONS[FM_DEFAULT];
+  const pen = Math.max(0, 0.8 - fmFitAvg(formKey)) * 0.1;
+  return {atk:F.atk - pen, def:F.def - pen};
+}
+function fmEffectText(k){
+  const F = FORMATIONS[k];
+  const at = F.atk>0.012 ? 'Hücum ↑' : F.atk<-0.008 ? 'Hücum ↓' : 'Hücum =';
+  const df = F.def>0.015 ? 'Savunma ↑' : F.def<-0.008 ? 'Savunma ↓' : 'Savunma =';
+  return `${at} • ${df}`;
+}
+const fmLast = n => n.trim().split(/\s+/).slice(-1)[0];
+function mgrFormationInner(pfx, tall){
+  const cur = fmKey(), F = FORMATIONS[cur];
+  const {res, pool, bench} = fmAssign(cur);
+  const slotOf = {}; res.forEach((a,si)=>{ if(a) slotOf[a.pl.uid]=si; });
+  return `<div class="fm-btns">${Object.keys(FORMATIONS).map(k=>`<button class="btn sm${k===cur?' primary':''}" data-fm="${k}" onclick="setMgrFormation('${k}','${pfx}')">${k}</button>`).join('')}</div>
+    <p class="sub" id="${pfx}-note" style="margin:0 0 4px"></p>
+    <div class="fm-pitch${tall?' tall':''}" id="${pfx}-pitch">
+      <div class="fm-ln fm-out"></div><div class="fm-ln fm-circ"></div><div class="fm-ln fm-box"></div><div class="fm-ln fm-box2"></div>
+      ${pool.map(o=>{ const si = slotOf[o.pl.uid]; const st = (fmInstantNext && si!=null) ? `left:${F.slots[si][1]}%;top:${F.slots[si][2]}%;` : '';
+        return `<div class="fm-pl" id="${pfx}-p${o.pl.uid}" data-uid="${o.pl.uid}" data-src="pitch" style="${st}">
+        <div class="fm-dot">${o.pl.ovr}</div><span class="fm-nm">${fmLast(o.pl.name)}</span><span class="fm-pos"></span>
+      </div>`; }).join('')}
+    </div>
+    <div class="fm-info" id="${pfx}-info"></div>
+    <p class="sub" style="margin:8px 0 4px">👆 Oyuncuyu <b>sürükleyip</b> başka birinin üstüne bırak (ya da sırayla iki oyuncuya dokun). Yedekten sahadakinin üstüne bırakırsan <b>ilk 11'e girer</b>. Yeşil halka = o mevkiye uygun.</p>
+    <h5 style="margin:6px 0 4px">Yedekler <span class="sub">(${bench.length})</span></h5>
+    <div class="fm-bench" id="${pfx}-bench">
+      ${bench.length ? bench.map(o=>`<div class="fm-bn" id="${pfx}-b${o.pl.uid}" data-uid="${o.pl.uid}" data-src="bench">
+        <span class="fm-bpos">${posByKey(o.pl.posKey).short}</span><span class="fm-bnm">${fmLast(o.pl.name)}</span><b>${o.pl.ovr}</b>
+      </div>`).join('') : '<span class="sub">Yedek oyuncu yok.</span>'}
+    </div>`;
+}
+function mgrFormationHTML(pfx, tall){
+  return `<div class="fm-wrap" id="${pfx}-root" data-tall="${tall?1:0}">${mgrFormationInner(pfx, tall)}</div>`;
+}
+function fmLayout(pfx){
+  fmBind(pfx);
+  const cur = fmKey(), F = FORMATIONS[cur];
+  const {res} = fmAssign(cur);
+  let off = 0;
+  res.forEach((a,si)=>{
+    if(!a) return;
+    const el = $(`${pfx}-p${a.pl.uid}`); if(!el) return;
+    el.style.left = F.slots[si][1]+'%'; el.style.top = F.slots[si][2]+'%';
+    el.dataset.role = F.slots[si][0];
+    el.classList.remove('mid','bad');
+    if(a.fit<0.5){ el.classList.add('bad'); off++; } else if(a.fit<0.85){ el.classList.add('mid'); }
+    const ps = el.querySelector('.fm-pos'); if(ps) ps.textContent = posByKey(F.slots[si][0]).short;
+  });
+  fmInstantNext = false;
+  const fit = Math.round(res.reduce((t,x)=>t+(x?x.fit:0),0)/res.length*100);
+  const note = $(`${pfx}-note`); if(note) note.textContent = F.note;
+  const info = $(`${pfx}-info`);
+  if(info) info.innerHTML = `<span>Mevki uyumu: <b style="color:${fit>=80?'var(--good)':fit>=60?'#f59e0b':'var(--bad)'}">%${fit}</b></span><span>${fmEffectText(cur)}</span>${off?`<span style="color:var(--bad)">⚠️ ${off} oyuncu yabancı mevkide</span>`:''}`;
+}
+// Sayfa çizildikten hemen sonra oyuncular ortadan yerlerine kayarak dizilir.
+function fmLayoutAfterPaint(pfx){ setTimeout(()=>fmLayout(pfx), 60); }
+function setMgrFormation(k, pfx){
+  if(!FORMATIONS[k]) return;
+  S.p.mgrFormation = k; save();
+  fmSelUid = null;
+  const root = $(`${pfx}-root`);
+  if(root) root.querySelectorAll('.fm-btns .btn').forEach(b=>b.classList.toggle('primary', b.dataset.fm===k));
+  fmLayout(pfx);
+}
+function fmRefresh(pfx){
+  fmInstantNext = true; fmSelUid = null;
+  if(pfx==='fmc'){ renderClubManagement(); return; }
+  const root = $(`${pfx}-root`); if(!root) { fmInstantNext=false; return; }
+  root.innerHTML = mgrFormationInner(pfx, root.dataset.tall==='1');
+  fmLayout(pfx);
+}
+/* İki oyuncuyu değiştirir: ikisi de sahadaysa yer değiştirir; biri yedekteyse
+   yedek ilk 11'e girer, çıkan yedeğe düşer (gerçek kadro durumu — takım gücü değişir). */
+function fmSwap(uidA, uidB, pfx){
+  if(uidA===uidB) return false;
+  const cur = fmKey(), F = FORMATIONS[cur];
+  const a = fmAssign(cur);
+  const sq = S.squads[S.p.team] || [];
+  const pa = sq.find(x=>x.uid===uidA), pb = sq.find(x=>x.uid===uidB);
+  if(!pa || !pb) return false;
+  const ia = a.res.findIndex(x=>x&&x.pl.uid===uidA), ib = a.res.findIndex(x=>x&&x.pl.uid===uidB);
+  if(ia<0 && ib<0) return false;
+  const res = a.res.slice();
+  let msg = '';
+  if(ia>=0 && ib>=0){
+    if(!fmSlotOk(pb,F.slots[ia][0]) || !fmSlotOk(pa,F.slots[ib][0])){ toast('Kaleci ile saha oyuncusu yer değiştiremez.'); return false; }
+    const t = res[ia]; res[ia] = res[ib]; res[ib] = t;
+  } else {
+    const slot = ia>=0 ? ia : ib;
+    const out = ia>=0 ? pa : pb, inn = ia>=0 ? pb : pa;
+    if(!fmSlotOk(inn, F.slots[slot][0])){ toast(inn.posKey==='GK' ? 'Kaleci saha oyuncusunun yerine giremez.' : 'Kaleci yerine sadece kaleci girebilir.'); return false; }
+    out.on = false; inn.on = true;
+    if(out.slot!=null) inn.slot = out.slot;
+    res[slot] = {pl:inn, fit:fmFit(inn,F.slots[slot][0])};
+    msg = `🔁 ${inn.name} ilk 11'e girdi, ${out.name} yedeğe çekildi.`;
+  }
+  S.p.mgrAssign = S.p.mgrAssign || {};
+  S.p.mgrAssign[cur] = res.map(x=>x?x.pl.uid:null);
+  save();
+  if(msg) toast(msg);
+  fmRefresh(pfx);
+  return true;
+}
+/* --- sürükle-bırak / dokunarak seç (fare + dokunmatik, Pointer Events) --- */
+function fmBind(pfx){
+  const root = $(`${pfx}-root`);
+  if(!root || root.dataset.bound) return;
+  root.dataset.bound = '1';
+  root.addEventListener('pointerdown', e=>fmDown(e,pfx));
+}
+function fmHints(uid, pfx, on){
+  const root = $(`${pfx}-root`); if(!root) return;
+  root.querySelectorAll('.fm-ok,.fm-no').forEach(el=>el.classList.remove('fm-ok','fm-no'));
+  if(!on) return;
+  const sq = S.squads[S.p.team]||[];
+  const pl = sq.find(x=>x.uid===uid); if(!pl) return;
+  const srcEl = root.querySelector(`[data-uid="${uid}"]`);
+  const srcRole = srcEl && srcEl.dataset.role;
+  root.querySelectorAll('.fm-pl').forEach(el=>{
+    if(el.dataset.uid===uid) return;
+    const role = el.dataset.role; if(!role) return;
+    el.classList.add(fmSlotOk(pl,role) && fmFit(pl,role)>=0.5 ? 'fm-ok' : 'fm-no');
+  });
+  if(srcRole) root.querySelectorAll('.fm-bn').forEach(el=>{
+    const b = sq.find(x=>x.uid===el.dataset.uid); if(!b) return;
+    el.classList.add(fmSlotOk(b,srcRole) && fmFit(b,srcRole)>=0.5 ? 'fm-ok' : 'fm-no');
+  });
+}
+function fmDown(e, pfx){
+  const el = e.target.closest('.fm-pl, .fm-bn'); if(!el || fmDrag) return;
+  if(e.pointerType==='mouse' && e.button!==0) return;
+  fmDrag = {el, pfx, uid:el.dataset.uid, sx:e.clientX, sy:e.clientY, moved:false, ghost:null, over:null, pid:e.pointerId};
+  document.addEventListener('pointermove', fmMove);
+  document.addEventListener('pointerup', fmUp);
+  document.addEventListener('pointercancel', fmCancel);
+}
+function fmMove(e){
+  const d = fmDrag; if(!d || e.pointerId!==d.pid) return;
+  if(!d.moved){
+    if(Math.hypot(e.clientX-d.sx, e.clientY-d.sy) < 8) return;
+    d.moved = true;
+    const g = d.el.cloneNode(true); g.removeAttribute('id'); g.classList.add('fm-ghost');
+    document.body.appendChild(g); d.ghost = g;
+    d.el.classList.add('fm-src');
+    fmHints(d.uid, d.pfx, true);
+  }
+  d.ghost.style.left = e.clientX+'px'; d.ghost.style.top = e.clientY+'px';
+  const t = document.elementFromPoint(e.clientX, e.clientY);
+  const tel = t && t.closest('.fm-pl, .fm-bn');
+  const root = $(`${d.pfx}-root`);
+  const valid = tel && tel!==d.el && root && root.contains(tel) ? tel : null;
+  if(d.over && d.over!==valid) d.over.classList.remove('fm-drop');
+  if(valid) valid.classList.add('fm-drop');
+  d.over = valid;
+}
+function fmEnd(){
+  const d = fmDrag; if(!d) return null;
+  document.removeEventListener('pointermove', fmMove);
+  document.removeEventListener('pointerup', fmUp);
+  document.removeEventListener('pointercancel', fmCancel);
+  if(d.ghost) d.ghost.remove();
+  d.el.classList.remove('fm-src');
+  if(d.over) d.over.classList.remove('fm-drop');
+  fmDrag = null;
+  return d;
+}
+function fmCancel(){ const d = fmEnd(); if(d) fmHints(d.uid, d.pfx, false); }
+function fmUp(e){
+  if(fmDrag && e.pointerId!==fmDrag.pid) return;
+  const d = fmEnd(); if(!d) return;
+  if(d.moved){
+    fmHints(d.uid, d.pfx, false);
+    if(d.over) fmSwap(d.uid, d.over.dataset.uid, d.pfx);
+    return;
+  }
+  // dokunma: önce biri seçilir, sonra diğerine dokununca yer değiştirir
+  const root = $(`${d.pfx}-root`); if(!root) return;
+  if(fmSelUid===null){
+    fmSelUid = d.uid; d.el.classList.add('fm-sel'); fmHints(d.uid, d.pfx, true);
+  } else if(fmSelUid===d.uid){
+    fmSelUid = null; d.el.classList.remove('fm-sel'); fmHints(d.uid, d.pfx, false);
+  } else {
+    const first = fmSelUid; fmSelUid = null;
+    fmHints(first, d.pfx, false);
+    root.querySelectorAll('.fm-sel').forEach(x=>x.classList.remove('fm-sel'));
+    if(!fmSwap(first, d.uid, d.pfx)){ fmSelUid = d.uid; d.el.classList.add('fm-sel'); fmHints(d.uid, d.pfx, true); }
+  }
+}
+function openFormationModal(){
+  fmSelUid = null;
+  $('modal').classList.add('fullscreen');
+  modal(`<div class="lineup-full" style="overflow:auto">
+    <h3 style="color:var(--flood)">🧩 Diziliş & Saha</h3>
+    ${mgrFormationHTML('fmm', true)}
+    <button class="btn primary block" style="margin-top:8px" onclick="closeModal();render();">Kapat</button>
+  </div>`);
+  fmLayoutAfterPaint('fmm');
+}
 function renderClubManagement(){
   const p = S.p;
   const box = $('transferBox'); if(!box) return;
@@ -4685,6 +5012,11 @@ function renderClubManagement(){
       </div>
       <button class="btn sm primary adcapbtn" ${clubBudgetVidBusy?'disabled':''} onclick="watchClubBudgetVideo()">${clubBudgetVidBusy?'…':`<span class="adcap">${adCapBadge()}</span> İzle`}</button>
     </div>
+  </div>
+  <div class="card">
+    <h3>🧩 Diziliş & Saha</h3>
+    <p class="sub" style="margin-bottom:4px">Bir dizilişe dokun, ilk 11 sahada yerine kayıp şekil alsın. Diziliş maç sonucuna küçük bir etki yapar.</p>
+    ${mgrFormationHTML('fmc', false)}
   </div>
   <div class="card">
     <h3>Kadro <span class="sub">${rows.length} oyuncu</span></h3>
@@ -4733,6 +5065,7 @@ function renderClubManagement(){
         <button class="btn sm ${(S.clubBudget||0)>=mp.price?'primary':''} psell" ${(S.clubBudget||0)<mp.price?'disabled':''} onclick="confirmBuyClubPlayer('${mp.id}', this)">${TL(mp.price)}</button>
       </div>`;}).join('')}</div>` : '<p class="sub">Pazarda kimse yok, gelecek hafta tekrar bak.</p>'}
   </div>`;
+  fmLayoutAfterPaint('fmc');
 }
 function renderTransfers(){
   const p = S.p;
@@ -7241,14 +7574,16 @@ function leaveMatch(){
 /* =========================================================
    SONUÇLARIN İŞLENMESİ / HAFTA / SEZON
    ========================================================= */
-function simScore(h, a, tacticSide, tacticKey){
+function simScore(h, a, tacticSide, tacticKey, formKey){
   const hs0 = teamStrength(h) + 4;    // iç saha avantajı
   const as0 = teamStrength(a);
   let exH = clamp(1.15 + (hs0-as0)/22, 0.25, 4)/1;
   let exA = clamp(1.00 + (as0-hs0)/24, 0.2, 4)/1;
   // Teknik direktörün seçtiği taktik: kendi tarafına küçük bir hücum/defans eğilimi katar
   if(tacticSide && tacticKey && TACTICS[tacticKey]){
-    const t = TACTICS[tacticKey];
+    const t0 = TACTICS[tacticKey];
+    const fm = formKey ? fmModifiers(formKey) : {atk:0, def:0};
+    const t = {atk:t0.atk+fm.atk, def:t0.def+fm.def};
     if(tacticSide==='h'){ exH = clamp(exH*(1+t.atk*1.6), 0.15, 4.5); exA = clamp(exA*(1-t.def*1.4), 0.1, 4.5); }
     else { exA = clamp(exA*(1+t.atk*1.6), 0.15, 4.5); exH = clamp(exH*(1-t.def*1.4), 0.1, 4.5); }
   }
@@ -8030,6 +8365,7 @@ function renderManagerHub(){
           ${Object.keys(TACTICS).map(k=>`<button class="btn ${p.mgrTactic===k?'primary':''} sm" style="flex:1;min-width:90px" onclick="setMgrTactic('${k}')">${TACTICS[k].n}</button>`).join('')}
         </div>
         <p class="sub" style="margin:4px 0 10px">${TACTICS[p.mgrTactic].note}</p>
+        <button class="btn block" style="margin-bottom:10px" onclick="openFormationModal()">🧩 Diziliş: <b>${fmKey()}</b> — sahada gör / değiştir</button>
         <button class="btn primary block" onclick="managerPlayWeek()">Haftayı yönet ▸</button>`;
     } else {
       html += `<p class="sub">Bu hafta liginiz için maç yok.</p><button class="btn green" onclick="endWeek()">Haftayı geç ▸</button>`;
@@ -8074,7 +8410,7 @@ function managerPlayWeek(){
   if(!fx) return;
   const p = S.p;
   const home = fx.h===p.team;
-  const r = simScore(fx.h, fx.a, home?'h':'a', p.mgrTactic||'dengeli');
+  const r = simScore(fx.h, fx.a, home?'h':'a', p.mgrTactic||'dengeli', fmKey());
   addToTable(fx.h, fx.a, r.hs, r.as);
   S.results.push({week:wk, h:fx.h, a:fx.a, hs:r.hs, as:r.as, comp:'lig'});
   const hScorers = creditScorers(fx.h, r.hs), aScorers = creditScorers(fx.a, r.as);
@@ -8094,6 +8430,7 @@ function managerPlayWeek(){
       <div class="spread"><span class="sub">${fx.h} golleri</span><b style="text-align:right">${fmtScorers(scorerLine(hScorers))}</b></div>
       <div class="spread"><span class="sub">${fx.a} golleri</span><b style="text-align:right">${fmtScorers(scorerLine(aScorers))}</b></div>
       <div class="spread"><span class="sub">Uyguladığın taktik</span><b>${TACTICS[p.mgrTactic||'dengeli'].n}</b></div>
+      <div class="spread"><span class="sub">Diziliş</span><b>${fmKey()}</b></div>
       <div class="spread"><span class="sub">Yeni lig sıran</span><b>${newRank}.</b></div>
     </div>
     <button class="btn primary block" style="margin-top:12px" onclick="closeModal();endWeek();">Devam et ▸</button>`;
@@ -8414,9 +8751,10 @@ function showStreakModal(count, reward, claimable){
       <div class="streakday-amt">${TL(r.cash)}</div>
     </div>`;
   }).join('');
+  const nextReward = STREAK_REWARDS[cycleDay % STREAK_REWARDS.length];
   const actionBtn = claimable
     ? `<button class="btn primary block streak-claimbtn" style="margin-top:12px" onclick="claimStreakReward()">🎁 Ödülü Al — ${TL(reward.cash)}</button>`
-    : `<button class="btn primary block" style="margin-top:12px" onclick="closeModal()">Harika!</button>`;
+    : `<button class="btn primary block" style="margin-top:12px" onclick="closeModal()">✅ Bugünkü ödül alındı — yarın ${TL(nextReward.cash)} seni bekliyor</button>`;
   modal(`<div class="awardstage" style="padding:18px 10px">
       <div class="spotlight"></div>
       <div class="trophy${claimable?' trophy-claim':''}"${claimable?' onclick="claimStreakReward()" role="button" tabindex="0"':''}>${claimable?'🎁':'🔥'}</div>
@@ -8426,7 +8764,7 @@ function showStreakModal(count, reward, claimable){
     </div>
     <div class="statbox spread" style="margin-top:10px"><span class="sub">${claimable?'Alacağın ödül':'Bugünün ödülü'}</span><b style="color:var(--good)">${TL(reward.cash)}</b></div>
     <div class="streakgrid">${cells}</div>
-    <p class="sub" style="margin-top:10px;text-align:center">${claimable?'Ödülünü hesabına eklemek için üstteki hediyeye ya da aşağıdaki butona dokun.':'Her gün üst üste giriş yaptıkça ödül büyür. 7. günde büyük ödül alınır ve seri baştan başlar. Bir gün ara verirsen seri 1\'den başlar.'}</p>
+    <p class="sub" style="margin-top:10px;text-align:center">${claimable?'Ödülünü hesabına eklemek için üstteki hediyeye ya da aşağıdaki butona dokun.':`Yarın tekrar gel, <b>${cycleDay % STREAK_REWARDS.length + 1}. gün ödülünü</b> al! Her gün üst üste girdikçe ödül büyür; bir gün ara verirsen seri 1'den başlar.`}</p>
     ${actionBtn}`);
 }
 
