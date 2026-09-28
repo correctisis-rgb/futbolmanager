@@ -1139,7 +1139,7 @@ body.has-ad #app{padding-bottom:calc(96px + var(--adh));}
   <div id="game" style="display:none">
     <div class="topbar">
       <div class="who"><b id="t-name">—</b><span id="t-sub">—</span></div>
-      <div class="chip" id="t-streak" title="Giriş serisi" style="display:none">🔥 0</div>
+      <div class="chip" id="t-streak" role="button" tabindex="0" title="Günlük giriş ödülleri" style="display:none;cursor:pointer" onclick="openStreakInfoModal()">🔥 0</div>
       <div class="chip gold buy" id="t-money" role="button" tabindex="0" title="Para kazan">0 ₺</div>
       <div class="chip ovr" id="t-ovr">0</div>
       <button class="btn sm" id="t-sound" title="Ses" style="padding:4px 8px">🔊</button>
@@ -2820,7 +2820,7 @@ const SAVE_KEY = 'saha-kariyer-v3';
 // artırmak ZORUNLU DEĞİL; sadece manifest/ikon gibi statik dosyaları da
 // değiştirdiyseniz onların önbellekten hemen düşmesi için isteğe bağlı
 // artırabilirsiniz (bkz. sw.js başındaki not).
-const APP_VERSION = 'v7.8';
+const APP_VERSION = 'v7.9';
 const LAST_VERSION_KEY = 'saha-kariyer-lastversion';
 
 /* ---------- Yeni sürüm uyarısı ----------
@@ -3114,7 +3114,7 @@ function render(){
   $('t-money').textContent = TL(p.money);
   $('t-ovr').textContent = 'GÜÇ ' + userOverall();
   { const sc = currentStreakCount(); const stChip = $('t-streak');
-    if(stChip){ if(sc>1){ stChip.style.display=''; stChip.textContent = '🔥 '+sc; } else stChip.style.display='none'; } }
+    if(stChip){ if(sc>0){ stChip.style.display=''; stChip.textContent = (streakPaidToday()?'🔥 ':'🎁 ')+sc; } else stChip.style.display='none'; } }
   updateNavBadges();
   updateNavForRole();
 
